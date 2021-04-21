@@ -1,0 +1,28 @@
+version: "3.3"
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+    volumes:
+      - ./:/app
+      - jobhunt-data:/jobhunt-data
+  db:
+    image: "postgres:13.1"
+    environment:
+        POSTGRES_DB: jobhunt_db
+        POSTGRES_USER: jobhunt
+        POSTGRES_PASSWORD: jobhunt
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-data/initdb.d:/docker-entrypoint-initdb.d/
+volumes:
+  postgres-data:
+  jobhunt-data:

@@ -1,0 +1,34 @@
+version: "3.3"
+
+services:
+  web-prod:
+    image: "jamerst/JobHunt:latest"
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - db
+    volumes:
+      - jobhunt-data:/jobhunt-data
+      - /certs:/certs
+    environment:
+        ASPNETCORE_URLS: https://+;http://+
+        ASPNETCORE_HTTPS_PORT: 443
+        ASPNETCORE_Kestrel__Certificates__Default__Password: PASSWORD_HERE
+        ASPNETCORE_Kestrel__Certificates__Default__Path: /certs/jobhunt-https.pfx
+    restart: always
+  db:
+    image: "postgres:13.2"
+    environment:
+        POSTGRES_DB: jobhunt_db
+        POSTGRES_USER: jobhunt
+        POSTGRES_PASSWORD: jobhunt
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-data/initdb.d:/docker-entrypoint-initdb.d/
+    restart: always
+volumes:
+  postgres-data:
+  jobhunt-data:
