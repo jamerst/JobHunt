@@ -2,15 +2,23 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
 
+using JobHunt.Configuration;
 namespace JobHunt.Controllers {
     [ApiController]
     [Route("[controller]/[action]")]
     public class TestController : ControllerBase {
+        private readonly SearchOptions _options;
+        public TestController(IOptions<SearchOptions> options) {
+            _options = options.Value;
+        }
+
         [HttpGet]
-        [Route("~/[controller]")]
+        // [Route("~/[controller]")]
         public async Task<IActionResult> List() {
-            return Ok("list");
+            
+            return Ok(_options.IndeedPublisherId);
         }
 
         [HttpGet("{id}")]

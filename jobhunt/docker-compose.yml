@@ -12,6 +12,7 @@ services:
     volumes:
       - ./:/app
       - jobhunt-data:/jobhunt-data
+      - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro,Z
   db:
     image: "postgres:13.1"
     environment:

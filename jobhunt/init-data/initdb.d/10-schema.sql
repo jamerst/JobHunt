@@ -73,3 +73,49 @@ INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
 VALUES ('20210422211329_InitialCreate', '5.0.5');
 
 COMMIT;
+
+START TRANSACTION;
+
+ALTER TABLE "Jobs" ADD "SearchSourceId" text NULL;
+
+ALTER TABLE "Jobs" ADD "Source" text NULL;
+
+ALTER TABLE "Jobs" ADD "SourceId" text NULL;
+
+ALTER TABLE "Companies" ADD "Blacklisted" boolean NOT NULL DEFAULT FALSE;
+
+ALTER TABLE "Companies" ADD "CareersCssBlacklist" text NULL;
+
+ALTER TABLE "Companies" ADD "GlassdoorId" text NULL;
+
+ALTER TABLE "Companies" ADD "GlassdoorRating" real NULL;
+
+ALTER TABLE "Companies" ADD "Watched" boolean NOT NULL DEFAULT FALSE;
+
+CREATE TABLE "CompanyNames" (
+    "CompanyId" text NOT NULL,
+    "Name" text NOT NULL,
+    "Id" text NULL,
+    CONSTRAINT "PK_CompanyNames" PRIMARY KEY ("CompanyId", "Name"),
+    CONSTRAINT "FK_CompanyNames_Companies_CompanyId" FOREIGN KEY ("CompanyId") REFERENCES "Companies" ("Id") ON DELETE CASCADE
+);
+
+CREATE TABLE "Searches" (
+    "Id" text NOT NULL,
+    "Provider" text NOT NULL,
+    "Query" text NOT NULL,
+    "Country" text NOT NULL,
+    "Location" text NULL,
+    "Distance" integer NULL,
+    "MaxAge" integer NULL,
+    CONSTRAINT "PK_Searches" PRIMARY KEY ("Id")
+);
+
+CREATE INDEX "IX_Jobs_SearchSourceId" ON "Jobs" ("SearchSourceId");
+
+ALTER TABLE "Jobs" ADD CONSTRAINT "FK_Jobs_Searches_SearchSourceId" FOREIGN KEY ("SearchSourceId") REFERENCES "Searches" ("Id") ON DELETE SET NULL;
+
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20210425202326_Searches', '5.0.5');
+
+COMMIT;

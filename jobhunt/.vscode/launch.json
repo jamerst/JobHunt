@@ -5,9 +5,9 @@
             "name": ".NET Core Attach Docker",
             "type": "coreclr",
             "request": "attach",
-            "processName": "JobHunt",
+            "processName": "jobhunt",
             "pipeTransport": {
-                "pipeCwd": "${workspaceFolder}/jobhunt",
+                "pipeCwd": "${workspaceFolder}/jobunt",
                 "pipeProgram": "/usr/bin/docker",
                 "pipeArgs": ["exec", "-i", "jobhunt_web_1"],
                 "debuggerPath": "/vsdbg/vsdbg",
@@ -26,9 +26,9 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/jobhunt/bin/Debug/net5.0/JobHunt.dll",
+            "program": "${workspaceFolder}/bin/Debug/net5.0/JobHunt.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/jobhunt",
+            "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             // Enable launching a web browser when ASP.NET Core starts. For more information: https://aka.ms/VSCode-CS-LaunchJson-WebBrowser
             "serverReadyAction": {

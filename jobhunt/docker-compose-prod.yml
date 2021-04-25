@@ -16,6 +16,9 @@ services:
         ASPNETCORE_HTTPS_PORT: 443
         ASPNETCORE_Kestrel__Certificates__Default__Password: PASSWORD_HERE
         ASPNETCORE_Kestrel__Certificates__Default__Path: /certs/jobhunt-https.pfx
+        Search__IndeedPublisherId: YOUR_PUBLISHER_ID
+        Search__GlassdoorPartnerId: YOUR_PARTNER_ID
+        Search__GlassdoorPartnerKey: YOUR_PARTNER_KEY
     restart: always
   db:
     image: "postgres:13.2"
