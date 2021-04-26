@@ -119,3 +119,28 @@ INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
 VALUES ('20210425202326_Searches', '5.0.5');
 
 COMMIT;
+
+START TRANSACTION;
+
+ALTER TABLE "Jobs" DROP CONSTRAINT "FK_Jobs_Searches_SearchSourceId";
+
+DROP INDEX "IX_Jobs_SearchSourceId";
+
+ALTER TABLE "Jobs" RENAME COLUMN "Source" TO "ProviderId";
+
+ALTER TABLE "Jobs" RENAME COLUMN "SearchSourceId" TO "Provider";
+
+ALTER TABLE "Searches" ADD "LastFetchSuccess" boolean NULL;
+
+ALTER TABLE "Searches" ADD "LastResultCount" integer NULL;
+
+ALTER TABLE "Searches" ADD "LastRun" timestamp without time zone NULL;
+
+CREATE INDEX "IX_Jobs_SourceId" ON "Jobs" ("SourceId");
+
+ALTER TABLE "Jobs" ADD CONSTRAINT "FK_Jobs_Searches_SourceId" FOREIGN KEY ("SourceId") REFERENCES "Searches" ("Id") ON DELETE SET NULL;
+
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20210426195040_NullableIds', '5.0.5');
+
+COMMIT;

@@ -19,8 +19,9 @@ namespace JobHunt.Models {
         public string Status { get; set; } = JobStatus.NotApplied;
         public DateTime? DateApplied { get; set; }
         public IList<JobCategory> JobCategories { get; set; } = null!;
-        public string? Source { get; set; }
+        public string? Provider { get; set; }
+        public string? ProviderId { get; set; }
         public string? SourceId { get; set; }
-        public Search? SearchSource { get; set; }
+        public Search? Source { get; set; }
     }
 }

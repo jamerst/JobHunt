@@ -49,7 +49,7 @@ namespace JobHunt.Data {
 
             builder.Entity<Search>()
                 .HasMany(s => s.FoundJobs)
-                .WithOne(j => j.SearchSource!)
+                .WithOne(j => j.Source!)
                 .OnDelete(DeleteBehavior.SetNull);
         }
 

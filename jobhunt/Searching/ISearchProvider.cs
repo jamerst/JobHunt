@@ -5,6 +5,6 @@ using JobHunt.DTO;
 
 namespace JobHunt.Searching {
     public interface ISearchProvider {
-        Task SearchAsync(SearchParameters searchParams, HttpClient client);
+        Task<SearchResults> SearchAsync(SearchParameters searchParams, HttpClient client);
     }
 }

@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using JobHunt.Configuration;
+using JobHunt.Services;
 namespace JobHunt {
     public class Startup {
         public Startup(IConfiguration configuration) {
@@ -30,6 +31,8 @@ namespace JobHunt {
                 configuration.RootPath = "client/build";
             });
             services.Configure<SearchOptions>(Configuration.GetSection(SearchOptions.Position));
+
+            services.AddTransient<IJobService, JobService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
