@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.WebUtilities;
@@ -27,7 +28,7 @@ namespace JobHunt.Searching {
             _options = options.Value;
         }
 
-        public async Task<SearchResults> SearchAsync(SearchParameters searchParameters, HttpClient client) {
+        public async Task<SearchResults> SearchAsync(SearchParameters searchParameters, HttpClient client, CancellationToken token) {
             Dictionary<string, string?> query = new Dictionary<string, string?>() {
                 { "publisher", _options.IndeedPublisherId },
                 { "q", searchParameters.Query },
@@ -77,6 +78,10 @@ namespace JobHunt.Searching {
 
             bool existingFound = false;
             foreach(IndeedJobResult job in response.Results) {
+                if (token.IsCancellationRequested) {
+                    return results;
+                }
+                
                 if (!await _jobService.AnyWithSourceIdAsync(SearchProviderName.Indeed, job.JobKey)) {
                     results.Jobs.Add(new Job {
                         Title = job.JobTitle,

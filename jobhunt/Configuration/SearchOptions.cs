@@ -4,5 +4,6 @@ namespace JobHunt.Configuration {
         public string IndeedPublisherId { get; set; } = null!;
         public string GlassdoorPartnerId { get; set; } = null!;
         public string GlassdoorPartnerKey { get; set; } = null!;
+        public string[] Schedules { get; set; } = null!;
     }
 }

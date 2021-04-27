@@ -9,6 +9,7 @@ using Microsoft.Extensions.Hosting;
 
 using JobHunt.Configuration;
 using JobHunt.Services;
+using JobHunt.Workers;
 namespace JobHunt {
     public class Startup {
         public Startup(IConfiguration configuration) {
@@ -33,6 +34,8 @@ namespace JobHunt {
             services.Configure<SearchOptions>(Configuration.GetSection(SearchOptions.Position));
 
             services.AddTransient<IJobService, JobService>();
+
+            services.AddHostedService<SearchRefreshWorker>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
