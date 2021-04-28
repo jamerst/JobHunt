@@ -1,5 +1,5 @@
 namespace JobHunt.DTO {
-    public class SearchParameters {
+    public class SearchDto {
         public string? SearchId { get; set; } = null;
         public string Query { get; set; } = null!;
         public string Country { get; set; } = null!;

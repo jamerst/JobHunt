@@ -2,10 +2,10 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-using JobHunt.DTO;
+using JobHunt.Models;
 
 namespace JobHunt.Searching {
     public interface ISearchProvider {
-        Task<SearchResults> SearchAsync(SearchParameters searchParams, HttpClient client, CancellationToken token);
+        Task SearchAsync(Search searchParams, HttpClient client, CancellationToken token);
     }
 }

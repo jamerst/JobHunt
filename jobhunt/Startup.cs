@@ -33,6 +33,7 @@ namespace JobHunt {
             });
             services.Configure<SearchOptions>(Configuration.GetSection(SearchOptions.Position));
 
+            services.AddTransient<ICompanyService, CompanyService>();
             services.AddTransient<IJobService, JobService>();
 
             services.AddHostedService<SearchRefreshWorker>();
