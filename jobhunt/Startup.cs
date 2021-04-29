@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using JobHunt.Configuration;
+using JobHunt.Searching;
 using JobHunt.Services;
 using JobHunt.Workers;
 namespace JobHunt {
@@ -35,6 +36,8 @@ namespace JobHunt {
 
             services.AddTransient<ICompanyService, CompanyService>();
             services.AddTransient<IJobService, JobService>();
+            services.AddTransient<ISearchService, SearchService>();
+            services.AddTransient<ISearchProvider, IndeedAPI>();
 
             services.AddHostedService<SearchRefreshWorker>();
         }

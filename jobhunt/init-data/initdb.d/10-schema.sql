@@ -144,3 +144,53 @@ INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
 VALUES ('20210426195040_NullableIds', '5.0.5');
 
 COMMIT;
+
+START TRANSACTION;
+
+ALTER TABLE "Companies" DROP COLUMN "CareersCssBlacklist";
+
+ALTER TABLE "Companies" DROP COLUMN "CareersCssSelector";
+
+ALTER TABLE "Companies" DROP COLUMN "CareersHash";
+
+ALTER TABLE "Companies" DROP COLUMN "CareersLastScraped";
+
+ALTER TABLE "Companies" DROP COLUMN "CareersLastUpdated";
+
+ALTER TABLE "Companies" DROP COLUMN "CareersPage";
+
+CREATE TABLE "CompanyCareersPages" (
+    "Id" text NOT NULL,
+    "CompanyId" text NOT NULL,
+    "Url" text NOT NULL,
+    "Hash" text NULL,
+    "CssSelector" text NULL,
+    "CssBlacklist" text NULL,
+    "LastScraped" timestamp without time zone NULL,
+    "LastUpdated" timestamp without time zone NULL,
+    "StatusMessage" text NULL,
+    CONSTRAINT "PK_CompanyCareersPages" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_CompanyCareersPages_Companies_CompanyId" FOREIGN KEY ("CompanyId") REFERENCES "Companies" ("Id") ON DELETE CASCADE
+);
+
+CREATE TABLE "SearchRuns" (
+    "Id" text NOT NULL,
+    "SearchId" text NOT NULL,
+    "Time" timestamp without time zone NOT NULL,
+    "Success" boolean NOT NULL,
+    "Message" text NULL,
+    "NewJobs" integer NOT NULL,
+    "NewCompanies" integer NOT NULL,
+    "TimeTaken" integer NOT NULL,
+    CONSTRAINT "PK_SearchRuns" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_SearchRuns_Searches_SearchId" FOREIGN KEY ("SearchId") REFERENCES "Searches" ("Id") ON DELETE CASCADE
+);
+
+CREATE INDEX "IX_CompanyCareersPages_CompanyId" ON "CompanyCareersPages" ("CompanyId");
+
+CREATE INDEX "IX_SearchRuns_SearchId" ON "SearchRuns" ("SearchId");
+
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20210429192858_CareersPages_SearchRuns', '5.0.5');
+
+COMMIT;

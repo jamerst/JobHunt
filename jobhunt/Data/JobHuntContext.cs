@@ -29,6 +29,11 @@ namespace JobHunt.Data {
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.Entity<Company>()
+                .HasMany(c => c.CareersPages)
+                .WithOne(cc => cc.Company)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Company>()
                 .HasMany(c => c.CompanyCategories)
                 .WithOne(cc => cc.Company)
                 .OnDelete(DeleteBehavior.Cascade);
@@ -51,14 +56,21 @@ namespace JobHunt.Data {
                 .HasMany(s => s.FoundJobs)
                 .WithOne(j => j.Source!)
                 .OnDelete(DeleteBehavior.SetNull);
+            
+            builder.Entity<Search>()
+                .HasMany(s => s.Runs)
+                .WithOne(sr => sr.Search)
+                .OnDelete(DeleteBehavior.Cascade);
         }
 
         public DbSet<Category> Categories => Set<Category>();
         public DbSet<Company> Companies => Set<Company>();
+        public DbSet<CompanyCareersPage> CompanyCareersPages => Set<CompanyCareersPage>();
         public DbSet<CompanyCategory> CompanyCategories => Set<CompanyCategory>();
         public DbSet<CompanyName> CompanyNames => Set<CompanyName>();
         public DbSet<Job> Jobs => Set<Job>();
         public DbSet<JobCategory> JobCategories => Set<JobCategory>();
         public DbSet<Search> Searches => Set<Search>();
+        public DbSet<SearchRun> SearchRuns => Set<SearchRun>();
     }
 }

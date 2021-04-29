@@ -13,8 +13,6 @@ services:
       - ./:/app
       - jobhunt-data:/jobhunt-data
       - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro,Z
-    environment:
-        Search__Schedules__0: "* * * * *"
   db:
     image: "postgres:13.1"
     environment:

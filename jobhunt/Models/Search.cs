@@ -16,5 +16,6 @@ namespace JobHunt.Models {
         public bool? LastFetchSuccess { get; set; }
         public DateTime? LastRun { get; set; }
         public IList<Job> FoundJobs { get; set; } = null!;
+        public IList<SearchRun> Runs { get; set; } = null!;
     }
 }

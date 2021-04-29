@@ -29,26 +29,32 @@ namespace JobHunt.Workers {
 
         public async Task StartAsync(CancellationToken token) {
             _logger.LogInformation($"SearchRefreshWorker started ({DateTime.Now:u})");
+            if (_options.Schedules == null) {
+                _logger.LogError("No search refresh schedule provided. Stopping.");
+                return;
+            }
             CronExpression[] expressions = _options.Schedules.Select(s => CronExpression.Parse(s)).ToArray();
             while (!token.IsCancellationRequested) {
                 DateTimeOffset? next = expressions.Select(e => e.GetNextOccurrence(DateTimeOffset.Now, TimeZoneInfo.Local, true)).Min();
 
                 if (next.HasValue) {
                     var delay = next.Value - DateTimeOffset.Now;
-                    await Task.Delay((int)delay.TotalMilliseconds, token);
-                    _logger.LogInformation($"SearchRefresh running ({DateTime.Now:u})");
                     try {
-                        await DoRefresh(token);
+                        await Task.Delay((int)delay.TotalMilliseconds, token);
                     } catch (TaskCanceledException) {
                         _logger.LogInformation($"SearchRefreshWorker stopping: task cancelled");
-                        break;
+                        return;
                     }
+
+                    _logger.LogInformation($"SearchRefresh running ({DateTime.Now:u})");
+                    await DoRefresh(token);
                     _logger.LogInformation($"SearchRefresh completed ({DateTime.Now:u})");
                 } else {
                     _logger.LogInformation($"SearchRefreshWorker stopping: no more occurrences");
-                    break;
+                    return;
                 }
             }
+            _logger.LogInformation("SearchRefreshWorker stopping");
         }
 
         public async Task DoRefresh(CancellationToken token) {

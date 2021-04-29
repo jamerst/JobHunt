@@ -1,9 +1,12 @@
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -27,6 +30,10 @@ namespace JobHunt.Searching {
         private readonly ILogger _logger;
         private readonly SearchOptions _options;
         private const int _pageSize = 25;
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions() {
+            PropertyNameCaseInsensitive = true,
+            Converters = { new IndeedDateTimeConverter() }
+        };
         public IndeedAPI( ICompanyService companyService, IJobService jobService, ISearchService searchService, IOptions<SearchOptions> options, ILogger<IndeedAPI> logger) {
             _companyService = companyService;
             _jobService = jobService;
@@ -45,7 +52,8 @@ namespace JobHunt.Searching {
                 { "format", "json" },
                 { "userip", "1.2.3.4" },
                 { "useragent", "Mozilla//4.0(Firefox)" },
-                { "latlong", "1" }
+                { "latlong", "1" },
+                { "v", "2" }
             };
 
             if (search.Location != null) {
@@ -70,20 +78,22 @@ namespace JobHunt.Searching {
             while (!existingFound && !token.IsCancellationRequested) {
                 IndeedResponse? response = null;
 
+                query["start"] = start.ToString();
                 using (var httpResponse = await client.GetAsync(QueryHelpers.AddQueryString(_apiUrl, query), HttpCompletionOption.ResponseHeadersRead)) {
                     if (httpResponse.IsSuccessStatusCode) {
                         using (var stream = await httpResponse.Content.ReadAsStreamAsync()) {
-                            response = await JsonSerializer.DeserializeAsync<IndeedResponse>(stream);
+                            response = await JsonSerializer.DeserializeAsync<IndeedResponse>(stream, _jsonOptions);
                         }
                     } else {
                         _logger.LogError("Indeed API request failed", httpResponse);
                         await _searchService.UpdateFetchResultAsync(search.Id!, 0, false);
+                        return;
                     }
                 }
 
-                if (response == null) {
+                if (response == null || response.Results == null) {
                     await _searchService.UpdateFetchResultAsync(search.Id!, 0, false);
-                    break;
+                    return;
                 }
 
                 foreach(IndeedJobResult job in response.Results) {
@@ -164,19 +174,19 @@ namespace JobHunt.Searching {
             }
 
             if (jobDescs != null) {
-                jobs.ForEach(j => {
-                    if (jobDescs.TryGetValue(j.SourceId!, out string? desc)) {
-                        j.Description = desc;
+                for (int i = 0; i < jobs.Count; i++) {
+                    if (jobDescs.TryGetValue(jobs[i].ProviderId!, out string? desc)) {
+                        jobs[i].Description = desc;
                     }
-                });
+                }
 
-                companies.ForEach(c => {
-                    ((List<Job>)c.Jobs).ForEach(j => {
-                        if (jobDescs.TryGetValue(j.SourceId!, out string? desc)) {
-                            j.Description = desc;
+                for (int i = 0; i < companies.Count; i++) {
+                    for (int j = 0; j < companies[i].Jobs.Count; j++) {
+                        if (jobDescs.TryGetValue(companies[i].Jobs[j].ProviderId!, out string? desc)) {
+                            companies[i].Jobs[j].Description = desc;
                         }
-                    });
-                });
+                    }
+                }
             }
 
            await _jobService.CreateAllAsync(jobs);
@@ -199,6 +209,19 @@ namespace JobHunt.Searching {
             public double Longitude { get; set; }
             public string JobKey { get; set; } = null!;
             public bool Sponsored { get; set; }
+        }
+
+        private class IndeedDateTimeConverter : JsonConverter<DateTime> {
+            public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            {
+                Debug.Assert(typeToConvert == typeof(DateTime));
+                return DateTime.ParseExact(reader.GetString()!, "r", CultureInfo.InvariantCulture);
+            }
+
+            public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
+            {
+                writer.WriteStringValue(value.ToString());
+            }
         }
     }
 }
