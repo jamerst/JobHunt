@@ -37,7 +37,7 @@ namespace JobHunt {
             services.AddTransient<ICompanyService, CompanyService>();
             services.AddTransient<IJobService, JobService>();
             services.AddTransient<ISearchService, SearchService>();
-            services.AddTransient<ISearchProvider, IndeedAPI>();
+            services.AddTransient<IIndeedAPI, IndeedAPI>();
 
             services.AddHostedService<SearchRefreshWorker>();
         }

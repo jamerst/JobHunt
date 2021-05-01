@@ -1,25 +1,39 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { Fragment, useState, useMemo } from 'react';
+import { Switch, BrowserRouter, Route } from "react-router-dom"
+import { CssBaseline } from "@material-ui/core"
+import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles"
+
+import Dashboard from "./components/Dashboard"
+import MainLayout from "./layouts/MainLayout"
 
 function App() {
+  const [darkMode, setDarkMode] = useState<boolean>(
+    localStorage.getItem("theme") === "dark"
+    || (window.matchMedia("(prefers-color-scheme: dark)").matches && localStorage.getItem("theme") === null)
+  );
+
+  const theme = React.useMemo(() =>
+    createMuiTheme({
+      palette: {
+        type: darkMode ? "dark" : "light"
+      },
+    }),
+    [darkMode],
+  );
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <BrowserRouter>
+        <Switch>
+          <Route exact path="/">
+            <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+              <Dashboard/>
+            </MainLayout>
+          </Route>
+        </Switch>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

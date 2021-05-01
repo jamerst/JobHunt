@@ -10,8 +10,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace JobHunt.Migrations
 {
     [DbContext(typeof(JobHuntContext))]
-    [Migration("20210429192858_CareersPages_SearchRuns")]
-    partial class CareersPages_SearchRuns
+    [Migration("20210501110554_InitialCreate")]
+    partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -23,9 +23,10 @@ namespace JobHunt.Migrations
 
             modelBuilder.Entity("JobHunt.Models.Category", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("text");
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -38,9 +39,10 @@ namespace JobHunt.Migrations
 
             modelBuilder.Entity("JobHunt.Models.Company", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("text");
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<bool>("Blacklisted")
                         .HasColumnType("boolean");
@@ -87,13 +89,13 @@ namespace JobHunt.Migrations
 
             modelBuilder.Entity("JobHunt.Models.CompanyCareersPage", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("text");
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-                    b.Property<string>("CompanyId")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("CssBlacklist")
                         .HasColumnType("text");
@@ -126,11 +128,11 @@ namespace JobHunt.Migrations
 
             modelBuilder.Entity("JobHunt.Models.CompanyCategory", b =>
                 {
-                    b.Property<string>("CompanyId")
-                        .HasColumnType("text");
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("integer");
 
-                    b.Property<string>("CategoryId")
-                        .HasColumnType("text");
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("integer");
 
                     b.HasKey("CompanyId", "CategoryId");
 
@@ -141,15 +143,16 @@ namespace JobHunt.Migrations
 
             modelBuilder.Entity("JobHunt.Models.CompanyName", b =>
                 {
-                    b.Property<string>("CompanyId")
-                        .HasColumnType("text");
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .HasColumnType("text");
 
-                    b.Property<string>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("text");
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.HasKey("CompanyId", "Name");
 
@@ -158,15 +161,16 @@ namespace JobHunt.Migrations
 
             modelBuilder.Entity("JobHunt.Models.Job", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("text");
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<bool>("Archived")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("CompanyId")
-                        .HasColumnType("text");
+                    b.Property<int?>("CompanyId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("DateApplied")
                         .HasColumnType("timestamp without time zone");
@@ -194,8 +198,8 @@ namespace JobHunt.Migrations
                     b.Property<string>("Salary")
                         .HasColumnType("text");
 
-                    b.Property<string>("SourceId")
-                        .HasColumnType("text");
+                    b.Property<int?>("SourceId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -219,11 +223,11 @@ namespace JobHunt.Migrations
 
             modelBuilder.Entity("JobHunt.Models.JobCategory", b =>
                 {
-                    b.Property<string>("JobId")
-                        .HasColumnType("text");
+                    b.Property<int>("JobId")
+                        .HasColumnType("integer");
 
-                    b.Property<string>("CategoryId")
-                        .HasColumnType("text");
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("integer");
 
                     b.HasKey("JobId", "CategoryId");
 
@@ -234,9 +238,10 @@ namespace JobHunt.Migrations
 
             modelBuilder.Entity("JobHunt.Models.Search", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("text");
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<string>("Country")
                         .IsRequired()
@@ -275,9 +280,10 @@ namespace JobHunt.Migrations
 
             modelBuilder.Entity("JobHunt.Models.SearchRun", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("text");
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<string>("Message")
                         .HasColumnType("text");
@@ -288,9 +294,8 @@ namespace JobHunt.Migrations
                     b.Property<int>("NewJobs")
                         .HasColumnType("integer");
 
-                    b.Property<string>("SearchId")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("SearchId")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("Success")
                         .HasColumnType("boolean");

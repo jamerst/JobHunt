@@ -21,7 +21,7 @@ using JobHunt.Models;
 using JobHunt.Services;
 
 namespace JobHunt.Searching {
-    public class IndeedAPI : ISearchProvider {
+    public class IndeedAPI : IIndeedAPI {
         private const string _apiUrl = "https://api.indeed.com/ads/apisearch";
         private const string _descUrl = "https://indeed.com/rpc/jobdescs";
         private readonly ICompanyService _companyService;
@@ -42,7 +42,21 @@ namespace JobHunt.Searching {
             _options = options.Value;
         }
 
+        public async Task SearchAllAsync(HttpClient client, CancellationToken token) {
+            IEnumerable<Search> searches = await _searchService.FindByProviderAsync(SearchProviderName.Indeed);
+
+            foreach(Search search in searches) {
+                if (token.IsCancellationRequested) {
+                    break;
+                }
+
+                await SearchAsync(search, client, token);
+            }
+        }
+
         public async Task SearchAsync(Search search, HttpClient client, CancellationToken token) {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             Dictionary<string, string?> query = new Dictionary<string, string?>() {
                 { "publisher", _options.IndeedPublisherId },
                 { "q", search.Query },
@@ -74,6 +88,7 @@ namespace JobHunt.Searching {
             List<Job> jobs = new List<Job>();
             List<Company> companies = new List<Company>();
             StringBuilder jobKeys = new StringBuilder();
+            int newJobs = 0;
 
             while (!existingFound && !token.IsCancellationRequested) {
                 IndeedResponse? response = null;
@@ -85,14 +100,18 @@ namespace JobHunt.Searching {
                             response = await JsonSerializer.DeserializeAsync<IndeedResponse>(stream, _jsonOptions);
                         }
                     } else {
+                        sw.Stop();
                         _logger.LogError("Indeed API request failed", httpResponse);
                         await _searchService.UpdateFetchResultAsync(search.Id!, 0, false);
+                        await _searchService.CreateSearchRunAsync(search.Id!, false, $"Indeed API error: HTTP {(int)httpResponse.StatusCode}", 0, 0, (int)sw.Elapsed.TotalSeconds);
                         return;
                     }
                 }
 
                 if (response == null || response.Results == null) {
+                    sw.Stop();
                     await _searchService.UpdateFetchResultAsync(search.Id!, 0, false);
+                    await _searchService.CreateSearchRunAsync(search.Id!, false, "Indeed API deserialisation error", 0, 0, (int)sw.Elapsed.TotalSeconds);
                     return;
                 }
 
@@ -103,8 +122,9 @@ namespace JobHunt.Searching {
 
                     if (!await _jobService.AnyWithSourceIdAsync(SearchProviderName.Indeed, job.JobKey)) {
                         jobKeys.Append(job.JobKey + ",");
+                        newJobs++;
 
-                        Company company = await _companyService.FindCompanyByNameAsync(job.Company);
+                        Company company = await _companyService.FindByNameAsync(job.Company);
                         if (company != null) {
                             jobs.Add(new Job {
                                 Title = job.JobTitle,
@@ -160,16 +180,26 @@ namespace JobHunt.Searching {
                 }
             }
 
+            if (newJobs == 0) {
+                sw.Stop();
+                await _searchService.CreateSearchRunAsync(search.Id!, true, null, 0, 0, (int)sw.Elapsed.TotalSeconds);
+                return;
+            }
+
             // Indeed doesn't provide full job descriptions through their API, so use this undocumented endpoint to get them
             // You have no idea how difficult it was to find this endpoint
             Dictionary<string, string>? jobDescs = new Dictionary<string, string>();
             using (var httpResponse = await client.GetAsync($"{_descUrl}?jks={jobKeys}", HttpCompletionOption.ResponseHeadersRead)) {
                 if (httpResponse.IsSuccessStatusCode) {
+                    string temp = await httpResponse.Content.ReadAsStringAsync();
                     using (var stream = await httpResponse.Content.ReadAsStreamAsync()) {
                         jobDescs = await JsonSerializer.DeserializeAsync<Dictionary<string, string>>(stream);
                     }
                 } else {
+                    sw.Stop();
                     _logger.LogError("Indeed Job Descriptions request failed", httpResponse);
+                    await _searchService.CreateSearchRunAsync(search.Id!, true, $"Job descriptions API error: HTTP {(int)httpResponse.StatusCode}", newJobs, companies.Count, (int)sw.Elapsed.TotalSeconds);
+
                 }
             }
 
@@ -187,10 +217,15 @@ namespace JobHunt.Searching {
                         }
                     }
                 }
+            } else {
+                sw.Stop();
+                await _searchService.CreateSearchRunAsync(search.Id!, true, "Job descriptions deserialisation error", newJobs, companies.Count, (int)sw.Elapsed.TotalSeconds);
             }
 
-           await _jobService.CreateAllAsync(jobs);
-           await _companyService.CreateAllAsync(companies);
+            await _jobService.CreateAllAsync(jobs);
+            await _companyService.CreateAllAsync(companies);
+            sw.Stop();
+            await _searchService.CreateSearchRunAsync(search.Id!, true, null, newJobs, companies.Count, (int)sw.Elapsed.TotalSeconds);
         }
 
         private class IndeedResponse {
@@ -224,4 +259,6 @@ namespace JobHunt.Searching {
             }
         }
     }
+
+    public interface IIndeedAPI : ISearchProvider { };
 }

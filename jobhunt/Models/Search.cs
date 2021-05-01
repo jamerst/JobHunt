@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace JobHunt.Models {
     public class Search {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public string? Id { get; set; }
+        public int Id { get; set; }
         public string Provider { get; set; } = null!;
         public string Query { get; set; } = null!;
         public string Country { get; set; } = null!;

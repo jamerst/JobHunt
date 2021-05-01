@@ -20,16 +20,6 @@ namespace JobHunt.Controllers {
 
         [HttpGet]
         public async Task<IActionResult> Indeed() {
-            Search search = new Search {
-                Id = "test",
-                Provider = "Indeed",
-                Query = "Developer",
-                Location = "Skipton",
-                Country = "uk",
-                Distance = 15
-            };
-
-            await _indeed.SearchAsync(search, new HttpClient(), new CancellationToken());
             return Ok();
         }
     }

@@ -13,7 +13,7 @@ namespace JobHunt.Services {
         public CompanyService(JobHuntContext context) {
             _context = context;
         }
-        public async Task<Company> FindCompanyByNameAsync(string name) {
+        public async Task<Company> FindByNameAsync(string name) {
             return await _context.Companies
                 .Include(c => c.AlternateNames)
                 .FirstOrDefaultAsync(c => c.Name == name || c.AlternateNames.Any(an => an.Name == name));
@@ -27,7 +27,7 @@ namespace JobHunt.Services {
     }
 
     public interface ICompanyService {
-        Task<Company> FindCompanyByNameAsync(string name);
+        Task<Company> FindByNameAsync(string name);
         Task CreateAllAsync(IEnumerable<Company> companies);
     }
 }

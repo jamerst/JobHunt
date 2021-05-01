@@ -6,6 +6,7 @@ using JobHunt.Models;
 
 namespace JobHunt.Searching {
     public interface ISearchProvider {
+        Task SearchAllAsync(HttpClient client, CancellationToken token);
         Task SearchAsync(Search searchParams, HttpClient client, CancellationToken token);
     }
 }

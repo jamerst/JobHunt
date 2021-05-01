@@ -4,8 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace JobHunt.Models {
     public class CompanyCareersPage {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public string? Id { get; set; }
-        public string CompanyId { get; set; } = null!;
+        public int Id { get; set; }
+        public int CompanyId { get; set; }
         public Company Company { get; set; } = null!;
         public string Url { get; set; } = null!;
         public string? Hash { get; set; }

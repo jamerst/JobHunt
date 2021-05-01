@@ -1,8 +1,8 @@
 namespace JobHunt.Models {
     public class CompanyCategory {
-        public string CompanyId { get; set; } = null!;
+        public int CompanyId { get; set; }
         public Company Company { get; set; } = null!;
-        public string CategoryId { get; set; } = null!;
+        public int CategoryId { get; set; }
         public Category Category { get; set; } = null!;
     }
 }
