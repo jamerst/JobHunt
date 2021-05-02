@@ -3,7 +3,7 @@ import { Switch, BrowserRouter, Route } from "react-router-dom"
 import { CssBaseline } from "@material-ui/core"
 import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles"
 
-import Dashboard from "./components/Dashboard"
+import Dashboard from "./views/Dashboard"
 import MainLayout from "./layouts/MainLayout"
 
 function App() {
@@ -16,7 +16,7 @@ function App() {
     createMuiTheme({
       palette: {
         type: darkMode ? "dark" : "light"
-      },
+      }
     }),
     [darkMode],
   );
@@ -27,7 +27,7 @@ function App() {
       <BrowserRouter>
         <Switch>
           <Route exact path="/">
-            <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+            <MainLayout pageTitle="Dashboard" darkMode={darkMode} setDarkMode={setDarkMode}>
               <Dashboard/>
             </MainLayout>
           </Route>

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -40,11 +41,27 @@ namespace JobHunt.Services {
 
             return (results, total);
         }
+
+        public async Task<JobCount> GetJobCountsAsync(DateTime date) {
+            JobCount counts = new JobCount();
+
+            DateTime dailyDate = date.Date.AddDays(-1);
+            counts.Daily = await _context.Jobs.Where(j => j.Posted.HasValue && j.Posted.Value.Date >= dailyDate).CountAsync();
+
+            DateTime weeklyDate = date.Date.AddDays(-7);
+            counts.Weekly = await _context.Jobs.Where(j => j.Posted.HasValue && j.Posted.Value.Date >= weeklyDate).CountAsync();
+
+            DateTime monthlyDate = date.Date.AddMonths(-1);
+            counts.Monthly = await _context.Jobs.Where(j => j.Posted.HasValue && j.Posted.Value.Date >= monthlyDate).CountAsync();
+
+            return counts;
+        }
     }
 
     public interface IJobService {
         Task<bool> AnyWithSourceIdAsync(string provider, string id);
         Task CreateAllAsync(IEnumerable<Job> jobs);
         Task<(IEnumerable<Job>, int)> GetLatestPagedAsync(int pageNum, int pageSize);
+        Task<JobCount> GetJobCountsAsync(DateTime Date);
     }
 }

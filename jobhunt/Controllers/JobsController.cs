@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -34,6 +35,11 @@ namespace JobHunt.Controllers {
                     })
                 })
             });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Counts() {
+            return new JsonResult(await _jobService.GetJobCountsAsync(DateTime.Now));
         }
     }
 }

@@ -1,6 +1,6 @@
 import React, { Fragment } from "react"
-import { AppBar, Grid, IconButton, Toolbar, Tooltip, Typography } from "@material-ui/core"
-import { Menu, BrightnessHigh, Brightness2  } from "@material-ui/icons";
+import { AppBar, Divider, Drawer, Grid, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Tooltip, Typography } from "@material-ui/core"
+import { Menu, BrightnessHigh, Brightness2, Work, Business, Search, Dashboard  } from "@material-ui/icons";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 
 type MainLayoutProps = {
@@ -9,15 +9,36 @@ type MainLayoutProps = {
   pageTitle?: string
 }
 
+const drawerWidth = 240;
+
 const useStyles = makeStyles((theme: Theme) => createStyles({
+  root: {
+    width: "100vw"
+  },
   mainContainer: {
-    width: "1200px",
-    maxWidth: "100%",
-    margin: "2em auto",
-    marginBottom: "0"
+    marginLeft: drawerWidth,
+    padding: theme.spacing(2),
+    paddingTop: 0
   },
   themeIcon: {
     color: "inherit"
+  },
+  drawer: {
+    "& .MuiDrawer-paper": {
+     background: theme.palette.primary.dark,
+     color: "#fff",
+     width: drawerWidth,
+     "& .MuiListItemIcon-root, .MuiIconButton-root": {
+      color: "inherit"
+     },
+     "& .MuiDivider-root": {
+       backgroundColor: "rgba(255, 255, 255, 0.12)"
+     }
+   }
+  },
+  title: {
+    width: "100%",
+    textAlign: "center"
   }
 }));
 
@@ -26,30 +47,53 @@ const MainLayout = (props: React.PropsWithChildren<MainLayoutProps>) => {
 
   return (
     <Fragment>
-      <AppBar position="sticky">
-        <Toolbar>
-          <Grid container direction="row" justify="space-between" alignItems="center">
-            <Grid container item alignItems="center" xs>
-              <IconButton edge="start" color="inherit" aria-label="menu">
-                <Menu/>
-              </IconButton>
-              <Typography variant="h6">{props.pageTitle ? props.pageTitle : "JobHunt"}</Typography>
+      <Drawer
+        variant="permanent"
+        anchor="left"
+        className={classes.drawer}
+      >
+        <List>
+          <ListItem>
+            <Typography className={classes.title} variant="h5">JobHunt</Typography>
+          </ListItem>
+          <Divider />
+          <ListItem button>
+            <ListItemIcon><Dashboard/></ListItemIcon>
+            <ListItemText primary="Dashboard"/>
+          </ListItem>
+          <ListItem button>
+            <ListItemIcon><Work/></ListItemIcon>
+            <ListItemText primary="Jobs"/>
+          </ListItem>
+          <ListItem button>
+            <ListItemIcon><Business/></ListItemIcon>
+            <ListItemText primary="Companies"/>
+          </ListItem>
+          <ListItem button>
+            <ListItemIcon><Search/></ListItemIcon>
+            <ListItemText primary="Searches"/>
+          </ListItem>
+          <Divider/>
+          <ListItem>
+            <Grid container justify="center">
+              <Tooltip title="Toggle theme">
+                <IconButton
+                  aria-label="Toggle theme"
+                  onClick={() => { props.setDarkMode(!props.darkMode); localStorage.setItem("theme", props.darkMode ? "light" : "dark") }}
+                >
+                  {props.darkMode ? <BrightnessHigh /> : <Brightness2 />}
+                </IconButton>
+              </Tooltip>
             </Grid>
-            <Tooltip title="Toggle theme">
-              <IconButton
-                aria-label="Toggle theme"
-                className={classes.themeIcon}
-                onClick={() => { props.setDarkMode(!props.darkMode); localStorage.setItem("theme", props.darkMode ? "light" : "dark") }}
-              >
-                {props.darkMode ? <BrightnessHigh /> : <Brightness2 />}
-              </IconButton>
-            </Tooltip>
-          </Grid>
+          </ListItem>
+        </List>
+      </Drawer>
+      <main className={classes.mainContainer}>
+        <Toolbar>
+          <Typography variant="h4">{props.pageTitle ? props.pageTitle : null}</Typography>
         </Toolbar>
-      </AppBar>
-      <Grid container direction="column" className={classes.mainContainer}>
         {props.children}
-      </Grid>
+      </main>
     </Fragment>
   )
 }

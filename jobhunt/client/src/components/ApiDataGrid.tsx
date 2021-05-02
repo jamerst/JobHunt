@@ -51,13 +51,13 @@ const ApiDataGrid = (props:ApiDataGridProps) => {
     const response = await fetch(url, { method: "GET" });
     if (response.ok) {
       const data = await response.json();
-      setRows(data.results)
       setRowCount(data.total)
+      setRows(data.results)
       setLoading(false);
     } else {
       console.error(`API request failed: ${url}, HTTP ${response.status}`);
     }
-  }, [pageSettings.page, pageSettings.size, props.queryParams, props.url]);
+  }, [pageSettings, props.queryParams, props.url]);
 
   useEffect(() => { fetchData() }, [pageSettings, fetchData]);
 
@@ -65,16 +65,17 @@ const ApiDataGrid = (props:ApiDataGridProps) => {
     <DataGrid
       rows={rows}
       columns={props.columns}
+      rowCount={rowCount}
       pagination
       pageSize={pageSettings.size}
       rowsPerPageOptions={[10, 15, 20, 50]}
       paginationMode={GridFeatureModeConstant.server}
-      rowCount={rowCount}
       onPageChange={(params: GridPageChangeParams) => { setPageSettings({ ...pageSettings, page: params.page }) }}
       onPageSizeChange={(params: GridPageChangeParams) => { setPageSettings({ ...pageSettings, size: params.pageSize }) }}
       autoHeight
       loading={loading}
       className={classes.root}
+      ref={React.createRef()}
     />
   )
 }
