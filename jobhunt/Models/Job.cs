@@ -20,7 +20,7 @@ namespace JobHunt.Models {
         public bool Archived { get; set; } = false;
         public string Status { get; set; } = JobStatus.NotApplied;
         public DateTime? DateApplied { get; set; }
-        public IList<JobCategory> JobCategories { get; set; } = null!;
+        public List<JobCategory> JobCategories { get; set; } = null!;
         public string? Provider { get; set; }
         public string? ProviderId { get; set; }
         public int? SourceId { get; set; }

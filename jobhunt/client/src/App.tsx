@@ -6,6 +6,7 @@ import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles"
 import Dashboard from "./views/Dashboard"
 import MainLayout from "./layouts/MainLayout"
 import Job from './views/Job';
+import { blue, cyan, green, indigo, purple } from '@material-ui/core/colors';
 
 function App() {
   const [darkMode, setDarkMode] = useState<boolean>(
@@ -16,7 +17,14 @@ function App() {
   const theme = React.useMemo(() =>
     createMuiTheme({
       palette: {
-        type: darkMode ? "dark" : "light"
+        type: darkMode ? "dark" : "light",
+        primary: {
+          main: blue[500],
+          dark: blue[700]
+        },
+        secondary: {
+          main: purple[500]
+        }
       }
     }),
     [darkMode],

@@ -6,6 +6,7 @@ import DOMPurify from "dompurify";
 import Card from "../components/Card";
 import ExpandableSnippet from "../components/ExpandableSnippet";
 import { Link } from "react-router-dom";
+import Categories, { Category } from "../components/Categories";
 
 type JobRouteParams = {
   id: string
@@ -25,15 +26,11 @@ type JobResponse = {
   archived: boolean,
   status: string,
   dateApplied?: string,
-  categories: JobCategory[],
+  categories: Category[],
   provider: string,
   sourceId?: number,
-  sourceName?: string
-}
-
-type JobCategory = {
-  id: number,
-  name: string
+  sourceName?: string,
+  seen: boolean
 }
 
 const Job = () => {
@@ -44,8 +41,18 @@ const Job = () => {
   const fetchData = useCallback(async () => {
     const response = await fetch(`/api/jobs/${id}`, { method: "GET" });
     if (response.ok) {
-      const data = await response.json();
-      setJobData(data as JobResponse);
+      const data = await response.json() as JobResponse;
+
+      if (!data.seen) {
+        const response = await fetch(`/api/jobs/seen/${id}`, { method: "PATCH" });
+        if (response.ok) {
+          data.seen = false;
+        } else {
+          console.error(`API request failed: /api/jobs/seen/${id}, HTTP ${response.status}`);
+        }
+      }
+
+      setJobData(data);
     } else {
       console.error(`API request failed: /api/jobs/${id}, HTTP ${response.status}`);
     }
@@ -62,6 +69,12 @@ const Job = () => {
       <Card title={jobData.title} titleVariant="h4" subtitle={`${jobData.companyName}, ${jobData.location}`} subtitleVariant="h6">
         <Box mx={3}>
           <Box mb={2}>
+            <Categories
+              categories={jobData.categories}
+              updateUrl={`/api/jobs/categories/${id}`}
+              onCategoryAdd={(cat) => console.log(`Added '${cat.name}'`)}
+              onCategoryRemove={(cat) => console.log(`Removed ${cat}`)}
+            />
             <Typography variant="h6">{jobData.salary ?? "Unknown Salary"}</Typography>
             <Typography variant="subtitle2">From "{jobData.sourceName}"</Typography>
             <Box my={2}>

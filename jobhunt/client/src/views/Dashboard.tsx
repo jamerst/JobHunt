@@ -1,7 +1,6 @@
 import React, { Fragment, useEffect, useState, useCallback } from "react"
-import { Grid, Typography, Tooltip, Paper, Box, Divider } from "@material-ui/core"
-import { GridColDef, GridCellParams } from "@material-ui/data-grid"
-import { green } from "@material-ui/core/colors"
+import { Grid, Typography, Tooltip, Chip } from "@material-ui/core"
+import { GridColDef } from "@material-ui/data-grid"
 import SwipeableView from "react-swipeable-views"
 import { autoPlay } from "react-swipeable-views-utils"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
@@ -19,6 +18,12 @@ type JobCount = {
   weekly: number,
   monthly: number
 }
+
+const useStyles = makeStyles((theme: Theme) => createStyles({
+  unseen: {
+    fontWeight: theme.typography.fontWeightBold
+  }
+}));
 
 const AutoPlaySwipeableView = autoPlay(SwipeableView);
 
@@ -47,22 +52,29 @@ const jobsColumns: GridColDef[] = [
       if (date.isBefore(dayjs().subtract(14, "day"), "day")) {
         return (<Fragment>{date.format("DD/MM/YYYY HH:mm")}</Fragment>);
       } else {
+        let newTag = params.row.seen ? null : (<Chip label="New" color="secondary"/>);
         return (
-        <Tooltip
-          title={<Typography variant="body2">{date.format("DD/MM/YYYY HH:mm")}</Typography>}
-          placement="right"
-        >
-            <span>{date.fromNow()}</span>
-          </Tooltip>
+          <Grid container justify="space-between" alignItems="center">
+            <Tooltip
+              title={<Typography variant="body2">{date.format("DD/MM/YYYY HH:mm")}</Typography>}
+              placement="right"
+            >
+              <span>{date.fromNow()}</span>
+            </Tooltip>
+            {newTag}
+          </Grid>
         );
       }
     }
-  }
+  },
+  {field: "seen", hide: true }
 ];
 
 export const Dashboard = () => {
   const [jobCounts, setJobCounts] = useState<JobCount>({ daily: -1, weekly: -1, monthly: -1 });
   const [index, setIndex] = useState<number>(0);
+
+  const classes = useStyles();
 
   const fetchJobCounts = useCallback(async () => {
     const response = await fetch("/api/jobs/counts", { method: "GET"} );
@@ -82,7 +94,7 @@ export const Dashboard = () => {
     <Grid container spacing={4}>
       <Grid item container xs={12}>
         <Grid item xs={12} md={3}>
-          <Card icon={(<Work fontSize="inherit"/>)} colour={green[600]}>
+          <Card icon={(<Work fontSize="inherit"/>)}>
             <Typography variant="subtitle1" align="right" color="textSecondary">New Jobs</Typography>
             <AutoPlaySwipeableView index={index} onChangeIndex={(i) => setIndex(i)} interval={7500}>
               <div>
@@ -108,6 +120,7 @@ export const Dashboard = () => {
             columns={jobsColumns}
             disableColumnMenu
             disableColumnSelector
+            getRowClassName={(params) => params.row.seen ? "" : classes.unseen}
           />
         </Card>
       </Grid>

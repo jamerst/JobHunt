@@ -45,8 +45,30 @@ namespace JobHunt.Controllers {
                     }),
                     Provider = job.Provider,
                     SourceId = job.SourceId,
-                    SourceName = job.Source?.ToString()
+                    SourceName = job.Source?.ToString(),
+                    seen = job.Seen
                 });
+            }
+        }
+
+        [HttpPatch]
+        [Route("{id}")]
+        public async Task Seen([FromRoute] int id) {
+            await _jobService.MarkAsSeenAsync(id);
+        }
+
+        [HttpPatch]
+        [Route("{id}")]
+        public async Task<IActionResult> Categories([FromRoute] int id, [FromBody] CategoryDto[] categories) {
+            var result = await _jobService.UpdateCategoriesAsync(id, categories);
+
+            if (result != null) {
+                return new JsonResult(result.Select(c => new CategoryDto {
+                    Id = c.Id,
+                    Name = c.Name
+                }));
+            } else {
+                return BadRequest();
             }
         }
 
@@ -61,7 +83,8 @@ namespace JobHunt.Controllers {
                     Location = j.Location,
                     CompanyId = j.CompanyId,
                     CompanyName = j.Company?.Name,
-                    Posted = j.Posted
+                    Posted = j.Posted,
+                    Seen = j.Seen
                 })
             });
         }

@@ -67,6 +67,54 @@ namespace JobHunt.Services {
 
             return counts;
         }
+
+        public async Task MarkAsSeenAsync(int id) {
+            Job job = await _context.Jobs.FirstOrDefaultAsync(j => j.Id == id);
+
+            if (job != default(Job)) {
+                job.Seen = true;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<IEnumerable<Category>?> UpdateCategoriesAsync(int id, CategoryDto[] categories) {
+            Job job = await _context.Jobs
+                .Include(j => j.JobCategories)
+                .FirstOrDefaultAsync(j => j.Id == id);
+
+            if (job == default(Job)) {
+                return null;
+            }
+
+            job.JobCategories.RemoveAll(jc => !categories.Any(c => c.Id == jc.CategoryId));
+
+            List<Category> allCategories = await _context.Categories.ToListAsync();
+            foreach (var cat in categories) {
+                Category? existing = allCategories.FirstOrDefault(c => c.Id == cat.Id || c.Name == cat.Name);
+                // if category already exists
+                if (existing != null) {
+                    // if not already added
+                    if (!job.JobCategories.Any(jc => jc.CategoryId == existing.Id)) {
+                        job.JobCategories.Add(new JobCategory { JobId = id, CategoryId = existing.Id});
+                    }
+                } else {
+                    job.JobCategories.Add(new JobCategory {
+                        JobId = id,
+                        Category = new Category {
+                            Name = cat.Name
+                        }
+                    });
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            return await _context.JobCategories
+                .Include(jc => jc.Category)
+                .Where(jc => jc.JobId == id)
+                .Select(jc => jc.Category)
+                .ToListAsync();
+        }
     }
 
     public interface IJobService {
@@ -75,5 +123,7 @@ namespace JobHunt.Services {
         Task CreateAllAsync(IEnumerable<Job> jobs);
         Task<(IEnumerable<Job>, int)> GetLatestPagedAsync(int pageNum, int pageSize);
         Task<JobCount> GetJobCountsAsync(DateTime Date);
+        Task MarkAsSeenAsync(int id);
+        Task<IEnumerable<Category>?> UpdateCategoriesAsync(int id, CategoryDto[] categories);
     }
 }

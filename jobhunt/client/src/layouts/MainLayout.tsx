@@ -27,7 +27,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
   drawer: {
     "& .MuiDrawer-paper": {
      background: theme.palette.primary.dark,
-     color: "#fff",
+     color: theme.palette.getContrastText(theme.palette.primary.dark),
      width: drawerWidth,
      "& .MuiListItemIcon-root, .MuiIconButton-root": {
       color: "inherit"

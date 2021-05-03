@@ -14,7 +14,7 @@ type CardProps = {
 const useStyles = makeStyles((theme: Theme) => createStyles({
   bar: {
     backgroundColor: (props: CardProps) => props.colour ? props.colour : theme.palette.primary.main,
-    color: "#fff",
+    color: (props: CardProps) => theme.palette.getContrastText(props.colour ? props.colour : theme.palette.primary.main),
     zIndex: 100,
     position: "relative",
     borderRadius: theme.shape.borderRadius,
