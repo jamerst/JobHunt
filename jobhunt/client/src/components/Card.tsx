@@ -1,10 +1,12 @@
 import React, { Fragment } from "react"
-import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
+import { createStyles, makeStyles, Theme, TypographyVariant } from "@material-ui/core/styles"
 import { Box, Grid, Paper, Typography } from "@material-ui/core";
 
 type CardProps = {
   title?: string,
+  titleVariant?: TypographyVariant,
   subtitle?: string,
+  subtitleVariant?: TypographyVariant,
   icon?: React.ReactElement,
   colour?: string
 }
@@ -40,7 +42,7 @@ const Card = (props: React.PropsWithChildren<CardProps>) => {
           {props.icon ? props.icon : null}
         </Box>
         <Paper>
-          <Box mt={-9} p={3} pt={3}>
+          <Box mt={-9} p={3} pt={2}>
             {props.children}
           </Box>
         </Paper>
@@ -55,8 +57,8 @@ const Card = (props: React.PropsWithChildren<CardProps>) => {
               {props.icon ? props.icon : null}
             </Grid>
             <Grid item>
-              {props.title ? (<Typography variant="h6">{props.title}</Typography>) : null}
-              {props.subtitle ? (<Typography className={classes.subtitle} variant="subtitle2">{props.subtitle}</Typography>) : null}
+              {props.title ? (<Typography variant={props.titleVariant ?? "h6"}>{props.title}</Typography>) : null}
+              {props.subtitle ? (<Typography className={classes.subtitle} variant={props.subtitleVariant ?? "subtitle2"}>{props.subtitle}</Typography>) : null}
             </Grid>
           </Grid>
         </Box>

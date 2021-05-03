@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useState } from "react"
-import { DataGrid, GridColDef, GridFeatureModeConstant, GridPageChangeParams, GridRowData } from "@material-ui/data-grid"
+import { DataGrid, DataGridProps, GridColDef, GridFeatureModeConstant, GridPageChangeParams, GridRowData } from "@material-ui/data-grid"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 
-type ApiDataGridProps = {
-  columns: GridColDef[],
+// have to remove the "rows" property since that shouldn't be passed to the DataGrid
+type ApiDataGridProps = Omit<ApiDataGridPropsRows, "rows">;
+type ApiDataGridPropsRows = DataGridProps & {
   url: string,
   queryParams?: Map<string, string>
 }
@@ -19,6 +20,13 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
       background: theme.palette.background.default,
       '& .MuiDataGrid-colCellTitle': {
         fontWeight: theme.typography.fontWeightBold
+      }
+    },
+    "& a": {
+      color: theme.palette.text.primary,
+      textDecoration: "none",
+      "&:hover": {
+        textDecoration: "underline"
       }
     }
   }
@@ -63,9 +71,6 @@ const ApiDataGrid = (props:ApiDataGridProps) => {
 
   return (
     <DataGrid
-      rows={rows}
-      columns={props.columns}
-      rowCount={rowCount}
       pagination
       pageSize={pageSettings.size}
       rowsPerPageOptions={[10, 15, 20, 50]}
@@ -73,9 +78,12 @@ const ApiDataGrid = (props:ApiDataGridProps) => {
       onPageChange={(params: GridPageChangeParams) => { setPageSettings({ ...pageSettings, page: params.page }) }}
       onPageSizeChange={(params: GridPageChangeParams) => { setPageSettings({ ...pageSettings, size: params.pageSize }) }}
       autoHeight
-      loading={loading}
-      className={classes.root}
       ref={React.createRef()}
+      {...props}
+      rows={rows}
+      rowCount={rowCount}
+      loading={loading}
+      className={classes.root + " " + props.className}
     />
   )
 }

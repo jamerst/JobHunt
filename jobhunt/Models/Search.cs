@@ -17,5 +17,9 @@ namespace JobHunt.Models {
         public DateTime? LastRun { get; set; }
         public IList<Job> FoundJobs { get; set; } = null!;
         public IList<SearchRun> Runs { get; set; } = null!;
+
+        public override string ToString() {
+            return $"{Query} jobs in {Location} on {Provider}";
+        }
     }
 }

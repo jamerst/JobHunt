@@ -13,13 +13,16 @@ namespace JobHunt.Controllers {
     [ApiController]
     [Route("[controller]/[action]")]
     public class SearchDebugController : ControllerBase {
-        private readonly ISearchProvider _indeed;
-        public SearchDebugController(ISearchProvider indeed) {
+        private readonly IIndeedAPI _indeed;
+        public SearchDebugController(IIndeedAPI indeed) {
             _indeed = indeed;
         }
 
         [HttpGet]
         public async Task<IActionResult> Indeed() {
+            HttpClient client = new HttpClient();
+            CancellationToken token = new CancellationToken();
+            await _indeed.SearchAllAsync(client, token);
             return Ok();
         }
     }

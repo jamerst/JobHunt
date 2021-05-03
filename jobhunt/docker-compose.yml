@@ -14,7 +14,9 @@ services:
       - jobhunt-data:/jobhunt-data
       - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro,Z
       - /etc/localtime:/etc/localtime:ro
-    # environment:
+    environment:
+      Search__IndeedHostName: "uk.indeed.com"
+      Search__IndeedFetchSalary: "true"
     #   Search__Schedules__0: "* * * * *"
   db:
     image: "postgres:13.1"

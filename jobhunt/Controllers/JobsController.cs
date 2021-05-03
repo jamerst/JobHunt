@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
 using JobHunt.DTO;
+using JobHunt.Models;
 using JobHunt.Services;
 
 namespace JobHunt.Controllers {
@@ -17,6 +18,39 @@ namespace JobHunt.Controllers {
         }
 
         [HttpGet]
+        [Route("~/api/jobs/{id}")]
+        public async Task<IActionResult> Get([FromRoute] int id) {
+            Job job = await _jobService.GetByIdAsync(id);
+
+            if (job == default(Job)) {
+                return NotFound();
+            } else {
+                return new JsonResult(new {
+                    Id = job.Id,
+                    Title = job.Title,
+                    Description = job.Description,
+                    Salary = job.Salary,
+                    Location = job.Location,
+                    Url = job.Url,
+                    CompanyId = job.CompanyId,
+                    CompanyName = job.Company?.Name,
+                    Posted = job.Posted,
+                    Notes = job.Notes,
+                    Archived = job.Archived,
+                    Status = job.Status,
+                    DateApplied = job.DateApplied,
+                    Categories = job.JobCategories.Select(jc => new {
+                        Id = jc.CategoryId,
+                        Name = jc.Category.Name
+                    }),
+                    Provider = job.Provider,
+                    SourceId = job.SourceId,
+                    SourceName = job.Source?.ToString()
+                });
+            }
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Latest([FromQuery] int page, [FromQuery] int size) {
             (var results, int total) = await _jobService.GetLatestPagedAsync(page, size);
             return new JsonResult(new {
@@ -24,15 +58,10 @@ namespace JobHunt.Controllers {
                 results = results.Select(j => new {
                     Id = j.Id,
                     Title = j.Title,
-                    Salary = j.Salary,
-                    Location = j.Location, 
+                    Location = j.Location,
                     CompanyId = j.CompanyId,
                     CompanyName = j.Company?.Name,
-                    Posted = j.Posted,
-                    Categories = j.JobCategories.Select(jc => new CategoryDto {
-                        Id = jc.CategoryId,
-                        Name = jc.Category.Name
-                    })
+                    Posted = j.Posted
                 })
             });
         }

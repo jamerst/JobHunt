@@ -15,6 +15,17 @@ namespace JobHunt.Services {
         public JobService(JobHuntContext context) {
             _context = context;
         }
+
+        public async Task<Job> GetByIdAsync(int id) {
+            return await _context.Jobs
+                .AsNoTracking()
+                .Include(j => j.Company)
+                .Include(j => j.JobCategories)
+                    .ThenInclude(jc => jc.Category)
+                .Include(j => j.Source)
+                .FirstOrDefaultAsync(j => j.Id == id);
+        }
+
         public async Task<bool> AnyWithSourceIdAsync(string provider, string id) {
             return await _context.Jobs.AnyAsync(j => j.Provider == provider && j.ProviderId == id);
         }
@@ -59,6 +70,7 @@ namespace JobHunt.Services {
     }
 
     public interface IJobService {
+        Task<Job> GetByIdAsync(int id);
         Task<bool> AnyWithSourceIdAsync(string provider, string id);
         Task CreateAllAsync(IEnumerable<Job> jobs);
         Task<(IEnumerable<Job>, int)> GetLatestPagedAsync(int pageNum, int pageSize);

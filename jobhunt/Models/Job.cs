@@ -9,12 +9,14 @@ namespace JobHunt.Models {
         public string Title { get; set; } = null!;
         public string Description { get; set; } = null!;
         public string? Salary { get; set; }
+        public int? AvgYearlySalary { get; set; }
         public string Location { get; set; } = null!;
         public string? Url { get; set; }
         public int? CompanyId { get; set; }
         public Company? Company { get; set; }
         public DateTime? Posted { get; set; }
         public string? Notes { get; set; }
+        public bool Seen { get; set; } = false;
         public bool Archived { get; set; } = false;
         public string Status { get; set; } = JobStatus.NotApplied;
         public DateTime? DateApplied { get; set; }

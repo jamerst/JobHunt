@@ -2,6 +2,7 @@ import React, { Fragment } from "react"
 import { AppBar, Divider, Drawer, Grid, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Tooltip, Typography } from "@material-ui/core"
 import { Menu, BrightnessHigh, Brightness2, Work, Business, Search, Dashboard  } from "@material-ui/icons";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
+import { Link } from "react-router-dom";
 
 type MainLayoutProps = {
   darkMode: boolean,
@@ -57,7 +58,7 @@ const MainLayout = (props: React.PropsWithChildren<MainLayoutProps>) => {
             <Typography className={classes.title} variant="h5">JobHunt</Typography>
           </ListItem>
           <Divider />
-          <ListItem button>
+          <ListItem button component={ Link } to="/">
             <ListItemIcon><Dashboard/></ListItemIcon>
             <ListItemText primary="Dashboard"/>
           </ListItem>

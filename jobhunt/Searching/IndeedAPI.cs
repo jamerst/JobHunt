@@ -23,6 +23,7 @@ using JobHunt.Services;
 namespace JobHunt.Searching {
     public class IndeedAPI : IIndeedAPI {
         private const string _apiUrl = "https://api.indeed.com/ads/apisearch";
+        private readonly string _salaryUrl;
         private const string _descUrl = "https://indeed.com/rpc/jobdescs";
         private readonly ICompanyService _companyService;
         private readonly IJobService _jobService;
@@ -34,18 +35,19 @@ namespace JobHunt.Searching {
             PropertyNameCaseInsensitive = true,
             Converters = { new IndeedDateTimeConverter() }
         };
-        public IndeedAPI( ICompanyService companyService, IJobService jobService, ISearchService searchService, IOptions<SearchOptions> options, ILogger<IndeedAPI> logger) {
+        public IndeedAPI(ICompanyService companyService, IJobService jobService, ISearchService searchService, IOptions<SearchOptions> options, ILogger<IndeedAPI> logger) {
             _companyService = companyService;
             _jobService = jobService;
             _searchService = searchService;
             _logger = logger;
             _options = options.Value;
+            _salaryUrl = $"https://{_options.IndeedHostName}/viewjob";
         }
 
         public async Task SearchAllAsync(HttpClient client, CancellationToken token) {
             IEnumerable<Search> searches = await _searchService.FindByProviderAsync(SearchProviderName.Indeed);
 
-            foreach(Search search in searches) {
+            foreach (Search search in searches) {
                 if (token.IsCancellationRequested) {
                     break;
                 }
@@ -103,7 +105,7 @@ namespace JobHunt.Searching {
                         sw.Stop();
                         _logger.LogError("Indeed API request failed", httpResponse);
                         await _searchService.UpdateFetchResultAsync(search.Id!, 0, false);
-                        await _searchService.CreateSearchRunAsync(search.Id!, false, $"Indeed API error: HTTP {(int)httpResponse.StatusCode}", 0, 0, (int)sw.Elapsed.TotalSeconds);
+                        await _searchService.CreateSearchRunAsync(search.Id!, false, $"Indeed API error: HTTP {(int) httpResponse.StatusCode}", 0, 0, (int) sw.Elapsed.TotalSeconds);
                         return;
                     }
                 }
@@ -111,11 +113,11 @@ namespace JobHunt.Searching {
                 if (response == null || response.Results == null) {
                     sw.Stop();
                     await _searchService.UpdateFetchResultAsync(search.Id!, 0, false);
-                    await _searchService.CreateSearchRunAsync(search.Id!, false, "Indeed API deserialisation error", 0, 0, (int)sw.Elapsed.TotalSeconds);
+                    await _searchService.CreateSearchRunAsync(search.Id!, false, "Indeed API deserialisation error", 0, 0, (int) sw.Elapsed.TotalSeconds);
                     return;
                 }
 
-                foreach(IndeedJobResult job in response.Results) {
+                foreach (IndeedJobResult job in response.Results) {
                     if (token.IsCancellationRequested) {
                         break;
                     }
@@ -124,13 +126,40 @@ namespace JobHunt.Searching {
                         jobKeys.Append(job.JobKey + ",");
                         newJobs++;
 
+                        string? salary = null;
+                        int? avgYearlySalary = null;
+                        if (_options.IndeedFetchSalary) {
+                            Dictionary<string, string?> salaryQuery = new Dictionary<string, string?> {
+                                { "jk", job.JobKey },
+                                { "vjs", "1" }
+                            };
+
+                            IndeedSalaryResponse? salaryResponse = null;
+                            using (var httpResponse = await client.GetAsync(QueryHelpers.AddQueryString(_salaryUrl, salaryQuery), HttpCompletionOption.ResponseHeadersRead)) {
+                                if (httpResponse.IsSuccessStatusCode) {
+                                    using (var stream = await httpResponse.Content.ReadAsStreamAsync()) {
+                                        salaryResponse = await JsonSerializer.DeserializeAsync<IndeedSalaryResponse>(stream, _jsonOptions);
+                                    }
+                                } else {
+                                    _logger.LogError("Indeed Salary API request failed", httpResponse);
+                                }
+                            }
+
+                            if (salaryResponse != null && salaryResponse.ExpectedSalary != null) {
+                                salary = salaryResponse.FormattedSalary;
+                                avgYearlySalary = salaryResponse.ExpectedSalary.GetYearlyAverage();
+                            }
+                        }
+
                         Company company = await _companyService.FindByNameAsync(job.Company);
                         if (company != null) {
                             jobs.Add(new Job {
                                 Title = job.JobTitle,
                                 Description = job.Snippet,
+                                Salary = salary,
+                                AvgYearlySalary = avgYearlySalary,
                                 Location = job.FormattedLocation,
-                                Url = job.Url,
+                                Url = $"https://indeed.com/viewjob?jk={job.JobKey}",
                                 CompanyId = company.Id,
                                 Posted = job.Date,
                                 Provider = SearchProviderName.Indeed,
@@ -143,8 +172,10 @@ namespace JobHunt.Searching {
                             newCompany.Jobs.Add(new Job {
                                 Title = job.JobTitle,
                                 Description = job.Snippet,
+                                Salary = salary,
+                                AvgYearlySalary = avgYearlySalary,
                                 Location = job.FormattedLocation,
-                                Url = job.Url,
+                                Url = $"https://indeed.com/viewjob?jk={job.JobKey}",
                                 Posted = job.Date,
                                 Provider = SearchProviderName.Indeed,
                                 ProviderId = job.JobKey,
@@ -158,8 +189,10 @@ namespace JobHunt.Searching {
                                     new Job {
                                         Title = job.JobTitle,
                                         Description = job.Snippet,
+                                        Salary = salary,
+                                        AvgYearlySalary = avgYearlySalary,
                                         Location = job.FormattedLocation,
-                                        Url = job.Url,
+                                        Url = $"https://indeed.com/viewjob?jk={job.JobKey}",
                                         Posted = job.Date,
                                         Provider = SearchProviderName.Indeed,
                                         ProviderId = job.JobKey,
@@ -167,7 +200,7 @@ namespace JobHunt.Searching {
                                     }
                                 }
                             });
-                        }                    
+                        }
                     } else {
                         existingFound = true;
                     }
@@ -182,7 +215,7 @@ namespace JobHunt.Searching {
 
             if (newJobs == 0) {
                 sw.Stop();
-                await _searchService.CreateSearchRunAsync(search.Id!, true, null, 0, 0, (int)sw.Elapsed.TotalSeconds);
+                await _searchService.CreateSearchRunAsync(search.Id!, true, null, 0, 0, (int) sw.Elapsed.TotalSeconds);
                 return;
             }
 
@@ -198,12 +231,11 @@ namespace JobHunt.Searching {
                 } else {
                     sw.Stop();
                     _logger.LogError("Indeed Job Descriptions request failed", httpResponse);
-                    await _searchService.CreateSearchRunAsync(search.Id!, true, $"Job descriptions API error: HTTP {(int)httpResponse.StatusCode}", newJobs, companies.Count, (int)sw.Elapsed.TotalSeconds);
-
+                    await _searchService.CreateSearchRunAsync(search.Id!, true, $"Job descriptions API error: HTTP {(int) httpResponse.StatusCode}", newJobs, companies.Count, (int) sw.Elapsed.TotalSeconds);
                 }
             }
 
-            if (jobDescs != null) {
+            if (jobDescs != null && jobDescs.Keys.Count > 0) {
                 for (int i = 0; i < jobs.Count; i++) {
                     if (jobDescs.TryGetValue(jobs[i].ProviderId!, out string? desc)) {
                         jobs[i].Description = desc;
@@ -219,13 +251,13 @@ namespace JobHunt.Searching {
                 }
             } else {
                 sw.Stop();
-                await _searchService.CreateSearchRunAsync(search.Id!, true, "Job descriptions deserialisation error", newJobs, companies.Count, (int)sw.Elapsed.TotalSeconds);
+                await _searchService.CreateSearchRunAsync(search.Id!, true, "Job descriptions deserialisation error", newJobs, companies.Count, (int) sw.Elapsed.TotalSeconds);
             }
 
             await _jobService.CreateAllAsync(jobs);
             await _companyService.CreateAllAsync(companies);
             sw.Stop();
-            await _searchService.CreateSearchRunAsync(search.Id!, true, null, newJobs, companies.Count, (int)sw.Elapsed.TotalSeconds);
+            await _searchService.CreateSearchRunAsync(search.Id!, true, null, newJobs, companies.Count, (int) sw.Elapsed.TotalSeconds);
         }
 
         private class IndeedResponse {
@@ -246,15 +278,55 @@ namespace JobHunt.Searching {
             public bool Sponsored { get; set; }
         }
 
+        private class IndeedSalaryResponse {
+            [JsonPropertyName("sEx")]
+            public IndeedSalary? ExpectedSalary { get; set; }
+            [JsonPropertyName("ssT")]
+            public string? FormattedSalary { get; set; }
+        }
+
+        private class IndeedSalary {
+            [JsonPropertyName("sAvg")]
+            public double Average { get; set; }
+            [JsonPropertyName("sRg")]
+            public string? Range { get; set; }
+            [JsonPropertyName("sT")]
+            public string? Type { get; set; }
+            public int? GetYearlyAverage() {
+                switch (Type) {
+                    case null:
+                        return null;
+                    case IndeedSalaryTypes.Yearly:
+                        return (int) Average;
+                    case IndeedSalaryTypes.Monthly:
+                        return (int) (Average * 12);
+                    case IndeedSalaryTypes.Weekly:
+                        return (int) (Average * 48);
+                    case IndeedSalaryTypes.Daily:
+                        return (int) (Average * 48 * 5);
+                    case IndeedSalaryTypes.Hourly:
+                        return (int) (Average * 48 * 5 * 8);
+                    default:
+                        return null;
+                }
+            }
+        }
+
+        private class IndeedSalaryTypes {
+            public const string Yearly = "YEARLY";
+            public const string Monthly = "MONTHLY";
+            public const string Weekly = "WEEKLY";
+            public const string Daily = "DAILY";
+            public const string Hourly = "HOURLY";
+
+        }
         private class IndeedDateTimeConverter : JsonConverter<DateTime> {
-            public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-            {
+            public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
                 Debug.Assert(typeToConvert == typeof(DateTime));
                 return DateTime.ParseExact(reader.GetString()!, "r", CultureInfo.InvariantCulture);
             }
 
-            public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
-            {
+            public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options) {
                 writer.WriteStringValue(value.ToString());
             }
         }

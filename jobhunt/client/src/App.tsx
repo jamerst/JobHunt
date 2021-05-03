@@ -5,6 +5,7 @@ import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles"
 
 import Dashboard from "./views/Dashboard"
 import MainLayout from "./layouts/MainLayout"
+import Job from './views/Job';
 
 function App() {
   const [darkMode, setDarkMode] = useState<boolean>(
@@ -29,6 +30,11 @@ function App() {
           <Route exact path="/">
             <MainLayout pageTitle="Dashboard" darkMode={darkMode} setDarkMode={setDarkMode}>
               <Dashboard/>
+            </MainLayout>
+          </Route>
+          <Route exact path="/job/:id">
+            <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+              <Job/>
             </MainLayout>
           </Route>
         </Switch>
