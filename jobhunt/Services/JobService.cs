@@ -109,6 +109,7 @@ namespace JobHunt.Services {
 
             await _context.SaveChangesAsync();
 
+            // return new list of categories
             return await _context.JobCategories
                 .Include(jc => jc.Category)
                 .Where(jc => jc.JobId == id)

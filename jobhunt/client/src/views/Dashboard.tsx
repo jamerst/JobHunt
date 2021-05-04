@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState, useCallback } from "react"
+import React, { Fragment, useEffect, useState } from "react"
 import { Grid, Typography, Tooltip, Chip } from "@material-ui/core"
 import { GridColDef } from "@material-ui/data-grid"
 import SwipeableView from "react-swipeable-views"
@@ -76,17 +76,17 @@ export const Dashboard = () => {
 
   const classes = useStyles();
 
-  const fetchJobCounts = useCallback(async () => {
-    const response = await fetch("/api/jobs/counts", { method: "GET"} );
-    if (response.ok) {
-      const data = await response.json();
-      setJobCounts({ ...data });
-    } else {
-      console.error(`API request failed: /api/jobs/counts, HTTP ${response.status}`)
-    }
-  }, []);
-
   useEffect(() => {
+    const fetchJobCounts = async () => {
+      const response = await fetch("/api/jobs/counts", { method: "GET"} );
+      if (response.ok) {
+        const data = await response.json();
+        setJobCounts({ ...data });
+      } else {
+        console.error(`API request failed: /api/jobs/counts, HTTP ${response.status}`)
+      }
+    };
+
     fetchJobCounts()
   }, []);
 

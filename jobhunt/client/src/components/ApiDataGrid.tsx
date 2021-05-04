@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react"
-import { DataGrid, DataGridProps, GridColDef, GridFeatureModeConstant, GridPageChangeParams, GridRowData } from "@material-ui/data-grid"
+import { DataGrid, DataGridProps, GridFeatureModeConstant, GridPageChangeParams, GridRowData } from "@material-ui/data-grid"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 
 // have to remove the "rows" property since that shouldn't be passed to the DataGrid

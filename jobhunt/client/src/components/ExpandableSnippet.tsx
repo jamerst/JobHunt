@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
-import { Button, Grid, IconButton } from "@material-ui/core";
+import { Grid, IconButton } from "@material-ui/core";
 import { ExpandLess, ExpandMore } from "@material-ui/icons";
 
 type ExpandableSnippetProps = {

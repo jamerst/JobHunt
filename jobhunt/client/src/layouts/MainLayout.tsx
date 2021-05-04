@@ -1,6 +1,6 @@
 import React, { Fragment } from "react"
-import { AppBar, Divider, Drawer, Grid, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Tooltip, Typography } from "@material-ui/core"
-import { Menu, BrightnessHigh, Brightness2, Work, Business, Search, Dashboard  } from "@material-ui/icons";
+import { Divider, Drawer, Grid, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Tooltip, Typography } from "@material-ui/core"
+import { BrightnessHigh, Brightness2, Work, Business, Search, Dashboard  } from "@material-ui/icons";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import { Link } from "react-router-dom";
 

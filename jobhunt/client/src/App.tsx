@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Switch, BrowserRouter, Route } from "react-router-dom"
 import { CssBaseline } from "@material-ui/core"
 import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles"
@@ -6,7 +6,7 @@ import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles"
 import Dashboard from "./views/Dashboard"
 import MainLayout from "./layouts/MainLayout"
 import Job from './views/Job';
-import { blue, cyan, green, indigo, purple } from '@material-ui/core/colors';
+import { blue, purple } from '@material-ui/core/colors';
 
 function App() {
   const [darkMode, setDarkMode] = useState<boolean>(
@@ -14,7 +14,7 @@ function App() {
     || (window.matchMedia("(prefers-color-scheme: dark)").matches && localStorage.getItem("theme") === null)
   );
 
-  const theme = React.useMemo(() =>
+  const theme = useMemo(() =>
     createMuiTheme({
       palette: {
         type: darkMode ? "dark" : "light",
