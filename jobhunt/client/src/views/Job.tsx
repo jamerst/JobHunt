@@ -6,6 +6,9 @@ import DOMPurify from "dompurify";
 import Card from "../components/Card";
 import ExpandableSnippet from "../components/ExpandableSnippet";
 import Categories, { Category } from "../components/Categories";
+import EditableComponent from "../components/EditableComponent";
+import CardHeader from "../components/CardHeader";
+import CardBody from "../components/CardBody";
 
 type JobRouteParams = {
   id: string
@@ -65,10 +68,18 @@ const Job = () => {
 
   return (
     <Container>
-      <Card title={jobData.title} titleVariant="h4" subtitle={`${jobData.companyName}, ${jobData.location}`} subtitleVariant="h6">
-        <Box mx={3}>
+      <Card>
+        <CardHeader>
+          <EditableComponent editing={false} value={jobData.title} label="Job Title" size="medium">
+            <Typography variant="h4">{jobData.title}</Typography>
+          </EditableComponent>
+          <Typography variant="h6">{`${jobData.companyName}, ${jobData.location}`}</Typography>
+        </CardHeader>
+        <CardBody>
           <Box mb={2}>
-            <Typography variant="h6">{jobData.salary ?? "Unknown Salary"}</Typography>
+            <EditableComponent editing={true} value={jobData.salary} label="Salary">
+              <Typography variant="h6">{jobData.salary ?? "Unknown Salary"}</Typography>
+            </EditableComponent>
             <Typography variant="subtitle2">From "{jobData.sourceName}"</Typography>
             <Box mt={1}>
               <Categories
@@ -86,7 +97,7 @@ const Job = () => {
             </ExpandableSnippet>
           </Box>
           <Divider/>
-        </Box>
+        </CardBody>
       </Card>
     </Container>
   );

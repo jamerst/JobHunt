@@ -12,6 +12,8 @@ import ApiDataGrid from "../components/ApiDataGrid"
 import Card from "../components/Card"
 import { Work } from "@material-ui/icons"
 import { Link } from "react-router-dom"
+import CardHeader from "../components/CardHeader"
+import CardBody from "../components/CardBody"
 
 type JobCount = {
   daily: number,
@@ -94,34 +96,43 @@ export const Dashboard = () => {
     <Grid container spacing={4}>
       <Grid item container xs={12}>
         <Grid item xs={12} md={3}>
-          <Card icon={(<Work fontSize="inherit"/>)}>
-            <Typography variant="subtitle1" align="right" color="textSecondary">New Jobs</Typography>
-            <AutoPlaySwipeableView index={index} onChangeIndex={(i) => setIndex(i)} interval={7500}>
-              <div>
-                <Typography variant="h6" align="right">{jobCounts.daily >= 0 ? jobCounts.daily : null}</Typography>
-                <Typography variant="subtitle2" align="right" color="textSecondary">Last 24 Hours</Typography>
-              </div>
-              <div>
-                <Typography variant="h6" align="right">{jobCounts.weekly >= 0 ? jobCounts.weekly : null}</Typography>
-                <Typography variant="subtitle2" align="right" color="textSecondary">Last Week</Typography>
-              </div>
-              <div>
-                <Typography variant="h6" align="right">{jobCounts.monthly >= 0 ? jobCounts.monthly : null}</Typography>
-                <Typography variant="subtitle2" align="right" color="textSecondary">Last Month</Typography>
-              </div>
-            </AutoPlaySwipeableView>
+          <Card >
+            <CardHeader variant="icon" icon={(<Work fontSize="inherit"/>)}/>
+            <CardBody>
+              <Typography variant="subtitle1" align="right" color="textSecondary">New Jobs</Typography>
+              <AutoPlaySwipeableView index={index} onChangeIndex={(i) => setIndex(i)} interval={7500}>
+                <div>
+                  <Typography variant="h6" align="right">{jobCounts.daily >= 0 ? jobCounts.daily : null}</Typography>
+                  <Typography variant="subtitle2" align="right" color="textSecondary">Last 24 Hours</Typography>
+                </div>
+                <div>
+                  <Typography variant="h6" align="right">{jobCounts.weekly >= 0 ? jobCounts.weekly : null}</Typography>
+                  <Typography variant="subtitle2" align="right" color="textSecondary">Last Week</Typography>
+                </div>
+                <div>
+                  <Typography variant="h6" align="right">{jobCounts.monthly >= 0 ? jobCounts.monthly : null}</Typography>
+                  <Typography variant="subtitle2" align="right" color="textSecondary">Last Month</Typography>
+                </div>
+              </AutoPlaySwipeableView>
+            </CardBody>
           </Card>
         </Grid>
       </Grid>
       <Grid item xs={12} lg={8} xl={6}>
-        <Card title="Recent Jobs" subtitle="Jobs recently fetched from searches">
-          <ApiDataGrid
-            url="/api/jobs/latest"
-            columns={jobsColumns}
-            disableColumnMenu
-            disableColumnSelector
-            getRowClassName={(params) => params.row.seen ? "" : classes.unseen}
-          />
+        <Card>
+          <CardHeader>
+            <Typography variant="h6">Recent Jobs</Typography>
+            <Typography variant="subtitle2">Jobs recently fetched from searches</Typography>
+          </CardHeader>
+          <CardBody>
+            <ApiDataGrid
+              url="/api/jobs/latest"
+              columns={jobsColumns}
+              disableColumnMenu
+              disableColumnSelector
+              getRowClassName={(params) => params.row.seen ? "" : classes.unseen}
+            />
+          </CardBody>
         </Card>
       </Grid>
     </Grid>
