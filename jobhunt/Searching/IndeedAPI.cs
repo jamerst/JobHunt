@@ -10,6 +10,7 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Html2Markdown;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -235,17 +236,18 @@ namespace JobHunt.Searching {
                 }
             }
 
+            var mdConverter = new Converter();
             if (jobDescs != null && jobDescs.Keys.Count > 0) {
                 for (int i = 0; i < jobs.Count; i++) {
                     if (jobDescs.TryGetValue(jobs[i].ProviderId!, out string? desc)) {
-                        jobs[i].Description = desc;
+                        jobs[i].Description = mdConverter.Convert(desc);
                     }
                 }
 
                 for (int i = 0; i < companies.Count; i++) {
                     for (int j = 0; j < companies[i].Jobs.Count; j++) {
                         if (jobDescs.TryGetValue(companies[i].Jobs[j].ProviderId!, out string? desc)) {
-                            companies[i].Jobs[j].Description = desc;
+                            companies[i].Jobs[j].Description = mdConverter.Convert(desc);
                         }
                     }
                 }

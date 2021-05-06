@@ -52,6 +52,18 @@ namespace JobHunt.Controllers {
         }
 
         [HttpPatch]
+        [Route("~/api/jobs/{id}")]
+        public async Task<IActionResult> Update([FromRoute] int id, [FromBody] JobDto details) {
+            Job? result = await _jobService.UpdateAsync(id, details);
+
+            if (result == null) {
+                return NotFound();
+            } else {
+                return Ok();
+            }
+        }
+
+        [HttpPatch]
         [Route("{id}")]
         public async Task Seen([FromRoute] int id) {
             await _jobService.MarkAsSeenAsync(id);

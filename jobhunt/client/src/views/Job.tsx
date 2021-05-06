@@ -1,7 +1,6 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Box, Button, Container, Divider, Typography } from "@material-ui/core";
+import React, { Fragment, useCallback, useEffect, useState } from "react";
+import { Box, Button, Container, Divider, Grid, IconButton, Menu, MenuItem, Typography } from "@material-ui/core";
 import { useParams } from "react-router";
-import DOMPurify from "dompurify";
 
 import Card from "../components/Card";
 import ExpandableSnippet from "../components/ExpandableSnippet";
@@ -9,6 +8,8 @@ import Categories, { Category } from "../components/Categories";
 import EditableComponent from "../components/EditableComponent";
 import CardHeader from "../components/CardHeader";
 import CardBody from "../components/CardBody";
+import ReactMarkdown from "react-markdown";
+import { Edit, MoreHoriz, Save } from "@material-ui/icons";
 
 type JobRouteParams = {
   id: string
@@ -39,6 +40,9 @@ const Job = () => {
   const { id }: JobRouteParams = useParams();
 
   const [jobData, setJobData] = useState<JobResponse>();
+  const [origJobData, setOrigJobData] = useState<JobResponse>();
+  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+  const [editing, setEditing] = useState<boolean>(false);
 
   const fetchData = useCallback(async () => {
     const response = await fetch(`/api/jobs/${id}`, { method: "GET" });
@@ -50,15 +54,34 @@ const Job = () => {
         if (response.ok) {
           data.seen = true;
         } else {
-          console.error(`API request failed: /api/jobs/seen/${id}, HTTP ${response.status}`);
+          console.error(`API request failed: PATCH /api/jobs/seen/${id}, HTTP ${response.status}`);
         }
       }
 
       setJobData(data);
+      setOrigJobData(data);
     } else {
-      console.error(`API request failed: /api/jobs/${id}, HTTP ${response.status}`);
+      console.error(`API request failed: GET /api/jobs/${id}, HTTP ${response.status}`);
     }
   }, [id]);
+
+  const saveChanges = useCallback(async () => {
+    const response = await fetch(`/api/jobs/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(jobData),
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (response.ok) {
+      setOrigJobData(jobData);
+    } else {
+      console.error(`API request failed: PATCH /api/jobs/${id}, HTTP ${response.status}`);
+      setJobData(origJobData);
+    }
+    setEditing(false);
+  }, [jobData, origJobData, id]);
 
   useEffect(() => { fetchData() }, [fetchData]);
 
@@ -70,14 +93,34 @@ const Job = () => {
     <Container>
       <Card>
         <CardHeader>
-          <EditableComponent editing={false} value={jobData.title} label="Job Title" size="medium">
-            <Typography variant="h4">{jobData.title}</Typography>
-          </EditableComponent>
-          <Typography variant="h6">{`${jobData.companyName}, ${jobData.location}`}</Typography>
+          <Grid container alignItems="center" spacing={1}>
+            <Grid item xs>
+              <EditableComponent editing={editing} value={jobData.title} onChange={(e) => setJobData({...jobData, title: e.target.value})} label="Job Title" size="medium" fontSize="h4" colour="#fff">
+                <Typography variant="h4">{jobData.title}</Typography>
+              </EditableComponent>
+              <Typography variant="h6">{`${jobData.companyName}, ${jobData.location}`}</Typography>
+            </Grid>
+            <Grid item>
+              <IconButton onClick={(e) => setMenuAnchor(e.currentTarget)}>
+                <MoreHoriz/>
+              </IconButton>
+              <Menu
+                anchorEl={menuAnchor}
+                keepMounted
+                open={Boolean(menuAnchor)}
+                onClose={() => setMenuAnchor(null)}
+                getContentAnchorEl={null}
+                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                transformOrigin={{ vertical: "top", horizontal: "right" }}
+              >
+                <MenuItem onClick={() => {setEditing(true); setMenuAnchor(null);}}>Edit Job</MenuItem>
+              </Menu>
+            </Grid>
+          </Grid>
         </CardHeader>
         <CardBody>
           <Box mb={2}>
-            <EditableComponent editing={true} value={jobData.salary} label="Salary">
+            <EditableComponent editing={editing} value={jobData.salary} onChange={(e) => setJobData({...jobData, salary: e.target.value})} label="Salary" fontSize="h6">
               <Typography variant="h6">{jobData.salary ?? "Unknown Salary"}</Typography>
             </EditableComponent>
             <Typography variant="subtitle2">From "{jobData.sourceName}"</Typography>
@@ -90,11 +133,26 @@ const Job = () => {
               />
             </Box>
             <Box my={2}>
-              <Button variant="contained" color="secondary" component="a" href={jobData.url} target="_blank">View Job</Button>
+              { editing ?
+                (
+                  <Grid container spacing={2}>
+                    <Grid item>
+                      <Button variant="contained" color="primary" startIcon={<Save/>} onClick={() => saveChanges()}>Save Changes</Button>
+                    </Grid>
+                    <Grid item>
+                      <Button variant="contained" color="default" onClick={() => { setEditing(false); setJobData(origJobData); }}>Discard</Button>
+                    </Grid>
+                  </Grid>
+                )
+                :
+                (<Button variant="contained" color="secondary" component="a" href={jobData.url} target="_blank">View Job</Button>)
+              }
             </Box>
-            <ExpandableSnippet>
-              <div dangerouslySetInnerHTML={{__html: DOMPurify.sanitize(jobData.description)}}></div>
-            </ExpandableSnippet>
+            <EditableComponent editing={editing} value={jobData.description} onChange={(e) => setJobData({...jobData, description: e.target.value})} label="Job Description" multiline rowsMax={20}>
+              <ExpandableSnippet>
+                <ReactMarkdown>{jobData.description}</ReactMarkdown>
+              </ExpandableSnippet>
+            </EditableComponent>
           </Box>
           <Divider/>
         </CardBody>

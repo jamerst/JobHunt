@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
+using Html2Markdown;
 
 using JobHunt.Data;
 using JobHunt.DTO;
@@ -116,6 +117,23 @@ namespace JobHunt.Services {
                 .Select(jc => jc.Category)
                 .ToListAsync();
         }
+
+        public async Task<Job?> UpdateAsync(int id, JobDto details) {
+            Job job = await _context.Jobs
+                .FirstOrDefaultAsync(j => j.Id == id);
+
+            if (job == default(Job)) {
+                return null;
+            }
+
+            job.Title = details.Title;
+            job.Salary = details.Salary;
+            job.Description = details.Description;
+
+            await _context.SaveChangesAsync();
+
+            return job;
+        }
     }
 
     public interface IJobService {
@@ -126,5 +144,6 @@ namespace JobHunt.Services {
         Task<JobCount> GetJobCountsAsync(DateTime Date);
         Task MarkAsSeenAsync(int id);
         Task<IEnumerable<Category>?> UpdateCategoriesAsync(int id, CategoryDto[] categories);
+        Task<Job?> UpdateAsync(int id, JobDto details);
     }
 }

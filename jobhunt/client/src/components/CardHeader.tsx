@@ -39,7 +39,7 @@ const CardHeader: FunctionComponent<CardHeaderProps> = (props) => {
           <Grid item className={classes.icon}>
             {props.icon ? props.icon : null}
           </Grid>
-          <Grid item>
+          <Grid item xs={12}>
             {props.children}
           </Grid>
         </Grid>
