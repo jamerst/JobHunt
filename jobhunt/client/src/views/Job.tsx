@@ -10,7 +10,7 @@ import EditableComponent from "../components/EditableComponent";
 import CardHeader from "../components/CardHeader";
 import CardBody from "../components/CardBody";
 import ReactMarkdown from "react-markdown";
-import { MoreHoriz, Save } from "@material-ui/icons";
+import { MoreHoriz, OpenInNew, Save } from "@material-ui/icons";
 
 type JobRouteParams = {
   id: string
@@ -149,12 +149,12 @@ const Job = () => {
                   </Grid>
                 )
                 :
-                (<Button variant="contained" color="secondary" component="a" href={jobData.url} target="_blank">View Job</Button>)
+                (<Button variant="contained" color="secondary" endIcon={<OpenInNew/>} component="a" href={jobData.url} target="_blank">View Job</Button>)
               }
             </Box>
             <EditableComponent editing={editing} value={jobData.description} onChange={(e) => setJobData({...jobData, description: e.target.value})} label="Job Description" multiline rowsMax={20}>
               <ExpandableSnippet>
-                <ReactMarkdown>{jobData.description}</ReactMarkdown>
+                <ReactMarkdown skipHtml>{jobData.description}</ReactMarkdown>
               </ExpandableSnippet>
             </EditableComponent>
           </Box>

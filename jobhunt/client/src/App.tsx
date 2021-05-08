@@ -8,6 +8,7 @@ import MainLayout from "./layouts/MainLayout"
 import Job from './views/Job';
 import Jobs from './views/Jobs';
 import { blue, purple } from '@material-ui/core/colors';
+import Company from './views/Company';
 
 function App() {
   const [darkMode, setDarkMode] = useState<boolean>(
@@ -25,6 +26,15 @@ function App() {
         },
         secondary: {
           main: purple[500]
+        }
+      },
+      overrides: {
+        MuiCssBaseline: {
+          "@global": {
+            ".MuiGrid-item:empty": {
+              padding: "0 !important" // remove padding on empty grid items
+            }
+          }
         }
       }
     }),
@@ -49,6 +59,11 @@ function App() {
           <Route exact path="/job/:id">
             <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
               <Job/>
+            </MainLayout>
+          </Route>
+          <Route exact path="/company/:id">
+            <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+              <Company/>
             </MainLayout>
           </Route>
         </Switch>
