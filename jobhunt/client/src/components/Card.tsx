@@ -1,6 +1,6 @@
 import React, { Fragment, FunctionComponent } from "react"
-import { createStyles, makeStyles, Theme, TypographyVariant } from "@material-ui/core/styles"
-import { Box, Grid, Paper, Typography } from "@material-ui/core";
+import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
+import { Paper } from "@material-ui/core";
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
   paper: {

@@ -1,6 +1,6 @@
 import React, { FunctionComponent, ReactElement } from "react"
-import { Box, Grid, Paper, Typography } from "@material-ui/core";
-import { createStyles, makeStyles, Theme, TypographyVariant } from "@material-ui/core/styles"
+import { Box, Grid } from "@material-ui/core";
+import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 
 type CardHeaderProps = {
   variant?: "icon" | "text",
@@ -36,9 +36,7 @@ const CardHeader: FunctionComponent<CardHeaderProps> = (props) => {
     return (
       <Box mx={3} mt={-3} px={3} py={2} className={classes.bar}>
         <Grid container alignItems="center" spacing={2}>
-          <Grid item className={classes.icon}>
-            {props.icon ? props.icon : null}
-          </Grid>
+          {props.icon ? (<Grid item className={classes.icon}>{props.icon}</Grid>) : null}
           <Grid item xs={12}>
             {props.children}
           </Grid>

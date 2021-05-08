@@ -6,6 +6,7 @@ import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles"
 import Dashboard from "./views/Dashboard"
 import MainLayout from "./layouts/MainLayout"
 import Job from './views/Job';
+import Jobs from './views/Jobs';
 import { blue, purple } from '@material-ui/core/colors';
 
 function App() {
@@ -38,6 +39,11 @@ function App() {
           <Route exact path="/">
             <MainLayout pageTitle="Dashboard" darkMode={darkMode} setDarkMode={setDarkMode}>
               <Dashboard/>
+            </MainLayout>
+          </Route>
+          <Route exact path="/jobs">
+            <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+              <Jobs/>
             </MainLayout>
           </Route>
           <Route exact path="/job/:id">

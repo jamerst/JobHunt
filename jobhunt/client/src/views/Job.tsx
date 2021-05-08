@@ -1,6 +1,7 @@
-import React, { Fragment, useCallback, useEffect, useState } from "react";
-import { Box, Button, Container, Divider, Grid, IconButton, Menu, MenuItem, Typography } from "@material-ui/core";
-import { useParams } from "react-router";
+import React, { useCallback, useEffect, useState } from "react"
+import { Box, Button, Container, Divider, Grid, IconButton, Menu, MenuItem, Typography } from "@material-ui/core"
+import { useParams } from "react-router"
+import { Helmet } from "react-helmet"
 
 import Card from "../components/Card";
 import ExpandableSnippet from "../components/ExpandableSnippet";
@@ -9,7 +10,7 @@ import EditableComponent from "../components/EditableComponent";
 import CardHeader from "../components/CardHeader";
 import CardBody from "../components/CardBody";
 import ReactMarkdown from "react-markdown";
-import { Edit, MoreHoriz, Save } from "@material-ui/icons";
+import { MoreHoriz, Save } from "@material-ui/icons";
 
 type JobRouteParams = {
   id: string
@@ -91,6 +92,9 @@ const Job = () => {
 
   return (
     <Container>
+      <Helmet>
+        <title>{jobData.title} | JobHunt</title>
+      </Helmet>
       <Card>
         <CardHeader>
           <Grid container alignItems="center" spacing={1}>

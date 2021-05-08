@@ -71,6 +71,12 @@ namespace JobHunt.Controllers {
 
         [HttpPatch]
         [Route("{id}")]
+        public async Task Archive([FromRoute] int id) {
+            await _jobService.MarkAsArchivedAsync(id);
+        }
+
+        [HttpPatch]
+        [Route("{id}")]
         public async Task<IActionResult> Categories([FromRoute] int id, [FromBody] CategoryDto[] categories) {
             var result = await _jobService.UpdateCategoriesAsync(id, categories);
 

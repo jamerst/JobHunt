@@ -1,5 +1,5 @@
 import React, { Fragment, useEffect, useState } from "react"
-import { Grid, Typography, Tooltip, Chip } from "@material-ui/core"
+import { Grid, Typography, Tooltip, Chip, Button, IconButton } from "@material-ui/core"
 import { GridColDef } from "@material-ui/data-grid"
 import SwipeableView from "react-swipeable-views"
 import { autoPlay } from "react-swipeable-views-utils"
@@ -8,12 +8,13 @@ import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
 
-import ApiDataGrid from "../components/ApiDataGrid"
+import ApiDataGrid, { ToolbarAction } from "../components/ApiDataGrid"
 import Card from "../components/Card"
-import { Work } from "@material-ui/icons"
+import { Archive, MoreHoriz, Work } from "@material-ui/icons"
 import { Link } from "react-router-dom"
 import CardHeader from "../components/CardHeader"
 import CardBody from "../components/CardBody"
+import { Helmet } from "react-helmet"
 
 type JobCount = {
   daily: number,
@@ -31,7 +32,7 @@ const AutoPlaySwipeableView = autoPlay(SwipeableView);
 
 dayjs.extend(relativeTime);
 const jobsColumns: GridColDef[] = [
-  { field: "id", hide: true, headerName: "Job ID" },
+  { field: "id", hide: true },
   {
     field: "title",
     headerName: "Job Title",
@@ -68,9 +69,25 @@ const jobsColumns: GridColDef[] = [
         );
       }
     }
-  },
-  {field: "seen", hide: true }
+  }
 ];
+
+const jobActions: ToolbarAction[] = [
+  {
+    text: "Archive",
+    icon: (<Archive/>),
+    onClick: async (ids) => {
+      for (let i = 0; i < ids.length; i++) {
+        const response = await fetch(`/api/jobs/archive/${ids[i]}`, { method: "PATCH" });
+        if (!response.ok) {
+          console.error(`API request failed: /api/jobs/archive/${ids[i]}, HTTP ${response.status}`)
+        }
+      }
+
+      return { refresh: true };
+    }
+  }
+]
 
 export const Dashboard = () => {
   const [jobCounts, setJobCounts] = useState<JobCount>({ daily: -1, weekly: -1, monthly: -1 });
@@ -94,6 +111,9 @@ export const Dashboard = () => {
 
   return (
     <Grid container spacing={4}>
+      <Helmet>
+        <title>Dashboard | JobHunt</title>
+      </Helmet>
       <Grid item container xs={12}>
         <Grid item xs={12} md={3}>
           <Card >
@@ -131,6 +151,8 @@ export const Dashboard = () => {
               disableColumnMenu
               disableColumnSelector
               getRowClassName={(params) => params.row.seen ? "" : classes.unseen}
+              toolbarActions={jobActions}
+              checkboxSelection
             />
           </CardBody>
         </Card>

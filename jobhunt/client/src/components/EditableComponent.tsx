@@ -1,5 +1,5 @@
-import React, { ElementType, FunctionComponent } from "react"
-import { InputBaseProps, TextField, TextFieldProps } from "@material-ui/core"
+import React, { FunctionComponent } from "react"
+import { TextField, TextFieldProps } from "@material-ui/core"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 
 type EditableComponentProps = TextFieldProps & {
@@ -25,8 +25,9 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 
 const EditableComponent: FunctionComponent<EditableComponentProps> = (props) => {
   const classes = useStyles(props);
+  const { editing, ...textProps } = props;
   if (props.editing) {
-    return (<TextField {...props} className={classes.root} value={props.value}/>);
+    return (<TextField {...textProps} className={classes.root} value={props.value}/>);
   } else {
     return (<React.Fragment>{props.children}</React.Fragment>);
   }

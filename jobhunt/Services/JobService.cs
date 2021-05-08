@@ -134,6 +134,15 @@ namespace JobHunt.Services {
 
             return job;
         }
+
+        public async Task MarkAsArchivedAsync(int id) {
+            Job job = await _context.Jobs.FirstOrDefaultAsync(j => j.Id == id);
+
+            if (job != default(Job) && !job.Archived) {
+                job.Archived = true;
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 
     public interface IJobService {
@@ -145,5 +154,6 @@ namespace JobHunt.Services {
         Task MarkAsSeenAsync(int id);
         Task<IEnumerable<Category>?> UpdateCategoriesAsync(int id, CategoryDto[] categories);
         Task<Job?> UpdateAsync(int id, JobDto details);
+        Task MarkAsArchivedAsync(int id);
     }
 }
