@@ -21,7 +21,7 @@ namespace JobHunt.Services {
                 .Include(c => c.CompanyCategories)
                     .ThenInclude(cc => cc.Category)
                 .Include(c => c.AlternateNames)
-                .Include(c => c.CareersPages)
+                .Include(c => c.WatchedPages)
                 .AsSplitQuery()
                 .FirstOrDefaultAsync(c => c.Id == id);
         }
@@ -81,7 +81,7 @@ namespace JobHunt.Services {
 
         public async Task<Company?> UpdateAsync(int id, CompanyDto details) {
             Company company = await _context.Companies
-                .Include(c => c.CareersPages)
+                .Include(c => c.WatchedPages)
                 .Include(c => c.AlternateNames)
                 .AsSingleQuery()
                 .FirstOrDefaultAsync(c => c.Id == id);
@@ -98,10 +98,10 @@ namespace JobHunt.Services {
             company.LinkedIn = details.LinkedIn;
             company.Endole = details.Endole;
 
-            company.CareersPages.RemoveAll(cp1 => !details.CareersPages.Any(cp2 => cp1.Url == cp2.Url));
-            company.CareersPages.AddRange(details.CareersPages
-                .Where(cp1 => !company.CareersPages.Any(cp2 => cp1.Url == cp2.Url))
-                .Select(cp => new CompanyCareersPage {
+            company.WatchedPages.RemoveAll(wp1 => !details.CareersPages.Any(wp2 => wp1.Url == wp2.Url));
+            company.WatchedPages.AddRange(details.CareersPages
+                .Where(cp1 => !company.WatchedPages.Any(cp2 => cp1.Url == cp2.Url))
+                .Select(cp => new WatchedPage {
                     Url = cp.Url,
                     CssSelector = cp.CssSelector,
                     CssBlacklist = cp.CssBlacklist

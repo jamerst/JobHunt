@@ -11,11 +11,13 @@ using JobHunt.Models;
 using JobHunt.Searching;
 namespace JobHunt.Controllers {
     [ApiController]
-    [Route("[controller]/[action]")]
+    [Route("api/[controller]/[action]")]
     public class SearchDebugController : ControllerBase {
         private readonly IIndeedAPI _indeed;
-        public SearchDebugController(IIndeedAPI indeed) {
+        private readonly IPageWatcher _pageWatcher;
+        public SearchDebugController(IIndeedAPI indeed, IPageWatcher pageWatcher) {
             _indeed = indeed;
+            _pageWatcher = pageWatcher;
         }
 
         [HttpGet]
@@ -23,6 +25,14 @@ namespace JobHunt.Controllers {
             HttpClient client = new HttpClient();
             CancellationToken token = new CancellationToken();
             await _indeed.SearchAllAsync(client, token);
+            return Ok();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> PageWatcher() {
+            HttpClient client = new HttpClient();
+            CancellationToken token = new CancellationToken();
+            await _pageWatcher.RefreshAllAsync(client, token);
             return Ok();
         }
     }

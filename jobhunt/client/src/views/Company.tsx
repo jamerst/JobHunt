@@ -28,7 +28,7 @@ type CompanyResponse = {
   glassdoor?: string,
   linkedIn?: string,
   endole?: string,
-  careersPages?: string[],
+  watchedPages?: string[],
   categories: Category[],
   alternateNames?: string[],
 }
@@ -53,7 +53,6 @@ const Company = () => {
   }, [id]);
 
   const saveChanges = useCallback(async () => {
-    console.log(companyData);
     const response = await fetch(`/api/companies/${id}`, {
       method: "PATCH",
       body: JSON.stringify(companyData),

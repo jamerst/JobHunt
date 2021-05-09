@@ -22,7 +22,7 @@ namespace JobHunt {
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services) {
 
-            services.AddDbContext<Data.JobHuntContext>(options => 
+            services.AddDbContext<Data.JobHuntContext>(options =>
                 options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"))
             );
 
@@ -34,10 +34,14 @@ namespace JobHunt {
             });
             services.Configure<SearchOptions>(Configuration.GetSection(SearchOptions.Position));
 
+            services.AddTransient<IAlertService, AlertService>();
             services.AddTransient<ICompanyService, CompanyService>();
             services.AddTransient<IJobService, JobService>();
             services.AddTransient<ISearchService, SearchService>();
+            services.AddTransient<IWatchedPageService, WatchedPageService>();
+
             services.AddTransient<IIndeedAPI, IndeedAPI>();
+            services.AddTransient<IPageWatcher, PageWatcher>();
 
             services.AddHostedService<SearchRefreshWorker>();
         }

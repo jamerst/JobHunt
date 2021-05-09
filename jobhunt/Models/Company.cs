@@ -19,7 +19,7 @@ namespace JobHunt.Models {
         public float? GlassdoorRating { get; set; }
         public string? LinkedIn { get; set; }
         public string? Endole { get; set; }
-        public List<CompanyCareersPage> CareersPages { get; set; } = null!;
+        public List<WatchedPage> WatchedPages { get; set; } = null!;
         public List<CompanyCategory> CompanyCategories { get; set; } = null!;
         public List<CompanyName> AlternateNames { get; set; } = null!;
     }

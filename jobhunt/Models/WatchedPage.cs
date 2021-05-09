@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace JobHunt.Models {
-    public class CompanyCareersPage {
+    public class WatchedPage {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public int CompanyId { get; set; }
@@ -14,5 +14,6 @@ namespace JobHunt.Models {
         public DateTime? LastScraped { get; set; }
         public DateTime? LastUpdated { get; set; }
         public string? StatusMessage { get; set; }
+        public bool Enabled { get; set; } = true;
     }
 }

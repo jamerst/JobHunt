@@ -37,13 +37,13 @@ namespace JobHunt.Controllers {
                     Glassdoor = company.Glassdoor,
                     LinkedIn = company.LinkedIn,
                     Endole = company.Endole,
-                    CareersPages = company.CareersPages.Select(cp => new {
-                        Url = cp.Url,
-                        CssSelector = cp.CssSelector,
-                        CssBlacklist = cp.CssBlacklist,
-                        LastScraped = cp.LastScraped,
-                        LastUpdated = cp.LastUpdated,
-                        StatusMessage = cp.StatusMessage
+                    WatchedPages = company.WatchedPages.Select(wp => new {
+                        Url = wp.Url,
+                        CssSelector = wp.CssSelector,
+                        CssBlacklist = wp.CssBlacklist,
+                        LastScraped = wp.LastScraped,
+                        LastUpdated = wp.LastUpdated,
+                        StatusMessage = wp.StatusMessage
                     }),
                     Categories = company.CompanyCategories.Select(cc => new {
                         Id = cc.CategoryId,

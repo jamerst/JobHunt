@@ -21,7 +21,7 @@ namespace JobHunt.Workers {
         private readonly IServiceProvider _provider;
         private readonly SearchOptions _options;
         private readonly ILogger _logger;
-        
+
         public SearchRefreshWorker(IServiceProvider provider, IOptions<SearchOptions> options, ILogger<SearchRefreshWorker> logger) {
             _provider = provider;
             _options = options.Value;
@@ -31,7 +31,7 @@ namespace JobHunt.Workers {
         public async Task StartAsync(CancellationToken token) {
             _logger.LogInformation($"SearchRefreshWorker started ({DateTime.Now:s})");
             if (_options.Schedules == null) {
-                _logger.LogError("No search refresh schedule provided. Stopping.");
+                _logger.LogWarning("No search refresh schedule provided. Stopping.");
                 return;
             }
             CronExpression[] expressions = _options.Schedules.Select(s => CronExpression.Parse(s)).ToArray();
@@ -67,7 +67,14 @@ namespace JobHunt.Workers {
                 if (indeed != null) {
                     tasks.Add(indeed.SearchAllAsync(client, token));
                 } else {
-                    _logger.LogError("SearchRefresh: failed to get instance of IndeedAPI");
+                    _logger.LogError("SearchRefreshWorker: failed to get instance of IndeedAPI");
+                }
+
+                IPageWatcher? pageWatcher = scope.ServiceProvider.GetService<IPageWatcher>();
+                if (pageWatcher != null) {
+                    tasks.Add(pageWatcher.RefreshAllAsync(client, token));
+                } else {
+                    _logger.LogError("SearchRefreshWorker: failed to get instance of PageWatcher");
                 }
 
                 await Task.WhenAll(tasks);
