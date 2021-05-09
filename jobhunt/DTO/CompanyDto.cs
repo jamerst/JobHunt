@@ -12,7 +12,7 @@ namespace JobHunt.DTO {
         public string? Glassdoor { get; set; }
         public string? LinkedIn { get; set; }
         public string? Endole { get; set; }
-        public IEnumerable<CompanyCareersPageDto> CareersPages { get; set; } = new List<CompanyCareersPageDto>();
+        public IEnumerable<WatchedPageDto> WatchedPages { get; set; } = new List<WatchedPageDto>();
         public IEnumerable<CategoryDto> Categories { get; set; } = new List<CategoryDto>();
         public IEnumerable<string> AlternateNames { get; set; } = new List<string>();
     }

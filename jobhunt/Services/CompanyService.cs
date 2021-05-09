@@ -98,13 +98,13 @@ namespace JobHunt.Services {
             company.LinkedIn = details.LinkedIn;
             company.Endole = details.Endole;
 
-            company.WatchedPages.RemoveAll(wp1 => !details.CareersPages.Any(wp2 => wp1.Url == wp2.Url));
-            company.WatchedPages.AddRange(details.CareersPages
-                .Where(cp1 => !company.WatchedPages.Any(cp2 => cp1.Url == cp2.Url))
-                .Select(cp => new WatchedPage {
-                    Url = cp.Url,
-                    CssSelector = cp.CssSelector,
-                    CssBlacklist = cp.CssBlacklist
+            company.WatchedPages.RemoveAll(wp1 => !details.WatchedPages.Any(wp2 => wp1.Url == wp2.Url));
+            company.WatchedPages.AddRange(details.WatchedPages
+                .Where(wp1 => !company.WatchedPages.Any(wp2 => wp1.Url == wp2.Url))
+                .Select(wp => new WatchedPage {
+                    Url = wp.Url,
+                    CssSelector = wp.CssSelector,
+                    CssBlacklist = wp.CssBlacklist
                 })
             );
 

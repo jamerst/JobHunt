@@ -1,7 +1,7 @@
 using System;
 
 namespace JobHunt.DTO {
-    public class CompanyCareersPageDto {
+    public class WatchedPageDto {
         public string Url { get; set; } = null!;
         public string? Hash { get; set; }
         public string? CssSelector { get; set; }
@@ -9,5 +9,6 @@ namespace JobHunt.DTO {
         public DateTime? LastScraped { get; set; }
         public DateTime? LastUpdated { get; set; }
         public string? StatusMessage { get; set; }
+        public bool Enabled { get; set; }
     }
 }

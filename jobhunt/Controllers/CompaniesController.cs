@@ -43,7 +43,8 @@ namespace JobHunt.Controllers {
                         CssBlacklist = wp.CssBlacklist,
                         LastScraped = wp.LastScraped,
                         LastUpdated = wp.LastUpdated,
-                        StatusMessage = wp.StatusMessage
+                        StatusMessage = wp.StatusMessage,
+                        Enabled = wp.Enabled
                     }),
                     Categories = company.CompanyCategories.Select(cc => new {
                         Id = cc.CategoryId,
