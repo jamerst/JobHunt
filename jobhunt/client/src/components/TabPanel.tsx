@@ -14,7 +14,7 @@ const TabPanel:FunctionComponent<TabPanelProps> = (props) => {
       id={`tabpanel-${props.index}`}
       aria-labelledby={`tab-${props.index}`}
     >
-      {props.index === props.index && (
+      {props.current === props.index && (
         <Box p={3}>
           {props.children}
         </Box>

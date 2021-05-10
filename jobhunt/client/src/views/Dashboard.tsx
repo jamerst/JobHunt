@@ -43,7 +43,15 @@ const jobsColumns: GridColDef[] = [
     }
   },
   { field: "location", headerName: "Location", flex: 1, sortable: false, },
-  { field: "companyName", headerName: "Company", flex: 2, sortable: false, },
+  {
+    field: "companyName",
+    headerName: "Company",
+    flex: 2,
+    sortable: false,
+    renderCell: (params) => {
+      return (<Link to={`/company/${params.row.companyId}`}>{params.value}</Link>)
+    }
+  },
   {
     field: "posted",
     headerName: "Posted",

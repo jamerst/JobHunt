@@ -13,8 +13,10 @@ namespace JobHunt.Controllers {
     [Route("api/[controller]/[action]")]
     public class CompaniesController : ControllerBase {
         private readonly ICompanyService _companyService;
-        public CompaniesController(ICompanyService jobService) {
-            _companyService = jobService;
+        private readonly IJobService _jobService;
+        public CompaniesController(ICompanyService companyService, IJobService jobService) {
+            _companyService = companyService;
+            _jobService = jobService;
         }
 
         [HttpGet]
@@ -53,6 +55,24 @@ namespace JobHunt.Controllers {
                     AlternateNames = company.AlternateNames.Select(n => n.Name)
                 });
             }
+        }
+
+        [HttpGet]
+        [Route("~/api/companies/{id}/jobs")]
+        public async Task<IActionResult> GetJobs([FromRoute] int id, [FromQuery] int page, [FromQuery] int size) {
+            (var results, int total) = await _jobService.GetLatestPagedByCompanyAsync(id, page, size);
+            return new JsonResult(new {
+                total = total,
+                results = results.Select(j => new {
+                    Id = j.Id,
+                    Title = j.Title,
+                    Location = j.Location,
+                    CompanyId = j.CompanyId,
+                    CompanyName = j.Company?.Name,
+                    Posted = j.Posted,
+                    Seen = j.Seen
+                })
+            });
         }
 
         [HttpPatch]

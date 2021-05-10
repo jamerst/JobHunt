@@ -1,16 +1,23 @@
-import React, { useCallback, useEffect, useState } from "react"
-import { Box, Button, Container, Divider, Grid, IconButton, Menu, MenuItem, Switch, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, TextField, Typography } from "@material-ui/core"
+import React, { Fragment, useCallback, useEffect, useState } from "react"
+import { Box, Button, Container, Chip, Grid, IconButton, Menu, MenuItem, Switch, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, TextField, Tooltip, Typography } from "@material-ui/core"
+import { GridColDef } from "@material-ui/data-grid"
+import { Delete, LinkedIn, MoreHoriz, OpenInNew, Save, Web } from "@material-ui/icons";
+import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import { useParams } from "react-router"
+import { Link } from "react-router-dom"
 import { Helmet } from "react-helmet"
+import dayjs from "dayjs"
+import relativeTime from "dayjs/plugin/relativeTime"
+import ReactMarkdown from "react-markdown";
 
 import Card from "../components/Card";
 import Categories, { Category } from "../components/Categories";
 import EditableComponent from "../components/EditableComponent";
 import CardHeader from "../components/CardHeader";
 import CardBody from "../components/CardBody";
-import ReactMarkdown from "react-markdown";
-import { Delete, LinkedIn, MoreHoriz, OpenInNew, Save, Web } from "@material-ui/icons";
+
 import TabPanel from "../components/TabPanel";
+import ApiDataGrid from "../components/ApiDataGrid";
 
 type CompanyRouteParams = {
   id: string
@@ -49,7 +56,57 @@ const UpdateArray = <T, >(array: T[], index: number, update: (current: T) => T) 
   return result;
 }
 
+dayjs.extend(relativeTime);
+const jobsColumns: GridColDef[] = [
+  { field: "id", hide: true },
+  {
+    field: "title",
+    headerName: "Job Title",
+    flex: 2,
+    sortable: false,
+    renderCell: (params) => {
+      return (<Link to={`/job/${params.id}`}>{params.value}</Link>)
+    }
+  },
+  { field: "location", headerName: "Location", flex: 1, sortable: false, },
+  { field: "companyName", headerName: "Company", flex: 2, sortable: false, },
+  {
+    field: "posted",
+    headerName: "Posted",
+    type: "datetime",
+    flex: 1,
+    sortable: false,
+    renderCell: (params) => {
+      let date = dayjs(params.value as string);
+      if (date.isBefore(dayjs().subtract(14, "day"), "day")) {
+        return (<Fragment>{date.format("DD/MM/YYYY HH:mm")}</Fragment>);
+      } else {
+        let newTag = params.row.seen ? null : (<Chip label="New" color="secondary"/>);
+        return (
+          <Grid container justify="space-between" alignItems="center">
+            <Tooltip
+              title={<Typography variant="body2">{date.format("DD/MM/YYYY HH:mm")}</Typography>}
+              placement="right"
+            >
+              <span>{date.fromNow()}</span>
+            </Tooltip>
+            {newTag}
+          </Grid>
+        );
+      }
+    }
+  }
+];
+
+const useStyles = makeStyles((theme: Theme) => createStyles({
+  unseen: {
+    fontWeight: theme.typography.fontWeightBold
+  }
+}));
+
 const Company = () => {
+  const classes = useStyles();
+
   const { id }: CompanyRouteParams = useParams();
 
   const [companyData, setCompanyData] = useState<CompanyResponse>();
@@ -202,11 +259,13 @@ const Company = () => {
                 <TableContainer>
                   <Table>
                     <TableHead>
-                      <TableCell>URL</TableCell>
-                      <TableCell>CSS Selector</TableCell>
-                      <TableCell>CSS Blacklist</TableCell>
-                      <TableCell>Enabled</TableCell>
-                      <TableCell>Actions</TableCell>
+                      <TableRow>
+                        <TableCell>URL</TableCell>
+                        <TableCell>CSS Selector</TableCell>
+                        <TableCell>CSS Blacklist</TableCell>
+                        <TableCell>Enabled</TableCell>
+                        <TableCell>Actions</TableCell>
+                      </TableRow>
                     </TableHead>
                     <TableBody>
                       {data.map((d, i) => (
@@ -313,10 +372,12 @@ const Company = () => {
             <TableContainer>
               <Table>
                 <TableHead>
-                  <TableCell>URL</TableCell>
-                  <TableCell>Last Scraped</TableCell>
-                  <TableCell>Last Updated</TableCell>
-                  <TableCell>Status</TableCell>
+                  <TableRow>
+                    <TableCell>URL</TableCell>
+                    <TableCell>Last Scraped</TableCell>
+                    <TableCell>Last Updated</TableCell>
+                    <TableCell>Status</TableCell>
+                  </TableRow>
                 </TableHead>
                 <TableBody>
                   {companyData.watchedPages.map(p =>
@@ -331,6 +392,17 @@ const Company = () => {
               </Table>
             </TableContainer>
             </EditableComponent>
+          </TabPanel>
+
+          <TabPanel current={tab} index={2}>
+            <ApiDataGrid
+              url={`/api/companies/${id}/jobs`}
+              columns={jobsColumns}
+              disableColumnMenu
+              disableColumnSelector
+              getRowClassName={(params) => params.row.seen ? "" : classes.unseen}
+              checkboxSelection
+            />
           </TabPanel>
         </CardBody>
       </Card>

@@ -54,6 +54,23 @@ namespace JobHunt.Services {
             return (results, total);
         }
 
+        public async Task<(IEnumerable<Job>, int)> GetLatestPagedByCompanyAsync(int companyId, int pageNum, int pageSize) {
+            int total = await _context.Jobs.Where(j => j.CompanyId == companyId).CountAsync();
+
+            IEnumerable<Job> results = await _context.Jobs
+                .AsNoTracking()
+                .Where(j => j.CompanyId == companyId)
+                .OrderByDescending(j => j.Posted)
+                .Skip(pageNum * pageSize)
+                .Take(pageSize)
+                .Include(j => j.JobCategories)
+                    .ThenInclude(jc => jc.Category)
+                .Include(j => j.Company)
+                .ToListAsync();
+
+            return (results, total);
+        }
+
         public async Task<JobCount> GetJobCountsAsync(DateTime date) {
             JobCount counts = new JobCount();
 
@@ -150,6 +167,7 @@ namespace JobHunt.Services {
         Task<bool> AnyWithSourceIdAsync(string provider, string id);
         Task CreateAllAsync(IEnumerable<Job> jobs);
         Task<(IEnumerable<Job>, int)> GetLatestPagedAsync(int pageNum, int pageSize);
+        Task<(IEnumerable<Job>, int)> GetLatestPagedByCompanyAsync(int compantId, int pageNum, int pageSize);
         Task<JobCount> GetJobCountsAsync(DateTime Date);
         Task MarkAsSeenAsync(int id);
         Task<IEnumerable<Category>?> UpdateCategoriesAsync(int id, CategoryDto[] categories);

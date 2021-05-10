@@ -85,7 +85,7 @@ const Categories = (props: CategoriesProps) => {
   return (
     <Grid container spacing={1}>
       {props.categories.map(c =>
-        (<Grid item><Chip color={c.colour} label={c.name} key={c.id} onDelete={() => removeCategory(c.id)}/></Grid>)
+        (<Grid item><Chip color={c.colour} label={c.name} key={`category-${c.id}`} onDelete={() => removeCategory(c.id)}/></Grid>)
       )}
 
       { adding ?
