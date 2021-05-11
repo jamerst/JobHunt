@@ -1,3 +1,5 @@
+using System;
+
 using Microsoft.EntityFrameworkCore;
 
 using JobHunt.Models;
@@ -61,6 +63,11 @@ namespace JobHunt.Data {
                 .HasMany(s => s.Runs)
                 .WithOne(sr => sr.Search)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasDbFunction(typeof(JobHuntContext).GetMethod(
+                nameof(GeoDistance),
+                new[] { typeof(double), typeof(double), typeof(double), typeof(double) }
+            )).HasName("geodistance");
         }
 
         public DbSet<Alert> Alerts => Set<Alert>();
@@ -73,5 +80,6 @@ namespace JobHunt.Data {
         public DbSet<JobCategory> JobCategories => Set<JobCategory>();
         public DbSet<Search> Searches => Set<Search>();
         public DbSet<SearchRun> SearchRuns => Set<SearchRun>();
+        public double GeoDistance(double alat, double alng, double blat, double blng) => throw new NotSupportedException();
     }
 }

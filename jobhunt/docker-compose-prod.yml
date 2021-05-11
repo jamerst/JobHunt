@@ -24,6 +24,7 @@ services:
         Search__GlassdoorPartnerKey: YOUR_PARTNER_KEY
         Search__Schedules__0: 0 12 * * *
         Search__Schedules__1: 0 18 * * *
+        Search__NominatimCountryCodes: "gb"
     restart: always
   db:
     image: "postgres:13.2"

@@ -8,6 +8,8 @@ namespace JobHunt.Models {
         public int Id { get; set; }
         public string Name { get; set; } = null!;
         public string Location { get; set; } = null!;
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
         public string? Notes { get; set; }
         public bool Watched { get; set; } = false;
         public bool Blacklisted { get; set; } = false;

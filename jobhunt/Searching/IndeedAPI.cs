@@ -160,6 +160,8 @@ namespace JobHunt.Searching {
                                 Salary = salary,
                                 AvgYearlySalary = avgYearlySalary,
                                 Location = job.FormattedLocation,
+                                Latitude = job.Latitude,
+                                Longitude = job.Longitude,
                                 Url = $"https://indeed.com/viewjob?jk={job.JobKey}",
                                 CompanyId = company.Id,
                                 Posted = job.Date,
@@ -176,6 +178,8 @@ namespace JobHunt.Searching {
                                 Salary = salary,
                                 AvgYearlySalary = avgYearlySalary,
                                 Location = job.FormattedLocation,
+                                Latitude = job.Latitude,
+                                Longitude = job.Longitude,
                                 Url = $"https://indeed.com/viewjob?jk={job.JobKey}",
                                 Posted = job.Date,
                                 Provider = SearchProviderName.Indeed,
@@ -186,6 +190,8 @@ namespace JobHunt.Searching {
                             companies.Add(new Company {
                                 Name = job.Company,
                                 Location = job.FormattedLocation,
+                                Latitude = job.Latitude,
+                                Longitude = job.Longitude,
                                 Jobs = new List<Job> {
                                     new Job {
                                         Title = job.JobTitle,
@@ -193,6 +199,8 @@ namespace JobHunt.Searching {
                                         Salary = salary,
                                         AvgYearlySalary = avgYearlySalary,
                                         Location = job.FormattedLocation,
+                                        Latitude = job.Latitude,
+                                        Longitude = job.Longitude,
                                         Url = $"https://indeed.com/viewjob?jk={job.JobKey}",
                                         Posted = job.Date,
                                         Provider = SearchProviderName.Indeed,

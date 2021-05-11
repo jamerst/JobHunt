@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using JobHunt.Configuration;
+using JobHunt.Geocoding;
 using JobHunt.Searching;
 using JobHunt.Services;
 using JobHunt.Workers;
@@ -42,6 +43,8 @@ namespace JobHunt {
 
             services.AddTransient<IIndeedAPI, IndeedAPI>();
             services.AddTransient<IPageWatcher, PageWatcher>();
+
+            services.AddTransient<INominatim, Nominatim>();
 
             services.AddHostedService<SearchRefreshWorker>();
         }

@@ -56,7 +56,7 @@ const jobsColumns: GridColDef[] = [
     field: "posted",
     headerName: "Posted",
     type: "datetime",
-    flex: 1,
+    flex: 1.25,
     sortable: false,
     renderCell: (params) => {
       let date = dayjs(params.value as string);

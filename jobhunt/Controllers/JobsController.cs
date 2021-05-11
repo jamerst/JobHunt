@@ -111,5 +111,10 @@ namespace JobHunt.Controllers {
         public async Task<IActionResult> Counts() {
             return new JsonResult(await _jobService.GetJobCountsAsync(DateTime.Now));
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Search([FromQuery] Filter filter) {
+            return new JsonResult(await _jobService.SearchAsync(filter));
+        }
     }
 }

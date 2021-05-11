@@ -17,6 +17,7 @@ services:
     environment:
       Search__IndeedHostName: "uk.indeed.com"
       Search__IndeedFetchSalary: "true"
+      Search__NominatimCountryCodes: "gb"
     #   Search__Schedules__0: "* * * * *"
   db:
     image: "postgres:13.1"

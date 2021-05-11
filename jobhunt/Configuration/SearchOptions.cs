@@ -7,5 +7,6 @@ namespace JobHunt.Configuration {
         public string GlassdoorPartnerId { get; set; } = null!;
         public string GlassdoorPartnerKey { get; set; } = null!;
         public string[] Schedules { get; set; } = null!;
+        public string? NominatimCountryCodes { get; set; }
     }
 }

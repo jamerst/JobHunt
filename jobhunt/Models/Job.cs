@@ -11,6 +11,8 @@ namespace JobHunt.Models {
         public string? Salary { get; set; }
         public int? AvgYearlySalary { get; set; }
         public string Location { get; set; } = null!;
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
         public string? Url { get; set; }
         public int? CompanyId { get; set; }
         public Company? Company { get; set; }

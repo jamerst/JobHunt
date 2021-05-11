@@ -8,13 +8,16 @@ using Html2Markdown;
 
 using JobHunt.Data;
 using JobHunt.DTO;
+using JobHunt.Geocoding;
 using JobHunt.Models;
 
 namespace JobHunt.Services {
     public class JobService : IJobService {
         private readonly JobHuntContext _context;
-        public JobService(JobHuntContext context) {
+        private readonly INominatim _nominatim;
+        public JobService(JobHuntContext context, INominatim nominatim) {
             _context = context;
+            _nominatim = nominatim;
         }
 
         public async Task<Job> GetByIdAsync(int id) {
@@ -160,6 +163,41 @@ namespace JobHunt.Services {
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<IEnumerable<Job>> SearchAsync(Filter filter) {
+            var query = _context.Jobs.AsNoTracking();
+
+            if (!string.IsNullOrEmpty(filter.Term)) {
+                query = query.Where(j => j.Title.ToLower().Contains(filter.Term.ToLower()));
+            }
+
+            if (!string.IsNullOrEmpty(filter.Location) && filter.Distance.HasValue) {
+                (double? lat, double? lng) = await _nominatim.Geocode(filter.Location);
+
+                if (lat.HasValue && lng.HasValue) {
+                    query = query.Where(j =>
+                        j.Latitude.HasValue
+                        && j.Longitude.HasValue
+                        && _context.GeoDistance(lat.Value, lng.Value, j.Latitude.Value, j.Longitude.Value) <= filter.Distance
+                    );
+                }
+            }
+
+            if (filter.MaxAge.HasValue) {
+                DateTime cutOff = DateTime.Now.Date.AddDays(-1 * filter.MaxAge.Value);
+                query = query.Where(j => j.Posted >= cutOff);
+            }
+
+            if (filter.Categories != null && filter.Categories.Count > 0) {
+                query = query.Where(j => j.JobCategories.Any(jc => filter.Categories.Contains(jc.CategoryId)));
+            }
+
+            if (filter.Status != null) {
+                query = query.Where(j => j.Status == filter.Status);
+            }
+
+            return await query.OrderByDescending(j => j.Posted).ToListAsync();
+        }
     }
 
     public interface IJobService {
@@ -173,5 +211,6 @@ namespace JobHunt.Services {
         Task<IEnumerable<Category>?> UpdateCategoriesAsync(int id, CategoryDto[] categories);
         Task<Job?> UpdateAsync(int id, JobDto details);
         Task MarkAsArchivedAsync(int id);
+        Task<IEnumerable<Job>> SearchAsync(Filter filter);
     }
 }
