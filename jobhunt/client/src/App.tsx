@@ -3,6 +3,8 @@ import { Switch, BrowserRouter, Route } from "react-router-dom"
 import { CssBaseline } from "@material-ui/core"
 import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles"
 
+import { useAudibleRenders } from "react-audible-debug"
+
 import Dashboard from "./views/Dashboard"
 import MainLayout from "./layouts/MainLayout"
 import Job from './views/Job';
@@ -15,6 +17,8 @@ function App() {
     localStorage.getItem("theme") === "dark"
     || (window.matchMedia("(prefers-color-scheme: dark)").matches && localStorage.getItem("theme") === null)
   );
+
+  // useAudibleRenders(true);
 
   const theme = useMemo(() =>
     createMuiTheme({

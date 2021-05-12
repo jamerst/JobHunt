@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react"
-import { Box, Button, Container, Divider, Grid, IconButton, Menu, MenuItem, Typography } from "@material-ui/core"
+import { Box, Button, Container, Divider, Grid, IconButton, Menu, MenuItem, Tab, Tabs, Typography } from "@material-ui/core"
 import { useParams } from "react-router"
 import { Helmet } from "react-helmet"
 
@@ -9,8 +9,10 @@ import Categories, { Category } from "../components/Categories";
 import EditableComponent from "../components/EditableComponent";
 import CardHeader from "../components/CardHeader";
 import CardBody from "../components/CardBody";
+import TabPanel from "../components/TabPanel";
 import ReactMarkdown from "react-markdown";
 import { MoreHoriz, OpenInNew, Save } from "@material-ui/icons";
+import { Link } from "react-router-dom";
 
 type JobRouteParams = {
   id: string
@@ -44,6 +46,7 @@ const Job = () => {
   const [origJobData, setOrigJobData] = useState<JobResponse>();
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [editing, setEditing] = useState<boolean>(false);
+  const [tab, setTab] = useState<number>(0);
 
   const fetchData = useCallback(async () => {
     const response = await fetch(`/api/jobs/${id}`, { method: "GET" });
@@ -84,6 +87,15 @@ const Job = () => {
     setEditing(false);
   }, [jobData, origJobData, id]);
 
+  const archiveJob = useCallback(async () => {
+    const response = await fetch(`/api/jobs/archive/${id}?toggle=true`, { method: "PATCH" });
+    if (response.ok && jobData) {
+      setJobData({...jobData, archived: !jobData.archived});
+    } else {
+      console.error(`API request failed: /api/jobs/archive/${id}, HTTP ${response.status}`);
+    }
+  }, [jobData])
+
   useEffect(() => { fetchData() }, [fetchData]);
 
   if (!jobData) {
@@ -93,7 +105,7 @@ const Job = () => {
   return (
     <Container>
       <Helmet>
-        <title>{jobData.title} | JobHunt</title>
+        <title>{jobData.title} - {jobData.companyName} | JobHunt</title>
       </Helmet>
       <Card>
         <CardHeader>
@@ -102,7 +114,8 @@ const Job = () => {
               <EditableComponent editing={editing} value={jobData.title} onChange={(e) => setJobData({...jobData, title: e.target.value})} label="Job Title" size="medium" fontSize="h4" colour="#fff">
                 <Typography variant="h4">{jobData.title}</Typography>
               </EditableComponent>
-              <Typography variant="h6">{`${jobData.companyName}, ${jobData.location}`}</Typography>
+              <Typography variant="h6"><Link to={`/company/${jobData.companyId}`}>{jobData.companyName}</Link>, {jobData.location}</Typography>
+              {jobData.archived ? (<Typography variant="subtitle1"><em>Archived</em></Typography>) : null}
             </Grid>
             <Grid item>
               <IconButton onClick={(e) => setMenuAnchor(e.currentTarget)}>
@@ -118,6 +131,7 @@ const Job = () => {
                 transformOrigin={{ vertical: "top", horizontal: "right" }}
               >
                 <MenuItem onClick={() => {setEditing(true); setMenuAnchor(null);}}>Edit Job</MenuItem>
+                <MenuItem onClick={() => {archiveJob(); setMenuAnchor(null);}}>{jobData.archived ? "Restore" : "Archive"} Job</MenuItem>
               </Menu>
             </Grid>
           </Grid>
@@ -152,11 +166,22 @@ const Job = () => {
                 (<Button variant="contained" color="secondary" endIcon={<OpenInNew/>} component="a" href={jobData.url} target="_blank">View Job</Button>)
               }
             </Box>
-            <EditableComponent editing={editing} value={jobData.description} onChange={(e) => setJobData({...jobData, description: e.target.value})} label="Job Description" multiline rowsMax={20}>
-              <ExpandableSnippet>
-                <ReactMarkdown skipHtml>{jobData.description}</ReactMarkdown>
-              </ExpandableSnippet>
-            </EditableComponent>
+            <Tabs value={tab} onChange={(_, t) => setTab(t)}>
+              <Tab label="Description"/>
+              <Tab label="Notes"/>
+            </Tabs>
+            <TabPanel current={tab} index={0}>
+              <EditableComponent editing={editing} value={jobData.description} onChange={(e) => setJobData({...jobData, description: e.target.value})} label="Job Description" multiline rows={20}>
+                <ExpandableSnippet>
+                  <ReactMarkdown skipHtml>{jobData.description}</ReactMarkdown>
+                </ExpandableSnippet>
+              </EditableComponent>
+            </TabPanel>
+            <TabPanel current={tab} index={1}>
+              <EditableComponent editing={editing} value={jobData.notes} onChange={(e) => setJobData({...jobData, notes: e.target.value})} label="Notes" multiline rows={20}>
+                <ReactMarkdown skipHtml>{jobData.notes ?? "_No notes added_"}</ReactMarkdown>
+              </EditableComponent>
+            </TabPanel>
           </Box>
           <Divider/>
         </CardBody>

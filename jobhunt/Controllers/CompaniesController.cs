@@ -59,8 +59,8 @@ namespace JobHunt.Controllers {
 
         [HttpGet]
         [Route("~/api/companies/{id}/jobs")]
-        public async Task<IActionResult> GetJobs([FromRoute] int id, [FromQuery] int page, [FromQuery] int size) {
-            (var results, int total) = await _jobService.GetLatestPagedByCompanyAsync(id, page, size);
+        public async Task<IActionResult> GetJobs([FromRoute] int id, [FromQuery] int page, [FromQuery] int size, [FromQuery] bool count = false) {
+            (var results, int? total) = await _jobService.GetLatestPagedByCompanyAsync(id, page, size, count);
             return new JsonResult(new {
                 total = total,
                 results = results.Select(j => new {

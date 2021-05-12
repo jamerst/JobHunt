@@ -40,25 +40,30 @@ namespace JobHunt.Services {
             await _context.SaveChangesAsync();
         }
 
-        public async Task<(IEnumerable<Job>, int)> GetLatestPagedAsync(int pageNum, int pageSize) {
-            int total = await _context.Jobs.Where(j => !j.Archived).CountAsync();
+        public async Task<(IEnumerable<Job>, int?)> GetLatestPagedAsync(int pageNum, int pageSize, bool count) {
+            int? total = null;
+            if (count) {
+                total = await _context.Jobs.Where(j => !j.Archived).Take(100).CountAsync();
+            }
 
             IEnumerable<Job> results = await _context.Jobs
                 .AsNoTracking()
                 .Where(j => !j.Archived)
                 .OrderByDescending(j => j.Posted)
+                .Take(100)
                 .Skip(pageNum * pageSize)
                 .Take(pageSize)
-                .Include(j => j.JobCategories)
-                    .ThenInclude(jc => jc.Category)
                 .Include(j => j.Company)
                 .ToListAsync();
 
             return (results, total);
         }
 
-        public async Task<(IEnumerable<Job>, int)> GetLatestPagedByCompanyAsync(int companyId, int pageNum, int pageSize) {
-            int total = await _context.Jobs.Where(j => j.CompanyId == companyId).CountAsync();
+        public async Task<(IEnumerable<Job>, int?)> GetLatestPagedByCompanyAsync(int companyId, int pageNum, int pageSize, bool count) {
+            int? total = null;
+            if (count) {
+                total = await _context.Jobs.Where(j => j.CompanyId == companyId).CountAsync();
+            }
 
             IEnumerable<Job> results = await _context.Jobs
                 .AsNoTracking()
@@ -66,8 +71,6 @@ namespace JobHunt.Services {
                 .OrderByDescending(j => j.Posted)
                 .Skip(pageNum * pageSize)
                 .Take(pageSize)
-                .Include(j => j.JobCategories)
-                    .ThenInclude(jc => jc.Category)
                 .Include(j => j.Company)
                 .ToListAsync();
 
@@ -155,16 +158,16 @@ namespace JobHunt.Services {
             return job;
         }
 
-        public async Task MarkAsArchivedAsync(int id) {
+        public async Task MarkAsArchivedAsync(int id, bool toggle) {
             Job job = await _context.Jobs.FirstOrDefaultAsync(j => j.Id == id);
 
-            if (job != default(Job) && !job.Archived) {
-                job.Archived = true;
+            if (job != default(Job)) {
+                job.Archived = !(toggle && job.Archived);
                 await _context.SaveChangesAsync();
             }
         }
 
-        public async Task<IEnumerable<Job>> SearchAsync(Filter filter) {
+        public async Task<(IEnumerable<Job>, int?)> SearchPagedAsync(Filter filter, int pageNum, int pageSize, bool count) {
             var query = _context.Jobs.AsNoTracking();
 
             if (!string.IsNullOrEmpty(filter.Term)) {
@@ -196,7 +199,18 @@ namespace JobHunt.Services {
                 query = query.Where(j => j.Status == filter.Status);
             }
 
-            return await query.OrderByDescending(j => j.Posted).ToListAsync();
+            int? total = null;
+            if (count) {
+                total = await query.CountAsync();
+            }
+
+            IEnumerable<Job> results = query
+                .OrderByDescending(j => j.Posted)
+                .Skip(pageNum * pageSize)
+                .Take(pageSize)
+                .Include(j => j.Company);
+
+            return (results, total);
         }
     }
 
@@ -204,13 +218,13 @@ namespace JobHunt.Services {
         Task<Job> GetByIdAsync(int id);
         Task<bool> AnyWithSourceIdAsync(string provider, string id);
         Task CreateAllAsync(IEnumerable<Job> jobs);
-        Task<(IEnumerable<Job>, int)> GetLatestPagedAsync(int pageNum, int pageSize);
-        Task<(IEnumerable<Job>, int)> GetLatestPagedByCompanyAsync(int compantId, int pageNum, int pageSize);
+        Task<(IEnumerable<Job>, int?)> GetLatestPagedAsync(int pageNum, int pageSize, bool count);
+        Task<(IEnumerable<Job>, int?)> GetLatestPagedByCompanyAsync(int compantId, int pageNum, int pageSize, bool count);
         Task<JobCount> GetJobCountsAsync(DateTime Date);
         Task MarkAsSeenAsync(int id);
         Task<IEnumerable<Category>?> UpdateCategoriesAsync(int id, CategoryDto[] categories);
         Task<Job?> UpdateAsync(int id, JobDto details);
-        Task MarkAsArchivedAsync(int id);
-        Task<IEnumerable<Job>> SearchAsync(Filter filter);
+        Task MarkAsArchivedAsync(int id, bool toggle);
+        Task<(IEnumerable<Job>, int?)> SearchPagedAsync(Filter filter, int pageNum, int pageSize, bool count);
     }
 }

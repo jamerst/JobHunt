@@ -18,7 +18,10 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     display: (props: CardHeaderProps) => props.variant === "text" ? "block": "inline-block",
     width: (props:CardHeaderProps) => props.variant === "text" ? "auto" : "2em",
     height: (props:CardHeaderProps) => props.variant === "text" ? "auto" : "2em",
-    position: (props:CardHeaderProps) => props.variant === "text" ? "static" : "absolute"
+    position: (props:CardHeaderProps) => props.variant === "text" ? "static" : "absolute",
+    "& a": {
+      color: "inherit"
+    }
   },
   icon: {
     fontSize: theme.typography.h3.fontSize,

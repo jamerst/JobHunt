@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { DataGrid, DataGridProps, GridFeatureModeConstant, GridPageChangeParams, GridRowData, GridRowId } from "@material-ui/data-grid"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import { Button, Grid, Box } from "@material-ui/core";
@@ -50,6 +50,7 @@ const ApiDataGrid = (props:ApiDataGridProps) => {
   const [rows, setRows] = useState<GridRowData[]>([])
   const [rowCount, setRowCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
+  const firstLoad = useRef<boolean>(true);
   const [selected, setSelected] = useState<GridRowId[]>([]);
 
   const classes = useStyles();
@@ -65,6 +66,9 @@ const ApiDataGrid = (props:ApiDataGridProps) => {
 
     queryMap.set("page", pageSettings.page.toString());
     queryMap.set("size", pageSettings.size.toString());
+    if (firstLoad.current) {
+      queryMap.set("count", "true");
+    }
 
     let params: string[] = [];
     queryMap.forEach((v,k) => params.push(`${k}=${v}`));
@@ -73,9 +77,12 @@ const ApiDataGrid = (props:ApiDataGridProps) => {
     const response = await fetch(url, { method: "GET" });
     if (response.ok) {
       const data = await response.json();
-      setRowCount(data.total)
+      if (data.total) {
+        setRowCount(data.total)
+      }
       setRows(data.results)
       setLoading(false);
+      firstLoad.current = false;
     } else {
       console.error(`API request failed: ${url}, HTTP ${response.status}`);
     }

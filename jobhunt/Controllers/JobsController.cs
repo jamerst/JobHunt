@@ -71,8 +71,8 @@ namespace JobHunt.Controllers {
 
         [HttpPatch]
         [Route("{id}")]
-        public async Task Archive([FromRoute] int id) {
-            await _jobService.MarkAsArchivedAsync(id);
+        public async Task Archive([FromRoute] int id, [FromQuery] bool toggle = false) {
+            await _jobService.MarkAsArchivedAsync(id, toggle);
         }
 
         [HttpPatch]
@@ -91,8 +91,8 @@ namespace JobHunt.Controllers {
         }
 
         [HttpGet]
-        public async Task<IActionResult> Latest([FromQuery] int page, [FromQuery] int size) {
-            (var results, int total) = await _jobService.GetLatestPagedAsync(page, size);
+        public async Task<IActionResult> Latest([FromQuery] int page, [FromQuery] int size, [FromQuery] bool count = false) {
+            (var results, int? total) = await _jobService.GetLatestPagedAsync(page, size, count);
             return new JsonResult(new {
                 total = total,
                 results = results.Select(j => new {
@@ -113,8 +113,21 @@ namespace JobHunt.Controllers {
         }
 
         [HttpGet]
-        public async Task<IActionResult> Search([FromQuery] Filter filter) {
-            return new JsonResult(await _jobService.SearchAsync(filter));
+        public async Task<IActionResult> Search([FromQuery] Filter filter, [FromQuery] int page, [FromQuery] int size, [FromQuery] bool count = false) {
+            (var results, int? total) = await _jobService.SearchPagedAsync(filter, page, size, count);
+
+            return new JsonResult(new {
+                total = total,
+                results = results.Select(j => new {
+                    Id = j.Id,
+                    Title = j.Title,
+                    Location = j.Location,
+                    CompanyId = j.CompanyId,
+                    CompanyName = j.Company?.Name,
+                    Posted = j.Posted,
+                    Seen = j.Seen
+                })
+            });
         }
     }
 }

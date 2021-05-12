@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react"
+import React, { FunctionComponent, useCallback, useState } from "react"
 import { IconButton, Chip, Grid, Tooltip, InputBase } from "@material-ui/core"
 import { Add } from "@material-ui/icons"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
@@ -25,7 +25,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
   }
 }));
 
-const Categories = (props: CategoriesProps) => {
+const Categories:FunctionComponent<CategoriesProps> = (props) => {
   const [adding, setAdding] = useState<boolean>(false);
   const [newName, setNewName] = useState<string>("");
 
@@ -84,6 +84,7 @@ const Categories = (props: CategoriesProps) => {
 
   return (
     <Grid container spacing={1}>
+      {props.children}
       {props.categories.map(c =>
         (<Grid item><Chip color={c.colour} label={c.name} key={`category-${c.id}`} onDelete={() => removeCategory(c.id)}/></Grid>)
       )}

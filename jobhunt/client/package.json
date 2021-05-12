@@ -54,6 +54,7 @@
     "@types/react-helmet": "^6.1.1",
     "@types/react-router-dom": "^5.1.7",
     "@types/react-swipeable-views": "^0.13.0",
-    "@types/react-swipeable-views-utils": "^0.13.2"
+    "@types/react-swipeable-views-utils": "^0.13.2",
+    "react-audible-debug": "^1.0.3"
   }
 }

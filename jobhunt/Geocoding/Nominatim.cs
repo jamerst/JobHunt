@@ -63,9 +63,9 @@ namespace JobHunt.Geocoding {
 
         private class NominatimResponse {
             [JsonPropertyName("lat")]
-            public string Latitude { get; set; }
+            public string? Latitude { get; set; }
             [JsonPropertyName("lon")]
-            public string Longitude { get; set; }
+            public string? Longitude { get; set; }
         }
     }
 
