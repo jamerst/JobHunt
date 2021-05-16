@@ -1,11 +1,24 @@
 using System;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 using JobHunt.Models;
 namespace JobHunt.Data {
     public class JobHuntContext : DbContext {
         public JobHuntContext(DbContextOptions options) : base(options) { }
+
+        /* protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
+            var loggerFactory = LoggerFactory.Create(builder => {
+                builder
+                .AddConsole((options) => { })
+                .AddFilter((category, level) =>
+                    category == DbLoggerCategory.Database.Command.Name
+                    && level == LogLevel.Information);
+            });
+
+            optionsBuilder.UseLoggerFactory(loggerFactory);
+        } */
 
         protected override void OnModelCreating(ModelBuilder builder) {
             base.OnModelCreating(builder);

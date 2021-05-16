@@ -25,6 +25,7 @@ namespace JobHunt {
 
             services.AddDbContext<Data.JobHuntContext>(options =>
                 options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"))
+                // .EnableSensitiveDataLogging()
             );
 
             services.AddControllers();

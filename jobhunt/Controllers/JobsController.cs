@@ -129,5 +129,14 @@ namespace JobHunt.Controllers {
                 })
             });
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Categories() {
+            var categories = await _jobService.GetJobCategoriesAsync();
+            return new JsonResult(categories.Select(c => new CategoryDto {
+                Id = c.Id,
+                Name = c.Name
+            }));
+        }
     }
 }

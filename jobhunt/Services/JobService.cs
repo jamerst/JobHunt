@@ -186,9 +186,8 @@ namespace JobHunt.Services {
                 }
             }
 
-            if (filter.MaxAge.HasValue) {
-                DateTime cutOff = DateTime.Now.Date.AddDays(-1 * filter.MaxAge.Value);
-                query = query.Where(j => j.Posted >= cutOff);
+            if (filter.Posted.HasValue) {
+                query = query.Where(j => j.Posted >= filter.Posted.Value);
             }
 
             if (filter.Categories != null && filter.Categories.Count > 0) {
@@ -212,6 +211,15 @@ namespace JobHunt.Services {
 
             return (results, total);
         }
+
+        public async Task<IEnumerable<Category>> GetJobCategoriesAsync() {
+            return await _context.JobCategories
+                .Include(jc => jc.Category)
+                .GroupBy(jc => new { jc.Category.Id, jc.Category.Name })
+                .OrderByDescending(g => g.Count())
+                .Select(g => new Category { Id = g.Key.Id, Name = g.Key.Name})
+                .ToListAsync();
+        }
     }
 
     public interface IJobService {
@@ -226,5 +234,6 @@ namespace JobHunt.Services {
         Task<Job?> UpdateAsync(int id, JobDto details);
         Task MarkAsArchivedAsync(int id, bool toggle);
         Task<(IEnumerable<Job>, int?)> SearchPagedAsync(Filter filter, int pageNum, int pageSize, bool count);
+        Task<IEnumerable<Category>> GetJobCategoriesAsync();
     }
 }

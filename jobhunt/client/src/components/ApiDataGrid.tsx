@@ -7,7 +7,7 @@ import { Button, Grid, Box } from "@material-ui/core";
 type ApiDataGridProps = Omit<ApiDataGridPropsRows, "rows">;
 type ApiDataGridPropsRows = DataGridProps & {
   url: string,
-  queryParams?: Map<string, string>,
+  queryParams?: [string, string | undefined][],
   toolbarActions?: ToolbarAction[]
 }
 
@@ -57,21 +57,20 @@ const ApiDataGrid = (props:ApiDataGridProps) => {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    let queryMap;
-    if (props.queryParams) {
-      queryMap = new Map<string, string>(props.queryParams);
-    } else {
-      queryMap = new Map<string, string>();
-    }
+    let queryMap = [...(props.queryParams ?? [])].filter(p => p[0] !== "page" && p[0] !== "size" && p[0] !== "count");
 
-    queryMap.set("page", pageSettings.page.toString());
-    queryMap.set("size", pageSettings.size.toString());
+    queryMap.push(["page", pageSettings.page.toString()]);
+    queryMap.push(["size", pageSettings.size.toString()]);
     if (firstLoad.current) {
-      queryMap.set("count", "true");
+      queryMap.push(["count", "true"]);
     }
 
     let params: string[] = [];
-    queryMap.forEach((v,k) => params.push(`${k}=${v}`));
+    queryMap.forEach((v) => {
+      if (v[1]) {
+        params.push(`${v[0]}=${v[1]}`)
+      }
+    });
     const url = `${props.url}?${params.join("&")}`;
 
     const response = await fetch(url, { method: "GET" });

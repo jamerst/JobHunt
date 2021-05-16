@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace JobHunt.DTO {
@@ -5,7 +6,7 @@ namespace JobHunt.DTO {
         public string? Term { get; set; }
         public string? Location { get; set; }
         public int? Distance { get; set; }
-        public int? MaxAge { get; set; }
+        public DateTime? Posted { get; set; }
         public List<int>? Categories { get; set; }
         public string? Status { get; set; }
     }
