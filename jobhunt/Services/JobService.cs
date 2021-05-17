@@ -167,15 +167,16 @@ namespace JobHunt.Services {
             }
         }
 
-        public async Task<(IEnumerable<Job>, int?)> SearchPagedAsync(Filter filter, int pageNum, int pageSize, bool count) {
+        public async Task<(IEnumerable<JobResultDto>, int?)> SearchPagedAsync(Filter filter, int pageNum, int pageSize, bool count) {
             var query = _context.Jobs.AsNoTracking();
 
             if (!string.IsNullOrEmpty(filter.Term)) {
                 query = query.Where(j => j.Title.ToLower().Contains(filter.Term.ToLower()));
             }
 
+            double? lat = null, lng = null;
             if (!string.IsNullOrEmpty(filter.Location) && filter.Distance.HasValue) {
-                (double? lat, double? lng) = await _nominatim.Geocode(filter.Location);
+                (lat, lng) = await _nominatim.Geocode(filter.Location);
 
                 if (lat.HasValue && lng.HasValue) {
                     query = query.Where(j =>
@@ -203,11 +204,21 @@ namespace JobHunt.Services {
                 total = await query.CountAsync();
             }
 
-            IEnumerable<Job> results = query
+            IEnumerable<JobResultDto> results = query
+                .Include(j => j.Company)
+                .Select(j => new JobResultDto {
+                    Id = j.Id,
+                    Title = j.Title,
+                    Location = j.Location,
+                    CompanyId = j.CompanyId,
+                    CompanyName = j.Company != null ? j.Company.Name : null,
+                    Posted = j.Posted,
+                    Seen = j.Seen,
+                    Distance = lat.HasValue && lng.HasValue ? _context.GeoDistance(lat.Value, lng.Value, j.Latitude!.Value, j.Longitude!.Value) : null
+                })
                 .OrderByDescending(j => j.Posted)
                 .Skip(pageNum * pageSize)
-                .Take(pageSize)
-                .Include(j => j.Company);
+                .Take(pageSize);
 
             return (results, total);
         }
@@ -233,7 +244,7 @@ namespace JobHunt.Services {
         Task<IEnumerable<Category>?> UpdateCategoriesAsync(int id, CategoryDto[] categories);
         Task<Job?> UpdateAsync(int id, JobDto details);
         Task MarkAsArchivedAsync(int id, bool toggle);
-        Task<(IEnumerable<Job>, int?)> SearchPagedAsync(Filter filter, int pageNum, int pageSize, bool count);
+        Task<(IEnumerable<JobResultDto>, int?)> SearchPagedAsync(Filter filter, int pageNum, int pageSize, bool count);
         Task<IEnumerable<Category>> GetJobCategoriesAsync();
     }
 }

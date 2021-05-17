@@ -118,15 +118,7 @@ namespace JobHunt.Controllers {
 
             return new JsonResult(new {
                 total = total,
-                results = results.Select(j => new {
-                    Id = j.Id,
-                    Title = j.Title,
-                    Location = j.Location,
-                    CompanyId = j.CompanyId,
-                    CompanyName = j.Company?.Name,
-                    Posted = j.Posted,
-                    Seen = j.Seen
-                })
+                results = results
             });
         }
 

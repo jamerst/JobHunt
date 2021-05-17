@@ -1,14 +1,8 @@
-import React, { FunctionComponent, useEffect, useState, useCallback, Fragment } from "react"
-import { Box, Button, Chip, Container, FormControl, Grid, InputLabel, MenuItem, Select, Slider, TextField, Tooltip, Typography } from "@material-ui/core";
-import { KeyboardDatePicker, MuiPickersUtilsProvider } from "@material-ui/pickers";
+import React, { FunctionComponent, useEffect, useState, useCallback } from "react"
+import { Box, Button, Chip, Container, Grid, Slider, TextField, Typography } from "@material-ui/core";
 import { GridColDef } from "@material-ui/data-grid"
 import { Helmet } from "react-helmet";
-import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 
-
-import dayjs from "dayjs"
-import relativeTime from "dayjs/plugin/relativeTime"
-import DayjsUtils from "../utils/dayjs-utils"
 
 import Card from "../components/Card";
 import CardBody from "../components/CardBody";
@@ -43,22 +37,15 @@ type Category = {
   name: string
 }
 
-const useStyles = makeStyles((theme: Theme) => createStyles({
-  unseen: {
-    fontWeight: theme.typography.fontWeightBold
-  }
-}));
-
-dayjs.extend(relativeTime);
-const jobsColumns: GridColDef[] = [
+const columns: GridColDef[] = [
   { field: "id", hide: true },
   {
-    field: "title",
-    headerName: "Job Title",
+    field: "name",
+    headerName: "Name",
     flex: 2,
     sortable: false,
     renderCell: (params) => {
-      return (<Link to={`/job/${params.id}`}>{params.value}</Link>)
+      return (<Link to={`/company/${params.id}`}>{params.value}</Link>)
     }
   },
   {
@@ -67,59 +54,22 @@ const jobsColumns: GridColDef[] = [
     flex: 1,
     sortable: false,
     valueGetter: (params) => params.row.distance ? `${params.value} (${(params.row.distance as number).toFixed(1)}mi away)` : params.value
-  },
-  {
-    field: "companyName",
-    headerName: "Company",
-    flex: 2,
-    sortable: false,
-    renderCell: (params) => {
-      return (<Link to={`/company/${params.row.companyId}`}>{params.value}</Link>)
-    }
-  },
-  {
-    field: "posted",
-    headerName: "Posted",
-    type: "datetime",
-    flex: 1.25,
-    sortable: false,
-    renderCell: (params) => {
-      let date = dayjs(params.value as string);
-      if (date.isBefore(dayjs().subtract(14, "day"), "day")) {
-        return (<Fragment>{date.format("DD/MM/YYYY HH:mm")}</Fragment>);
-      } else {
-        let newTag = params.row.seen ? null : (<Chip label="New" color="secondary"/>);
-        return (
-          <Grid container justify="space-between" alignItems="center">
-            <Tooltip
-              title={<Typography variant="body2">{date.format("DD/MM/YYYY HH:mm")}</Typography>}
-              placement="right"
-            >
-              <span>{date.fromNow()}</span>
-            </Tooltip>
-            {newTag}
-          </Grid>
-        );
-      }
-    }
   }
 ];
 
-const Jobs: FunctionComponent = (props) => {
+const Companies: FunctionComponent = (props) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [filter, setFilter] = useState<SearchFilter>({ categories: [] });
   const [query, setQuery] = useState<[string, string | undefined][]>([]);
 
-  const classes = useStyles();
-
   useEffect(() => {
     (async () => {
-      const response = await fetch("api/jobs/categories");
+      const response = await fetch("api/companies/categories");
       if (response.ok) {
         const data = await response.json();
         setCategories(data as Category[]);
       } else {
-        console.error(`API request failed: /api/jobs/categories, HTTP ${response.status}`);
+        console.error(`API request failed: /api/companies/categories, HTTP ${response.status}`);
       }
     })();
   }, []);
@@ -140,36 +90,20 @@ const Jobs: FunctionComponent = (props) => {
   return (
     <Container>
       <Helmet>
-        <title>Jobs | JobHunt</title>
+        <title>Companies | JobHunt</title>
       </Helmet>
       <Card>
         <CardHeader>
-         <Typography variant="h4">Saved Jobs</Typography>
+         <Typography variant="h4">Saved Companies</Typography>
         </CardHeader>
         <CardBody>
           <Box mx={8} mb={4}>
             <Grid container spacing={2}>
-              <Grid item md={8}>
+              <Grid item md={12}>
                 <TextField variant="filled" label="Search Term" fullWidth size="small" value={filter.term ?? ""} onChange={(e) => setFilter({...filter, term: e.target.value})}/>
               </Grid>
-              <Grid item md={4}>
-                <MuiPickersUtilsProvider utils={DayjsUtils}>
-                  <KeyboardDatePicker
-                    label="Posted After"
-                    value={filter.posted ?? null}
-                    onChange={(date) => setFilter({...filter, posted: date?.toDate()})}
-                    variant="inline"
-                    inputVariant="filled"
-                    format="DD/MM/YYYY"
-                    disableFuture
-                    autoOk
-                    fullWidth
-                    size="small"
-                  />
-                </MuiPickersUtilsProvider>
-              </Grid>
-              <Grid item md={4}>
-              <TextField
+              <Grid item md={6}>
+                <TextField
                   variant="filled"
                   label="Location"
                   fullWidth
@@ -186,7 +120,7 @@ const Jobs: FunctionComponent = (props) => {
                   }}
                 />
               </Grid>
-              <Grid item md={4}>
+              <Grid item md={6}>
                 <Typography id="label-distance" gutterBottom>Distance</Typography>
                 <Slider
                   value={filter.distance ?? 15}
@@ -201,27 +135,10 @@ const Jobs: FunctionComponent = (props) => {
                   disabled={!filter.location}
                 />
               </Grid>
-              <Grid item md={4}>
-                <FormControl fullWidth variant="filled">
-                  <InputLabel id="label-status">Status</InputLabel>
-                  <Select
-                    value={filter.status}
-                    onChange={(e) => setFilter({...filter, status: e.target.value as string})}
-                    labelId="label-status"
-                  >
-                    <MenuItem><em>Any</em></MenuItem>
-                    <MenuItem value="Not Applied">Not Applied</MenuItem>
-                    <MenuItem value="Awaiting Response">Awaiting Response</MenuItem>
-                    <MenuItem value="In Progress">In Progress</MenuItem>
-                    <MenuItem value="Rejected">Rejected</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
               <Grid item container md={12} spacing={1}>
                 {categories.map(c => (
-                  <Grid item>
+                  <Grid item key={`category-selector-${c.id}`}>
                     <Chip
-                      key={`category-selector-${c.id}`}
                       label={c.name}
                       onClick={() => addCategory(c.id)}
                       onDelete={filter.categories.includes(c.id) ? () => removeCategory(c.id) : undefined}
@@ -238,11 +155,10 @@ const Jobs: FunctionComponent = (props) => {
           <Box mx={4}>
             <Typography variant="h6">Search Results</Typography>
             <ApiDataGrid
-              url="/api/jobs/search"
-              columns={jobsColumns}
+              url="/api/companies/search"
+              columns={columns}
               disableColumnMenu
               disableColumnSelector
-              getRowClassName={(params) => params.row.seen ? "" : classes.unseen}
               queryParams={query}
             />
           </Box>
@@ -252,4 +168,4 @@ const Jobs: FunctionComponent = (props) => {
   );
 }
 
-export default Jobs;
+export default Companies;

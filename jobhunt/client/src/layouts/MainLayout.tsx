@@ -66,7 +66,7 @@ const MainLayout = (props: React.PropsWithChildren<MainLayoutProps>) => {
             <ListItemIcon><Work/></ListItemIcon>
             <ListItemText primary="Jobs"/>
           </ListItem>
-          <ListItem button>
+          <ListItem button component={Link} to="/companies">
             <ListItemIcon><Business/></ListItemIcon>
             <ListItemText primary="Companies"/>
           </ListItem>

@@ -94,7 +94,7 @@ const Job = () => {
     } else {
       console.error(`API request failed: /api/jobs/archive/${id}, HTTP ${response.status}`);
     }
-  }, [jobData])
+  }, [jobData, id])
 
   useEffect(() => { fetchData() }, [fetchData]);
 

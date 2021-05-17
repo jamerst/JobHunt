@@ -6,13 +6,17 @@ using Microsoft.EntityFrameworkCore;
 
 using JobHunt.Data;
 using JobHunt.DTO;
+using JobHunt.Geocoding;
 using JobHunt.Models;
 
 namespace JobHunt.Services {
     public class CompanyService : ICompanyService {
         private readonly JobHuntContext _context;
-        public CompanyService(JobHuntContext context) {
+        private readonly INominatim _nominatim;
+
+        public CompanyService(JobHuntContext context, INominatim nominatim) {
             _context = context;
+            _nominatim = nominatim;
         }
 
         public async Task<Company> GetByIdAsync(int id) {
@@ -118,6 +122,64 @@ namespace JobHunt.Services {
 
             return company;
         }
+
+        public async Task<(IEnumerable<CompanyResultDto>, int?)> SearchPagedAsync(Filter filter, int pageNum, int pageSize, bool count) {
+            var query = _context.Companies.AsNoTracking();
+
+            if (!string.IsNullOrEmpty(filter.Term)) {
+                query = query.Where(c => c.Name.ToLower().Contains(filter.Term.ToLower())
+                    || c.AlternateNames.Any(an => an.Name.ToLower().Contains(filter.Term.ToLower()))
+                );
+            }
+            double? lat = null, lng = null;
+            if (!string.IsNullOrEmpty(filter.Location) && filter.Distance.HasValue) {
+                (lat, lng) = await _nominatim.Geocode(filter.Location);
+
+                if (lat.HasValue && lng.HasValue) {
+                    query = query.Where(c =>
+                        c.Latitude.HasValue
+                        && c.Longitude.HasValue
+                        && _context.GeoDistance(lat.Value, lng.Value, c.Latitude.Value, c.Longitude.Value) <= filter.Distance
+                    );
+                }
+            }
+
+            if (filter.Categories != null && filter.Categories.Count > 0) {
+                query = query.Where(c => c.CompanyCategories.Any(cc => filter.Categories.Contains(cc.CategoryId)));
+            }
+
+            int? total = null;
+            if (count) {
+                total = await query.CountAsync();
+            }
+
+            if (lat.HasValue && lng.HasValue) {
+                query = query.OrderBy(c => _context.GeoDistance(lat.Value, lng.Value, c.Latitude!.Value, c.Longitude!.Value));
+            } else {
+                query = query.OrderBy(c => c.Name);
+            }
+
+            IEnumerable<CompanyResultDto> results = query
+                .Skip(pageNum * pageSize)
+                .Take(pageSize)
+                .Select(c => new CompanyResultDto {
+                    Id = c.Id,
+                    Name = c.Name,
+                    Location = c.Location,
+                    Distance = lat.HasValue && lng.HasValue ? _context.GeoDistance(lat.Value, lng.Value, c.Latitude!.Value, c.Longitude!.Value) : null
+                });
+
+            return (results, total);
+        }
+
+        public async Task<IEnumerable<Category>> GetCompanyCategoriesAsync() {
+            return await _context.CompanyCategories
+                .Include(cc => cc.Category)
+                .GroupBy(cc => new { cc.Category.Id, cc.Category.Name })
+                .OrderByDescending(g => g.Count())
+                .Select(g => new Category { Id = g.Key.Id, Name = g.Key.Name})
+                .ToListAsync();
+        }
     }
 
     public interface ICompanyService {
@@ -126,6 +188,7 @@ namespace JobHunt.Services {
         Task CreateAllAsync(IEnumerable<Company> companies);
         Task<IEnumerable<Category>?> UpdateCategoriesAsync(int id, CategoryDto[] categories);
         Task<Company?> UpdateAsync(int id, CompanyDto details);
-
+        Task<(IEnumerable<CompanyResultDto>, int?)> SearchPagedAsync(Filter filter, int pageNum, int pageSize, bool count);
+        Task<IEnumerable<Category>> GetCompanyCategoriesAsync();
     }
 }

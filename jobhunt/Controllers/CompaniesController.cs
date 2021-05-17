@@ -101,5 +101,24 @@ namespace JobHunt.Controllers {
                 return BadRequest();
             }
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Search([FromQuery] Filter filter, [FromQuery] int page, [FromQuery] int size, [FromQuery] bool count = false) {
+            (var results, int? total) = await _companyService.SearchPagedAsync(filter, page, size, count);
+
+            return new JsonResult(new {
+                total = total,
+                results = results
+            });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Categories() {
+            var categories = await _companyService.GetCompanyCategoriesAsync();
+            return new JsonResult(categories.Select(c => new CategoryDto {
+                Id = c.Id,
+                Name = c.Name
+            }));
+        }
     }
 }
