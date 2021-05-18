@@ -180,6 +180,32 @@ namespace JobHunt.Services {
                 .Select(g => new Category { Id = g.Key.Id, Name = g.Key.Name})
                 .ToListAsync();
         }
+
+        public async Task<bool> ToggleBlacklistAsync(int id) {
+            Company company = await _context.Companies.FirstOrDefaultAsync(c => c.Id == id);
+
+            if (company == default(Company)) {
+                return false;
+            }
+
+            company.Blacklisted = !company.Blacklisted;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> ToggleWatchAsync(int id) {
+            Company company = await _context.Companies.FirstOrDefaultAsync(c => c.Id == id);
+
+            if (company == default(Company)) {
+                return false;
+            }
+
+            company.Watched = !company.Watched;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 
     public interface ICompanyService {
@@ -190,5 +216,7 @@ namespace JobHunt.Services {
         Task<Company?> UpdateAsync(int id, CompanyDto details);
         Task<(IEnumerable<CompanyResultDto>, int?)> SearchPagedAsync(Filter filter, int pageNum, int pageSize, bool count);
         Task<IEnumerable<Category>> GetCompanyCategoriesAsync();
+        Task<bool> ToggleBlacklistAsync(int id);
+        Task<bool> ToggleWatchAsync(int id);
     }
 }

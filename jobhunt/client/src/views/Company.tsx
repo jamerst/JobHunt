@@ -1,14 +1,13 @@
 import React, { Fragment, useCallback, useEffect, useState } from "react"
 import { Box, Button, Container, Chip, Grid, IconButton, Menu, MenuItem, Switch, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, TextField, Tooltip, Typography } from "@material-ui/core"
 import { GridColDef } from "@material-ui/data-grid"
-import { Delete, LinkedIn, MoreHoriz, OpenInNew, Save, Web } from "@material-ui/icons";
+import { AccountBalance, Block, Delete, LinkedIn, MoreHoriz, OpenInNew, RateReview, Save, Visibility, VisibilityOff, Web } from "@material-ui/icons";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import { useParams } from "react-router"
 import { Link } from "react-router-dom"
 import { Helmet } from "react-helmet"
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
-import ReactMarkdown from "react-markdown";
 
 import Card from "../components/Card";
 import Categories, { Category } from "../components/Categories";
@@ -18,6 +17,7 @@ import CardBody from "../components/CardBody";
 
 import TabPanel from "../components/TabPanel";
 import ApiDataGrid from "../components/ApiDataGrid";
+import Markdown from "../components/Markdown";
 
 type CompanyRouteParams = {
   id: string
@@ -145,6 +145,24 @@ const Company = () => {
     setEditing(false);
   }, [companyData, origCompanyData, id]);
 
+  const toggleBlacklist = useCallback(async () => {
+    const response = await fetch(`/api/companies/blacklist/${id}`, { method: "PATCH" });
+    if (response.ok && companyData) {
+      setCompanyData({...companyData, blacklisted: !companyData.blacklisted});
+    } else {
+      console.error(`API request failed: PATCH /api/companies/blacklist/${id}, HTTP ${response.status}`);
+    }
+  }, [id, companyData]);
+
+  const toggleWatched = useCallback(async () => {
+    const response = await fetch(`/api/companies/watch/${id}`, { method: "PATCH" });
+    if (response.ok && companyData) {
+      setCompanyData({...companyData, watched: !companyData.watched});
+    } else {
+      console.error(`API request failed: PATCH /api/companies/blacklist/${id}, HTTP ${response.status}`);
+    }
+  }, [id, companyData]);
+
   useEffect(() => { fetchData() }, [fetchData]);
 
   if (!companyData) {
@@ -161,27 +179,42 @@ const Company = () => {
           <Grid container alignItems="center" spacing={1}>
             <Grid item xs>
               <EditableComponent editing={editing} value={companyData.name} onChange={(e) => setCompanyData({...companyData, name: e.target.value})} label="Company Name" size="medium" fontSize="h4" colour="#fff">
-                <Typography variant="h4">{companyData.name}</Typography>
+                <Grid container alignItems="center" spacing={1}>
+                  <Grid item><Typography variant="h4">{companyData.name}</Typography></Grid>
+                  {companyData.blacklisted ? <Grid item><Tooltip title={<Typography variant="subtitle2">This company is blacklisted.</Typography>}><Block fontSize="large"/></Tooltip></Grid> : null}
+                </Grid>
               </EditableComponent>
               <EditableComponent editing={editing} value={companyData.location} onChange={(e) => setCompanyData({...companyData, location: e.target.value})} label="Location" size="medium" fontSize="h6" colour="#fff">
                 <Typography variant="h6">{companyData.location}</Typography>
               </EditableComponent>
             </Grid>
             <Grid item>
-              <IconButton onClick={(e) => setMenuAnchor(e.currentTarget)}>
-                <MoreHoriz/>
-              </IconButton>
-              <Menu
-                anchorEl={menuAnchor}
-                keepMounted
-                open={Boolean(menuAnchor)}
-                onClose={() => setMenuAnchor(null)}
-                getContentAnchorEl={null}
-                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-                transformOrigin={{ vertical: "top", horizontal: "right" }}
-              >
-                <MenuItem onClick={() => {setEditing(true); setMenuAnchor(null);}}>Edit Company</MenuItem>
-              </Menu>
+              <Grid container alignItems="center" spacing={1}>
+                <Grid item>
+                  <Tooltip title={<Typography variant="subtitle2">{companyData.watched ? "Unwatch Company" : "Watch Company"}</Typography>}>
+                    <IconButton onClick={() => toggleWatched()}>
+                      {companyData.watched ? <VisibilityOff/> : <Visibility/>}
+                    </IconButton>
+                  </Tooltip>
+                </Grid>
+                <Grid item>
+                  <IconButton onClick={(e) => setMenuAnchor(e.currentTarget)}>
+                    <MoreHoriz/>
+                  </IconButton>
+                </Grid>
+                <Menu
+                  anchorEl={menuAnchor}
+                  keepMounted
+                  open={Boolean(menuAnchor)}
+                  onClose={() => setMenuAnchor(null)}
+                  getContentAnchorEl={null}
+                  anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                  transformOrigin={{ vertical: "top", horizontal: "right" }}
+                >
+                  <MenuItem onClick={() => {setEditing(true); setMenuAnchor(null);}}>Edit Company</MenuItem>
+                  <MenuItem onClick={() => {toggleBlacklist(); setMenuAnchor(null);}}>{companyData.blacklisted ? "Remove from blacklist" : "Blacklist company"}</MenuItem>
+                </Menu>
+              </Grid>
             </Grid>
           </Grid>
         </CardHeader>
@@ -212,26 +245,26 @@ const Company = () => {
           <Box my={2}>
             <Grid container direction={editing ? "column" : "row"} spacing={2}>
               <Grid item>
-                <EditableComponent editing={editing} value={companyData.website ?? ""} onChange={(e) => setCompanyData({...companyData, website: e.target.value})} label="Website" fontSize="h6">
-                  { companyData.website ? (<Button variant="contained" color="secondary" startIcon={<Web/>} endIcon={<OpenInNew/>} component="a" href={companyData.website} target="_blank" rel="noreferrer">Visit Website</Button>) : null }
+                <EditableComponent editing={editing} value={companyData.website ?? ""} onChange={(e) => setCompanyData({...companyData, website: e.target.value})} label="Website">
+                  { companyData.website ? (<Button variant="contained" color="secondary" startIcon={<Web/>} endIcon={<OpenInNew/>} component="a" href={companyData.website} target="_blank" rel="noreferrer">Website</Button>) : null }
                 </EditableComponent>
               </Grid>
 
               <Grid item>
-                <EditableComponent editing={editing} value={companyData.glassdoor ?? ""} onChange={(e) => setCompanyData({...companyData, glassdoor: e.target.value})} label="Glassdoor Profile" fontSize="h6">
-                  { companyData.glassdoor ? (<Button variant="contained" color="secondary" component="a" endIcon={<OpenInNew/>} href={companyData.glassdoor} target="_blank" rel="noreferrer">View Glassdoor Profile</Button>) : null }
+                <EditableComponent editing={editing} value={companyData.glassdoor ?? ""} onChange={(e) => setCompanyData({...companyData, glassdoor: e.target.value})} label="Glassdoor Profile">
+                  { companyData.glassdoor ? (<Button variant="contained" color="secondary" startIcon={<RateReview/>} component="a" endIcon={<OpenInNew/>} href={companyData.glassdoor} target="_blank" rel="noreferrer">Glassdoor Profile</Button>) : null }
                 </EditableComponent>
               </Grid>
 
               <Grid item>
-                <EditableComponent editing={editing} value={companyData.linkedIn ?? ""} onChange={(e) => setCompanyData({...companyData, linkedIn: e.target.value})} label="LinkedIn Profile" fontSize="h6">
-                  { companyData.linkedIn ? (<Button variant="contained" color="secondary" startIcon={<LinkedIn/>} endIcon={<OpenInNew/>} component="a" href={companyData.linkedIn} target="_blank" rel="noreferrer">View LinkedIn Profile</Button>) : null }
+                <EditableComponent editing={editing} value={companyData.linkedIn ?? ""} onChange={(e) => setCompanyData({...companyData, linkedIn: e.target.value})} label="LinkedIn Profile">
+                  { companyData.linkedIn ? (<Button variant="contained" color="secondary" startIcon={<LinkedIn/>} endIcon={<OpenInNew/>} component="a" href={companyData.linkedIn} target="_blank" rel="noreferrer">LinkedIn Profile</Button>) : null }
                 </EditableComponent>
               </Grid>
 
               <Grid item>
-                <EditableComponent editing={editing} value={companyData.endole ?? ""} onChange={(e) => setCompanyData({...companyData, endole: e.target.value})} label="Endole Profile" fontSize="h6">
-                  { companyData.endole ? (<Button variant="contained" color="secondary" component="a" endIcon={<OpenInNew/>} href={companyData.linkedIn} target="_blank" rel="noreferrer">View Endole Profile</Button>) : null }
+                <EditableComponent editing={editing} value={companyData.endole ?? ""} onChange={(e) => setCompanyData({...companyData, endole: e.target.value})} label="Endole Profile">
+                  { companyData.endole ? (<Button variant="contained" color="secondary" startIcon={<AccountBalance/>} component="a" endIcon={<OpenInNew/>} href={companyData.linkedIn} target="_blank" rel="noreferrer">Endole Profile</Button>) : null }
                 </EditableComponent>
               </Grid>
             </Grid>
@@ -245,13 +278,13 @@ const Company = () => {
           <TabPanel current={tab} index={0}>
             <EditableComponent editing={editing} value={companyData.notes} onChange={(e) => setCompanyData({...companyData, notes: e.target.value})} label="Notes" multiline rows={20}>
               {companyData.notes ?
-                (<ReactMarkdown skipHtml>{companyData.notes ?? ""}</ReactMarkdown>)
+                (<Markdown value={companyData.notes ?? ""}/>)
                 : null
               }
             </EditableComponent>
           </TabPanel>
 
-          <TabPanel current={tab} index={1}>
+          <TabPanel current={tab} index={1} keepMounted>
             <EditableComponent
               editing={editing}
               data={companyData.watchedPages}
@@ -382,19 +415,20 @@ const Company = () => {
                 <TableBody>
                   {companyData.watchedPages.map(p =>
                     <TableRow key={p.url}>
-                      <TableCell>{p.url}</TableCell>
+                      <TableCell><a href={p.url} target="_blank">{p.url}</a></TableCell>
                       <TableCell>{p.lastScraped ?? "Never"}</TableCell>
                       <TableCell>{p.lastUpdated ?? "Never"}</TableCell>
                       <TableCell>{p.statusMessage}</TableCell>
                     </TableRow>
                   )}
+                  {companyData.watchedPages.length === 0 ? <TableRow><TableCell colSpan={4} align="center"><em>No pages being watched</em></TableCell></TableRow> : null}
                 </TableBody>
               </Table>
             </TableContainer>
             </EditableComponent>
           </TabPanel>
 
-          <TabPanel current={tab} index={2}>
+          <TabPanel current={tab} index={2} keepMounted>
             <ApiDataGrid
               url={`/api/companies/${id}/jobs`}
               columns={jobsColumns}

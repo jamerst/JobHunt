@@ -120,5 +120,29 @@ namespace JobHunt.Controllers {
                 Name = c.Name
             }));
         }
+
+        [HttpPatch]
+        [Route("{id}")]
+        public async Task<IActionResult> Blacklist([FromRoute] int id) {
+            bool result = await _companyService.ToggleBlacklistAsync(id);
+
+            if (result) {
+                return Ok();
+            } else {
+                return NotFound();
+            }
+        }
+
+        [HttpPatch]
+        [Route("{id}")]
+        public async Task<IActionResult> Watch([FromRoute] int id) {
+            bool result = await _companyService.ToggleWatchAsync(id);
+
+            if (result) {
+                return Ok();
+            } else {
+                return NotFound();
+            }
+        }
     }
 }

@@ -38,6 +38,12 @@ function App() {
           "@global": {
             ".MuiGrid-item:empty": {
               padding: "0 !important" // remove padding on empty grid items
+            },
+            "a": {
+              color: "inherit",
+              "&:hover": {
+                textDecoration: "underline"
+              }
             }
           }
         }

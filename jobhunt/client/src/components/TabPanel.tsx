@@ -3,7 +3,8 @@ import React, { FunctionComponent } from "react"
 
 type TabPanelProps = {
   current: number,
-  index: number
+  index: number,
+  keepMounted?: boolean
 }
 
 const TabPanel:FunctionComponent<TabPanelProps> = (props) => {
@@ -14,7 +15,7 @@ const TabPanel:FunctionComponent<TabPanelProps> = (props) => {
       id={`tabpanel-${props.index}`}
       aria-labelledby={`tab-${props.index}`}
     >
-      {props.current === props.index && (
+      {(props.current === props.index || props.keepMounted) && (
         <Box p={3}>
           {props.children}
         </Box>
