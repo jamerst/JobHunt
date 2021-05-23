@@ -101,6 +101,8 @@ namespace JobHunt.Services {
             company.Glassdoor = details.Glassdoor;
             company.LinkedIn = details.LinkedIn;
             company.Endole = details.Endole;
+            company.Latitude = details.Latitude;
+            company.Longitude = details.Longitude;
 
             company.WatchedPages.RemoveAll(wp1 => !details.WatchedPages.Any(wp2 => wp1.Url == wp2.Url));
             company.WatchedPages.AddRange(details.WatchedPages

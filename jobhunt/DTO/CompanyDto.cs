@@ -15,5 +15,7 @@ namespace JobHunt.DTO {
         public IEnumerable<WatchedPageDto> WatchedPages { get; set; } = new List<WatchedPageDto>();
         public IEnumerable<CategoryDto> Categories { get; set; } = new List<CategoryDto>();
         public IEnumerable<string> AlternateNames { get; set; } = new List<string>();
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
     }
 }

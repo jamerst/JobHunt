@@ -46,7 +46,9 @@ namespace JobHunt.Controllers {
                     Provider = job.Provider,
                     SourceId = job.SourceId,
                     SourceName = job.Source?.ToString(),
-                    seen = job.Seen
+                    seen = job.Seen,
+                    Latitude = job.Latitude,
+                    Longitude = job.Longitude
                 });
             }
         }

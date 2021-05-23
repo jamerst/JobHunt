@@ -2,6 +2,10 @@ import React, { Fragment, FunctionComponent } from "react"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import { Paper } from "@material-ui/core";
 
+type CardProps = {
+  className?: string
+}
+
 const useStyles = makeStyles((theme: Theme) => createStyles({
   paper: {
     display: "flex",
@@ -10,7 +14,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
   }
 }));
 
-const Card: FunctionComponent = (props) => {
+const Card: FunctionComponent<CardProps> = (props) => {
   const classes = useStyles(props);
 
   return (

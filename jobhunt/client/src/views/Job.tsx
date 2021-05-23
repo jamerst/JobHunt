@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from "react"
-import { Box, Button, Container, Divider, Grid, IconButton, Menu, MenuItem, Tab, Tabs, Typography } from "@material-ui/core"
+import React, { useCallback, useEffect, useState, Fragment } from "react"
+import { Box, Button, Container, Divider, Grid, IconButton, Menu, MenuItem, Tab, Tabs, TextField, Typography } from "@material-ui/core"
 import { useParams } from "react-router"
 import { Helmet } from "react-helmet"
 
@@ -11,7 +11,7 @@ import CardHeader from "../components/CardHeader";
 import CardBody from "../components/CardBody";
 import TabPanel from "../components/TabPanel";
 import ReactMarkdown from "react-markdown";
-import { MoreHoriz, OpenInNew, Save } from "@material-ui/icons";
+import { Map, MoreHoriz, OpenInNew, Save, Subject } from "@material-ui/icons";
 import { Link } from "react-router-dom";
 
 type JobRouteParams = {
@@ -36,7 +36,9 @@ type JobResponse = {
   provider: string,
   sourceId?: number,
   sourceName?: string,
-  seen: boolean
+  seen: boolean,
+  latitude?: number,
+  longitude?: number
 }
 
 const Job = () => {
@@ -141,6 +143,44 @@ const Job = () => {
             <EditableComponent editing={editing} value={jobData.salary} onChange={(e) => setJobData({...jobData, salary: e.target.value})} label="Salary" fontSize="h6">
               <Typography variant="h6">{jobData.salary ?? "Unknown Salary"}</Typography>
             </EditableComponent>
+            {editing ? (
+              <Box my={1}>
+                <Grid container spacing={1}>
+                  <Grid item xs={3}>
+                    <TextField
+                      value={jobData.latitude ?? ""}
+                      onChange={(e) => {
+                        if (!e.target.value) {
+                          setJobData({...jobData, latitude: undefined });
+                        } else if (!isNaN(parseFloat(e.target.value))) {
+                          setJobData({...jobData, latitude : parseFloat(e.target.value)});
+                        }
+                      }}
+                      label="Latitude"
+                      variant="outlined"
+                      fullWidth
+                      size="small"
+                    />
+                  </Grid>
+                  <Grid item xs={3}>
+                    <TextField
+                      value={jobData.longitude ?? ""}
+                      onChange={(e) => {
+                        if (!e.target.value) {
+                          setJobData({...jobData, longitude: undefined });
+                        } else if (!isNaN(parseFloat(e.target.value))) {
+                          setJobData({...jobData, longitude : parseFloat(e.target.value)});
+                        }
+                      }}
+                      label="Longitude"
+                      variant="outlined"
+                      fullWidth
+                      size="small"
+                    />
+                  </Grid>
+                </Grid>
+              </Box>
+            ) : null}
             <Typography variant="subtitle2">From "{jobData.sourceName}"</Typography>
             <Box mt={1}>
               <Categories
@@ -151,20 +191,33 @@ const Job = () => {
               />
             </Box>
             <Box my={2}>
-              { editing ?
-                (
-                  <Grid container spacing={2}>
-                    <Grid item>
-                      <Button variant="contained" color="primary" startIcon={<Save/>} onClick={() => saveChanges()}>Save Changes</Button>
-                    </Grid>
-                    <Grid item>
-                      <Button variant="contained" color="default" onClick={() => { setEditing(false); setJobData(origJobData); }}>Discard</Button>
-                    </Grid>
-                  </Grid>
-                )
-                :
-                (<Button variant="contained" color="secondary" endIcon={<OpenInNew/>} component="a" href={jobData.url} target="_blank">View Job</Button>)
-              }
+              <Grid container spacing={2}>
+                { editing ?
+                  (
+                    <Fragment>
+                      <Grid item>
+                        <Button variant="contained" color="primary" startIcon={<Save/>} onClick={() => saveChanges()}>Save Changes</Button>
+                      </Grid>
+                      <Grid item>
+                        <Button variant="contained" color="default" onClick={() => { setEditing(false); setJobData(origJobData); }}>Discard</Button>
+                      </Grid>
+                    </Fragment>
+                  )
+                  :
+                  (
+                    <Fragment>
+                      <Grid item>
+                        <Button variant="contained" color="secondary" startIcon={<Subject/>} endIcon={<OpenInNew/>} component="a" href={jobData.url} target="_blank">View Listing</Button>
+                      </Grid>
+                      {jobData.latitude && jobData.longitude ? (
+                        <Grid item>
+                          <Button variant="contained" color="secondary" startIcon={<Map/>} endIcon={<OpenInNew/>} component="a" href={`https://www.google.com/maps/search/?api=1&query=${jobData.latitude},${jobData.longitude}`} target="_blank">View Location</Button>
+                        </Grid>
+                      ) : null}
+                    </Fragment>
+                  )
+                }
+              </Grid>
             </Box>
             <Tabs value={tab} onChange={(_, t) => setTab(t)}>
               <Tab label="Description"/>

@@ -1,7 +1,7 @@
 import React, { Fragment, useCallback, useEffect, useState } from "react"
 import { Box, Button, Container, Chip, Grid, IconButton, Menu, MenuItem, Switch, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, TextField, Tooltip, Typography } from "@material-ui/core"
 import { GridColDef } from "@material-ui/data-grid"
-import { AccountBalance, Block, Delete, LinkedIn, MoreHoriz, OpenInNew, RateReview, Save, Visibility, VisibilityOff, Web } from "@material-ui/icons";
+import { AccountBalance, Block, Delete, LinkedIn, Map, MoreHoriz, OpenInNew, RateReview, Save, Visibility, VisibilityOff, Web } from "@material-ui/icons";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import { useParams } from "react-router"
 import { Link } from "react-router-dom"
@@ -38,6 +38,8 @@ type CompanyResponse = {
   watchedPages: WatchedPage[],
   categories: Category[],
   alternateNames?: string[],
+  latitude?: number,
+  longitude?: number
 }
 
 type WatchedPage = {
@@ -193,7 +195,7 @@ const Company = () => {
                 <Grid item>
                   <Tooltip title={<Typography variant="subtitle2">{companyData.watched ? "Unwatch Company" : "Watch Company"}</Typography>}>
                     <IconButton onClick={() => toggleWatched()}>
-                      {companyData.watched ? <VisibilityOff/> : <Visibility/>}
+                      {companyData.watched ? <Visibility/> : <VisibilityOff/>}
                     </IconButton>
                   </Tooltip>
                 </Grid>
@@ -264,9 +266,54 @@ const Company = () => {
 
               <Grid item>
                 <EditableComponent editing={editing} value={companyData.endole ?? ""} onChange={(e) => setCompanyData({...companyData, endole: e.target.value})} label="Endole Profile">
-                  { companyData.endole ? (<Button variant="contained" color="secondary" startIcon={<AccountBalance/>} component="a" endIcon={<OpenInNew/>} href={companyData.linkedIn} target="_blank" rel="noreferrer">Endole Profile</Button>) : null }
+                  { companyData.endole ? (<Button variant="contained" color="secondary" startIcon={<AccountBalance/>} component="a" endIcon={<OpenInNew/>} href={companyData.endole} target="_blank" rel="noreferrer">Endole Profile</Button>) : null }
                 </EditableComponent>
               </Grid>
+
+              {editing ? (
+                <Grid item container spacing={1}>
+                  <Grid item xs={3}>
+                    <TextField
+                      value={companyData.latitude ?? ""}
+                      onChange={(e) => {
+                        if (!e.target.value) {
+                          setCompanyData({...companyData, latitude: undefined });
+                        } else if (!isNaN(parseFloat(e.target.value))) {
+                          setCompanyData({...companyData, latitude : parseFloat(e.target.value)});
+                        }
+                      }}
+                      label="Latitude"
+                      variant="outlined"
+                      fullWidth
+                      size="small"
+                    />
+                  </Grid>
+                  <Grid item xs={3}>
+                    <TextField
+                      value={companyData.longitude ?? ""}
+                      onChange={(e) => {
+                        if (!e.target.value) {
+                          setCompanyData({...companyData, longitude: undefined });
+                        } else if (!isNaN(parseFloat(e.target.value))) {
+                          setCompanyData({...companyData, longitude : parseFloat(e.target.value)});
+                        }
+                      }}
+                      label="Longitude"
+                      variant="outlined"
+                      fullWidth
+                      size="small"
+                    />
+                  </Grid>
+                </Grid>
+              ) : (
+                <Fragment>
+                  {companyData.latitude && companyData.longitude ? (
+                    <Grid item>
+                      <Button variant="contained" color="secondary" startIcon={<Map/>} endIcon={<OpenInNew/>} component="a" href={`https://www.google.com/maps/search/?api=1&query=${companyData.latitude},${companyData.longitude}`} target="_blank" rel="noreferrer">View Location</Button>
+                    </Grid>
+                  ) : null}
+                </Fragment>
+              )}
             </Grid>
           </Box>
           <Tabs value={tab} onChange={(_, t) => setTab(t)}>
@@ -415,9 +462,9 @@ const Company = () => {
                 <TableBody>
                   {companyData.watchedPages.map(p =>
                     <TableRow key={p.url}>
-                      <TableCell><a href={p.url} target="_blank">{p.url}</a></TableCell>
-                      <TableCell>{p.lastScraped ?? "Never"}</TableCell>
-                      <TableCell>{p.lastUpdated ?? "Never"}</TableCell>
+                      <TableCell><a href={p.url} target="_blank" rel="noreferrer">{p.url}</a></TableCell>
+                      <TableCell>{dayjs(p.lastScraped).fromNow() ?? "Never"}</TableCell>
+                      <TableCell>{dayjs(p.lastUpdated).toDate().toLocaleString() ?? "Never"}</TableCell>
                       <TableCell>{p.statusMessage}</TableCell>
                     </TableRow>
                   )}

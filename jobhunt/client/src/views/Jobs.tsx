@@ -1,10 +1,9 @@
 import React, { FunctionComponent, useEffect, useState, useCallback, Fragment } from "react"
-import { Box, Button, Chip, Container, FormControl, Grid, InputLabel, MenuItem, Select, Slider, TextField, Tooltip, Typography } from "@material-ui/core";
+import { Box, Button, Chip, Container, FormControl, FormControlLabel, Grid, InputLabel, MenuItem, Select, Slider, Switch, TextField, Tooltip, Typography } from "@material-ui/core";
 import { KeyboardDatePicker, MuiPickersUtilsProvider } from "@material-ui/pickers";
 import { GridColDef } from "@material-ui/data-grid"
 import { Helmet } from "react-helmet";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
-
 
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
@@ -22,7 +21,8 @@ type SearchFilter = {
   distance?: number,
   posted?: Date,
   categories: number[],
-  status?: string
+  status?: string,
+  showArchived: boolean
 }
 
 const toQuery = (f: SearchFilter) =>  {
@@ -31,7 +31,8 @@ const toQuery = (f: SearchFilter) =>  {
     ["location", f.location],
     ["distance", f.distance?.toString()],
     ["posted", f.posted?.toISOString()],
-    ["status", f.status]
+    ["status", f.status],
+    ["showArchived", String(f.showArchived)]
   ]
 
   f.categories.forEach(c => result.push(["categories", c.toString()]))
@@ -46,6 +47,9 @@ type Category = {
 const useStyles = makeStyles((theme: Theme) => createStyles({
   unseen: {
     fontWeight: theme.typography.fontWeightBold
+  },
+  archived: {
+    fontStyle: "italic"
   }
 }));
 
@@ -88,7 +92,7 @@ const jobsColumns: GridColDef[] = [
       if (date.isBefore(dayjs().subtract(14, "day"), "day")) {
         return (<Fragment>{date.format("DD/MM/YYYY HH:mm")}</Fragment>);
       } else {
-        let newTag = params.row.seen ? null : (<Chip label="New" color="secondary"/>);
+        let newTag = !params.row.seen && !params.row.archived ? (<Chip label="New" color="secondary"/>) : null;
         return (
           <Grid container justify="space-between" alignItems="center">
             <Tooltip
@@ -107,8 +111,8 @@ const jobsColumns: GridColDef[] = [
 
 const Jobs: FunctionComponent = (props) => {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [filter, setFilter] = useState<SearchFilter>({ categories: [] });
-  const [query, setQuery] = useState<[string, string | undefined][]>([]);
+  const [filter, setFilter] = useState<SearchFilter>({ categories: [], showArchived: false });
+  const [query, setQuery] = useState<[string, string | undefined][]>(toQuery(filter));
 
   const classes = useStyles();
 
@@ -219,9 +223,8 @@ const Jobs: FunctionComponent = (props) => {
               </Grid>
               <Grid item container md={12} spacing={1}>
                 {categories.map(c => (
-                  <Grid item>
+                  <Grid item key={`category-selector-${c.id}`}>
                     <Chip
-                      key={`category-selector-${c.id}`}
                       label={c.name}
                       onClick={() => addCategory(c.id)}
                       onDelete={filter.categories.includes(c.id) ? () => removeCategory(c.id) : undefined}
@@ -230,20 +233,29 @@ const Jobs: FunctionComponent = (props) => {
                   </Grid>
                 ))}
               </Grid>
-              <Grid item md={12}>
+              <Grid item container md={12} spacing={2}>
+                <Grid item>
                   <Button variant="contained" color="secondary" onClick={() => setQuery(toQuery(filter))}>Search</Button>
+                </Grid>
+                <Grid item>
+                  <FormControlLabel
+                    control={<Switch checked={filter.showArchived} onChange={(e) => setFilter({...filter, showArchived: e.target.checked})} />}
+                    label="Show Archived"
+                  />
+                </Grid>
               </Grid>
             </Grid>
           </Box>
           <Box mx={4}>
-            <Typography variant="h6">Search Results</Typography>
             <ApiDataGrid
               url="/api/jobs/search"
               columns={jobsColumns}
               disableColumnMenu
               disableColumnSelector
-              getRowClassName={(params) => params.row.seen ? "" : classes.unseen}
+              getRowClassName={(params) => params.row.archived ? classes.archived : params.row.seen ? "" : classes.unseen}
               queryParams={query}
+              alwaysUpdateCount
+              disableSelectionOnClick
             />
           </Box>
         </CardBody>

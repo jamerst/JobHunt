@@ -3,15 +3,17 @@ using System;
 using JobHunt.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace JobHunt.Migrations
 {
     [DbContext(typeof(JobHuntContext))]
-    partial class JobHuntContextModelSnapshot : ModelSnapshot
+    [Migration("20210523152239_SearchEnable")]
+    partial class SearchEnable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -256,14 +258,8 @@ namespace JobHunt.Migrations
                     b.Property<int?>("Distance")
                         .HasColumnType("integer");
 
-                    b.Property<bool>("EmployerOnly")
-                        .HasColumnType("boolean");
-
                     b.Property<bool>("Enabled")
                         .HasColumnType("boolean");
-
-                    b.Property<string>("JobType")
-                        .HasColumnType("text");
 
                     b.Property<bool?>("LastFetchSuccess")
                         .HasColumnType("boolean");

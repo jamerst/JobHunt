@@ -52,7 +52,9 @@ namespace JobHunt.Controllers {
                         Id = cc.CategoryId,
                         Name = cc.Category.Name
                     }).OrderBy(c => c.Name),
-                    AlternateNames = company.AlternateNames.Select(n => n.Name)
+                    AlternateNames = company.AlternateNames.Select(n => n.Name),
+                    Latitude = company.Latitude,
+                    Longitude = company.Longitude
                 });
             }
         }

@@ -8,7 +8,8 @@ type ApiDataGridProps = Omit<ApiDataGridPropsRows, "rows">;
 type ApiDataGridPropsRows = DataGridProps & {
   url: string,
   queryParams?: [string, string | undefined][],
-  toolbarActions?: ToolbarAction[]
+  toolbarActions?: ToolbarAction[],
+  alwaysUpdateCount?: boolean
 }
 
 type PageSettings = {
@@ -60,7 +61,7 @@ const ApiDataGrid = (props:ApiDataGridProps) => {
 
     queryMap.push(["page", pageSettings.page.toString()]);
     queryMap.push(["size", pageSettings.size.toString()]);
-    if (firstLoad.current) {
+    if (firstLoad.current || props.alwaysUpdateCount) {
       queryMap.push(["count", "true"]);
     }
 
@@ -84,7 +85,7 @@ const ApiDataGrid = (props:ApiDataGridProps) => {
     } else {
       console.error(`API request failed: ${url}, HTTP ${response.status}`);
     }
-  }, [pageSettings, props.queryParams, props.url]);
+  }, [pageSettings, props.queryParams, props.url, props.alwaysUpdateCount]);
 
   const handleToolbarResponse = useCallback(async (r: ToolbarActionResponse) => {
     if (r.refresh) {

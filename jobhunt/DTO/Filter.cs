@@ -9,5 +9,6 @@ namespace JobHunt.DTO {
         public DateTime? Posted { get; set; }
         public List<int>? Categories { get; set; }
         public string? Status { get; set; }
+        public bool? ShowArchived { get; set; }
     }
 }

@@ -46,7 +46,7 @@ namespace JobHunt.Searching {
         }
 
         public async Task SearchAllAsync(HttpClient client, CancellationToken token) {
-            IEnumerable<Search> searches = await _searchService.FindByProviderAsync(SearchProviderName.Indeed);
+            IEnumerable<Search> searches = await _searchService.FindEnabledByProviderAsync(SearchProviderName.Indeed);
 
             foreach (Search search in searches) {
                 if (token.IsCancellationRequested) {
@@ -85,6 +85,14 @@ namespace JobHunt.Searching {
                 query.Add("fromage", search.MaxAge.Value.ToString());
             }
 
+            if (search.EmployerOnly) {
+                query.Add("sr", "directhire");
+            }
+
+            if (!string.IsNullOrEmpty(search.JobType)) {
+                query.Add("jt", search.JobType);
+            }
+
             int start = 0;
             bool existingFound = false;
 
@@ -105,7 +113,6 @@ namespace JobHunt.Searching {
                     } else {
                         sw.Stop();
                         _logger.LogError("Indeed API request failed", httpResponse);
-                        await _searchService.UpdateFetchResultAsync(search.Id!, 0, false);
                         await _searchService.CreateSearchRunAsync(search.Id!, false, $"Indeed API error: HTTP {(int) httpResponse.StatusCode}", 0, 0, (int) sw.Elapsed.TotalSeconds);
                         return;
                     }
@@ -113,7 +120,6 @@ namespace JobHunt.Searching {
 
                 if (response == null || response.Results == null) {
                     sw.Stop();
-                    await _searchService.UpdateFetchResultAsync(search.Id!, 0, false);
                     await _searchService.CreateSearchRunAsync(search.Id!, false, "Indeed API deserialisation error", 0, 0, (int) sw.Elapsed.TotalSeconds);
                     return;
                 }
@@ -248,7 +254,11 @@ namespace JobHunt.Searching {
             if (jobDescs != null && jobDescs.Keys.Count > 0) {
                 for (int i = 0; i < jobs.Count; i++) {
                     if (jobDescs.TryGetValue(jobs[i].ProviderId!, out string? desc)) {
-                        jobs[i].Description = mdConverter.Convert(desc);
+                        try {
+                            jobs[i].Description = mdConverter.Convert(desc);
+                        } catch (InvalidOperationException) {
+                            _logger.LogError($"Failed to convert Indeed job description to markdown. JobKey={jobs[i].ProviderId}");
+                        }
                     }
                 }
 
@@ -340,6 +350,9 @@ namespace JobHunt.Searching {
                 writer.WriteStringValue(value.ToString());
             }
         }
+
+        public static readonly string[] SupportedCountries = { "ar", "au", "at", "bh", "be", "br", "ca", "cl", "cn", "co", "cz", "dk", "fi", "fr", "de", "gr", "hk", "hu", "in", "id", "ie", "il", "it", "jp", "kr", "kw", "lu", "my", "mx", "nl", "nz", "no", "om", "pk", "pe", "ph", "pl", "pt", "qt", "ro", "ru", "sa", "sg", "za", "es", "se", "ch", "tw", "th", "tr", "ae", "gb", "us", "ve", "vn" };
+        public static readonly string[] JobTypes = { "permanent", "fulltime", "contract", "apprenticeship", "temporary", "parttime", "internship" };
     }
 
     public interface IIndeedAPI : ISearchProvider { };

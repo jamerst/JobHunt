@@ -9,6 +9,7 @@ namespace JobHunt.DTO {
         public string? CompanyName { get; set; }
         public DateTime? Posted { get; set; }
         public bool Seen { get; set; }
+        public bool Archived { get; set; }
         public double? Distance { get; set; }
     }
 }

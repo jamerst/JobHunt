@@ -152,6 +152,8 @@ namespace JobHunt.Services {
             job.Title = details.Title;
             job.Salary = details.Salary;
             job.Description = details.Description;
+            job.Latitude = details.Latitude;
+            job.Longitude = details.Longitude;
 
             await _context.SaveChangesAsync();
 
@@ -199,6 +201,10 @@ namespace JobHunt.Services {
                 query = query.Where(j => j.Status == filter.Status);
             }
 
+            if (filter.ShowArchived.HasValue) {
+                query = query.Where(j => j.Archived == filter.ShowArchived || j.Archived == false);
+            }
+
             int? total = null;
             if (count) {
                 total = await query.CountAsync();
@@ -214,6 +220,7 @@ namespace JobHunt.Services {
                     CompanyName = j.Company != null ? j.Company.Name : null,
                     Posted = j.Posted,
                     Seen = j.Seen,
+                    Archived = j.Archived,
                     Distance = lat.HasValue && lng.HasValue ? _context.GeoDistance(lat.Value, lng.Value, j.Latitude!.Value, j.Longitude!.Value) : null
                 })
                 .OrderByDescending(j => j.Posted)

@@ -12,6 +12,7 @@ import Jobs from './views/Jobs';
 import { blue, purple } from '@material-ui/core/colors';
 import Company from './views/Company';
 import Companies from './views/Companies';
+import Searches from './views/Searches';
 
 function App() {
   const [darkMode, setDarkMode] = useState<boolean>(
@@ -80,6 +81,11 @@ function App() {
           <Route exact path="/company/:id">
             <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
               <Company/>
+            </MainLayout>
+          </Route>
+          <Route exact path="/searches">
+            <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+              <Searches/>
             </MainLayout>
           </Route>
         </Switch>
