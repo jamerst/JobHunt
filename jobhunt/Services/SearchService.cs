@@ -17,6 +17,13 @@ namespace JobHunt.Services {
             _context = context;
         }
 
+        public async Task<Search> GetByIdAsync(int id) {
+            return await _context.Searches
+                .AsNoTracking()
+                .Include(s => s.Runs.OrderByDescending(sr => sr.Time).Take(10))
+                .SingleOrDefaultAsync(s => s.Id == id);
+        }
+
         public async Task<IEnumerable<Search>> FindEnabledByProviderAsync(string provider) {
             return await _context.Searches.Where(s => s.Provider == provider && s.Enabled).ToListAsync();
         }
@@ -98,6 +105,59 @@ namespace JobHunt.Services {
 
             return (search.Id, "");
         }
+
+        public async Task<(bool, string)> UpdateAsync(SearchDto details) {
+            Search search = await _context.Searches.SingleOrDefaultAsync(s => s.Id == details.Id);
+
+            if (search == default(Search)) {
+                return (false, "Search not found");
+            }
+
+            if (SearchProviderName.AllProviders.Contains(details.Provider)) {
+                search.Provider = details.Provider;
+            } else {
+                return (false, "Unknown provider");
+            }
+
+            search.Query = details.Query;
+            search.Location = details.Location;
+            search.Distance = details.Distance;
+            search.MaxAge = details.MaxAge;
+            search.EmployerOnly = details.EmployerOnly;
+            search.Enabled = details.Enabled;
+
+            if (search.Provider == SearchProviderName.Indeed) {
+                if (IndeedAPI.SupportedCountries.Contains(details.Country.ToLower())) {
+                    search.Country = details.Country;
+                } else {
+                    return (false, "Country not supported");
+                }
+            }
+
+            if (!string.IsNullOrEmpty(search.JobType) && search.Provider == SearchProviderName.Indeed) {
+                if (IndeedAPI.JobTypes.Contains(details.JobType)) {
+                    search.JobType = details.JobType;
+                } else {
+                    return (false, "Unknown job type");
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            return (true, "");
+        }
+
+        public async Task<bool> RemoveAsync(int id) {
+            Search search = await _context.Searches.SingleOrDefaultAsync(s => s.Id == id);
+
+            if (search == default(Search)) {
+                return false;
+            }
+
+            _context.Searches.Remove(search);
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 
     public interface ISearchService {
@@ -106,5 +166,8 @@ namespace JobHunt.Services {
         Task<(IEnumerable<Search>, int?)> GetPagedAsync(int pageNum, int pageSize, bool count);
         Task ToggleEnabledAsync(int searchId);
         Task<(int?, string)> CreateAsync(SearchDto details);
+        Task<Search> GetByIdAsync(int id);
+        Task<(bool, string)> UpdateAsync(SearchDto details);
+        Task<bool> RemoveAsync(int id);
     }
 }

@@ -141,12 +141,12 @@ namespace JobHunt.Services {
                 .ToListAsync();
         }
 
-        public async Task<Job?> UpdateAsync(int id, JobDto details) {
+        public async Task<bool> UpdateAsync(int id, JobDto details) {
             Job job = await _context.Jobs
                 .FirstOrDefaultAsync(j => j.Id == id);
 
             if (job == default(Job)) {
-                return null;
+                return false;
             }
 
             job.Title = details.Title;
@@ -157,7 +157,7 @@ namespace JobHunt.Services {
 
             await _context.SaveChangesAsync();
 
-            return job;
+            return true;
         }
 
         public async Task MarkAsArchivedAsync(int id, bool toggle) {
@@ -249,7 +249,7 @@ namespace JobHunt.Services {
         Task<JobCount> GetJobCountsAsync(DateTime Date);
         Task MarkAsSeenAsync(int id);
         Task<IEnumerable<Category>?> UpdateCategoriesAsync(int id, CategoryDto[] categories);
-        Task<Job?> UpdateAsync(int id, JobDto details);
+        Task<bool> UpdateAsync(int id, JobDto details);
         Task MarkAsArchivedAsync(int id, bool toggle);
         Task<(IEnumerable<JobResultDto>, int?)> SearchPagedAsync(Filter filter, int pageNum, int pageSize, bool count);
         Task<IEnumerable<Category>> GetJobCategoriesAsync();
