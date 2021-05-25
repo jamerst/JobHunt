@@ -89,6 +89,17 @@ namespace JobHunt.Controllers {
             }
         }
 
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] CompanyDto details) {
+            int? result = await _companyService.CreateAsync(details);
+
+            if (result.HasValue) {
+                return new JsonResult(result.Value);
+            } else {
+                return BadRequest();
+            }
+        }
+
         [HttpPatch]
         [Route("{id}")]
         public async Task<IActionResult> Categories([FromRoute] int id, [FromBody] CategoryDto[] categories) {
@@ -145,6 +156,11 @@ namespace JobHunt.Controllers {
             } else {
                 return NotFound();
             }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Names() {
+            return new JsonResult(await _companyService.GetAllNamesAsync());
         }
     }
 }

@@ -7,6 +7,8 @@ namespace JobHunt.DTO {
         public string Title { get; set; } = null!;
         public string Description { get; set; } = null!;
         public string? Salary { get; set; }
+        public int? AvgYearlySalary { get; set; }
+        public string? Url { get; set; }
         public string Location { get; set; } = null!;
         public int? CompanyId { get; set; }
         public string? CompanyName { get; set; }

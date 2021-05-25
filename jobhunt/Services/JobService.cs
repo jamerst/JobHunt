@@ -160,6 +160,57 @@ namespace JobHunt.Services {
             return true;
         }
 
+        public async Task<int?> CreateAsync(NewJobDto details) {
+            Job job = new Job();
+
+            Company company = await _context.Companies.SingleOrDefaultAsync(c => c.Id == details.CompanyId);
+
+            job.Location = "";
+
+            if (company != default(Company)) {
+                job.CompanyId = company.Id;
+                job.Latitude = company.Latitude;
+                job.Longitude = company.Longitude;
+
+                if (string.IsNullOrEmpty(details.Location)) {
+                    job.Location = company.Location;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(details.Location)) {
+                job.Location = details.Location;
+                (double? lat, double? lng) = await _nominatim.Geocode(details.Location);
+
+                if (lat.HasValue && lng.HasValue) {
+                    job.Latitude = lat;
+                    job.Longitude = lng;
+                }
+            }
+
+            job.Title = details.Title;
+            job.Salary = details.Salary;
+            job.AvgYearlySalary = details.AvgYearlySalary;
+            job.Url = details.Url;
+
+            if (details.Posted.HasValue) {
+                job.Posted = details.Posted;
+            } else {
+                job.Posted = DateTime.Now;
+            }
+
+            if (!string.IsNullOrEmpty(details.Description)) {
+                var mdConverter = new Converter();
+                job.Description = mdConverter.Convert(details.Description);
+            } else {
+                job.Description = "";
+            }
+
+            _context.Jobs.Add(job);
+            await _context.SaveChangesAsync();
+
+            return job.Id;
+        }
+
         public async Task MarkAsArchivedAsync(int id, bool toggle) {
             Job job = await _context.Jobs.FirstOrDefaultAsync(j => j.Id == id);
 
@@ -250,6 +301,7 @@ namespace JobHunt.Services {
         Task MarkAsSeenAsync(int id);
         Task<IEnumerable<Category>?> UpdateCategoriesAsync(int id, CategoryDto[] categories);
         Task<bool> UpdateAsync(int id, JobDto details);
+        Task<int?> CreateAsync(NewJobDto details);
         Task MarkAsArchivedAsync(int id, bool toggle);
         Task<(IEnumerable<JobResultDto>, int?)> SearchPagedAsync(Filter filter, int pageNum, int pageSize, bool count);
         Task<IEnumerable<Category>> GetJobCategoriesAsync();

@@ -1,14 +1,15 @@
 import React, { FunctionComponent, useEffect, useState, useCallback } from "react"
-import { Box, Button, Chip, Container, Grid, Slider, TextField, Typography } from "@material-ui/core";
+import { Box, Button, Chip, Container, Grid, Slider, TextField, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Fab } from "@material-ui/core";
 import { GridColDef } from "@material-ui/data-grid"
 import { Helmet } from "react-helmet";
-
+import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
+import { Add } from "@material-ui/icons";
+import { Link, useHistory } from "react-router-dom";
 
 import Card from "../components/Card";
 import CardBody from "../components/CardBody";
 import CardHeader from "../components/CardHeader";
 import ApiDataGrid from "../components/ApiDataGrid";
-import { Link } from "react-router-dom";
 
 type SearchFilter = {
   term?: string,
@@ -37,6 +38,22 @@ type Category = {
   name: string
 }
 
+type Company = {
+  name: string,
+  location: string,
+  website?: string,
+  glassdoor?: string,
+  linkedin?: string,
+  endole?: string
+}
+
+const useStyles = makeStyles((theme: Theme) => createStyles({
+  dialog: {
+    minWidth: "40em",
+    maxWidth: "100%"
+  }
+}));
+
 const columns: GridColDef[] = [
   { field: "id", hide: true },
   {
@@ -61,6 +78,27 @@ const Companies: FunctionComponent = (props) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [filter, setFilter] = useState<SearchFilter>({ categories: [] });
   const [query, setQuery] = useState<[string, string | undefined][]>([]);
+  const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+  const [newCompany, setNewCompany] = useState<Company>({ name: "", location: "" });
+
+  const classes = useStyles();
+
+  const history = useHistory();
+
+  const create = useCallback(async () => {
+    const response = await fetch("/api/companies/create", {
+      method: "POST",
+      body: JSON.stringify(newCompany),
+      headers: { "Content-Type": "application/json" }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      history.push(`/company/${data}`);
+    } else {
+      console.error(`API request failed: POST /api/companies/create, HTTP ${response.status}`);
+    }
+  }, [newCompany, history])
 
   useEffect(() => {
     (async () => {
@@ -98,6 +136,7 @@ const Companies: FunctionComponent = (props) => {
         </CardHeader>
         <CardBody>
           <Box mx={8} mb={4}>
+            <form onSubmit={(e) => { e.preventDefault(); setQuery(toQuery(filter)); }}>
             <Grid container spacing={2}>
               <Grid item md={12}>
                 <TextField variant="filled" label="Search Term" fullWidth size="small" value={filter.term ?? ""} onChange={(e) => setFilter({...filter, term: e.target.value})}/>
@@ -148,9 +187,10 @@ const Companies: FunctionComponent = (props) => {
                 ))}
               </Grid>
               <Grid item md={12}>
-                  <Button variant="contained" color="secondary" onClick={() => setQuery(toQuery(filter))}>Search</Button>
+                  <Button variant="contained" color="secondary" onClick={() => setQuery(toQuery(filter))} type="submit">Search</Button>
               </Grid>
             </Grid>
+            </form>
           </Box>
           <Box mx={4}>
             <Typography variant="h6">Search Results</Typography>
@@ -162,8 +202,50 @@ const Companies: FunctionComponent = (props) => {
               queryParams={query}
             />
           </Box>
+          <Box mt={2}>
+            <Grid container justify="flex-end">
+              <Fab color="secondary" aria-label="add" onClick={() => setDialogOpen(!dialogOpen)}>
+                <Add/>
+              </Fab>
+            </Grid>
+          </Box>
         </CardBody>
       </Card>
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} aria-labelledby="add-dialog-title">
+        <DialogTitle id="add-dialog-title">Add New Company</DialogTitle>
+        <form onSubmit={(e) => { e.preventDefault(); create(); }}>
+          <DialogContent className={classes.dialog}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <TextField label="Name" value={newCompany.name} onChange={(e) => setNewCompany({...newCompany, name: e.target.value})} variant="outlined" fullWidth required />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField label="Location" value={newCompany.location} onChange={(e) => setNewCompany({...newCompany, location: e.target.value})} variant="outlined" fullWidth required />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField label="Website" value={newCompany.website ?? ""} onChange={(e) => setNewCompany({...newCompany, website: e.target.value})} variant="outlined" fullWidth size="small"/>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField label="Glassdoor" value={newCompany.glassdoor ?? ""} onChange={(e) => setNewCompany({...newCompany, glassdoor: e.target.value})} variant="outlined" fullWidth size="small"/>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField label="LinkedIn" value={newCompany.linkedin ?? ""} onChange={(e) => setNewCompany({...newCompany, linkedin: e.target.value})} variant="outlined" fullWidth size="small"/>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField label="Endole" value={newCompany.endole ?? ""} onChange={(e) => setNewCompany({...newCompany, endole: e.target.value})} variant="outlined" fullWidth size="small"/>
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button color="primary" onClick={() => setDialogOpen(false)} type="reset">
+              Cancel
+            </Button>
+            <Button color="primary" type="submit">
+              Add
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
     </Container>
   );
 }

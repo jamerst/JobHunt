@@ -138,95 +138,97 @@ const Searches: FunctionComponent = (props) => {
       </Card>
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} aria-labelledby="add-dialog-title">
         <DialogTitle id="add-dialog-title">Add New Search</DialogTitle>
-        <DialogContent className={classes.dialog}>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <FormControl fullWidth variant="outlined" required>
-                <InputLabel id="add-provider-select-label">Source</InputLabel>
-                <Select
-                  labelId="add-provider-select-label"
-                  value={newSearch.provider}
-                  onChange={(e) => setNewSearch({...newSearch, provider: e.target.value as string})}
-                  label="Source"
-                >
-                  <MenuItem value="Indeed">Indeed</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField label="Search Term" value={newSearch.query} onChange={(e) => setNewSearch({...newSearch, query: e.target.value})} variant="outlined" fullWidth required/>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Location" value={newSearch.location ?? ""} onChange={(e) => setNewSearch({...newSearch, location: e.target.value})} variant="outlined" fullWidth/>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Typography id="label-distance" gutterBottom>Distance (mi/km)</Typography>
-                <Slider
-                  value={newSearch.distance ?? 15}
-                  onChange={(_, val) => setNewSearch({...newSearch, distance: val as number})}
-                  step={5}
-                  marks
-                  min={0}
-                  max={50}
-                  valueLabelDisplay="auto"
-                  aria-labelledby="label-distance"
-                  disabled={!newSearch.location}
+        <form onSubmit={(e) => { e.preventDefault(); create(); }}>
+          <DialogContent className={classes.dialog}>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <FormControl fullWidth variant="outlined" required>
+                  <InputLabel id="add-provider-select-label">Source</InputLabel>
+                  <Select
+                    labelId="add-provider-select-label"
+                    value={newSearch.provider}
+                    onChange={(e) => setNewSearch({...newSearch, provider: e.target.value as string})}
+                    label="Source"
+                  >
+                    <MenuItem value="Indeed">Indeed</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField label="Search Term" value={newSearch.query} onChange={(e) => setNewSearch({...newSearch, query: e.target.value})} variant="outlined" fullWidth required/>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField label="Location" value={newSearch.location ?? ""} onChange={(e) => setNewSearch({...newSearch, location: e.target.value})} variant="outlined" fullWidth/>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Typography id="label-distance" gutterBottom>Distance (mi/km)</Typography>
+                  <Slider
+                    value={newSearch.distance ?? 15}
+                    onChange={(_, val) => setNewSearch({...newSearch, distance: val as number})}
+                    step={5}
+                    marks
+                    min={0}
+                    max={50}
+                    valueLabelDisplay="auto"
+                    aria-labelledby="label-distance"
+                    disabled={!newSearch.location}
+                  />
+              </Grid>
+              <Grid item xs={12}>
+                <CountrySelector
+                  value={newSearch.country}
+                  onChange={(code: string) => setNewSearch({...newSearch, country: code})}
+                  required
                 />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel id="add-type-select-label">Job Type</InputLabel>
+                  <Select
+                    labelId="add-type-select-label"
+                    value={newSearch.jobType}
+                    onChange={(e) => setNewSearch({...newSearch, jobType: e.target.value as string})}
+                    label="Job Type"
+                  >
+                    <MenuItem><em>Any</em></MenuItem>
+                    <MenuItem value="permanent">Permanent</MenuItem>
+                    <MenuItem value="fulltime">Full-time</MenuItem>
+                    <MenuItem value="contract">Contract</MenuItem>
+                    <MenuItem value="apprenticeship">Apprenticeship</MenuItem>
+                    <MenuItem value="temporary">Temporary</MenuItem>
+                    <MenuItem value="parttime">Part-time</MenuItem>
+                    <MenuItem value="internship">Internship</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  label="Maximum Age"
+                  value={newSearch.maxAge ?? ""}
+                  onChange={(e) => setNewSearch({...newSearch, maxAge: isNaN(parseInt(e.target.value, 10)) ? undefined : parseInt(e.target.value, 10)})}
+                  variant="outlined"
+                  fullWidth
+                  InputProps={{endAdornment: <InputAdornment position="end">days</InputAdornment>}}
+                />
+              </Grid>
+              <Grid item xs={12} alignItems="center">
+                <FormControlLabel
+                  style={{height: "100%"}}
+                  control={<Switch checked={!newSearch.employerOnly} onChange={(e) => setNewSearch({...newSearch, employerOnly: !e.target.checked})} color="primary" />}
+                  label="Include jobs from recruiters"
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={12}>
-              <CountrySelector
-                value={newSearch.country}
-                onChange={(code: string) => setNewSearch({...newSearch, country: code})}
-                required
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth variant="outlined">
-                <InputLabel id="add-type-select-label">Job Type</InputLabel>
-                <Select
-                  labelId="add-type-select-label"
-                  value={newSearch.jobType}
-                  onChange={(e) => setNewSearch({...newSearch, jobType: e.target.value as string})}
-                  label="Job Type"
-                >
-                  <MenuItem><em>Any</em></MenuItem>
-                  <MenuItem value="permanent">Permanent</MenuItem>
-                  <MenuItem value="fulltime">Full-time</MenuItem>
-                  <MenuItem value="contract">Contract</MenuItem>
-                  <MenuItem value="apprenticeship">Apprenticeship</MenuItem>
-                  <MenuItem value="temporary">Temporary</MenuItem>
-                  <MenuItem value="parttime">Part-time</MenuItem>
-                  <MenuItem value="internship">Internship</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Maximum Age"
-                value={newSearch.maxAge ?? ""}
-                onChange={(e) => setNewSearch({...newSearch, maxAge: isNaN(parseInt(e.target.value, 10)) ? undefined : parseInt(e.target.value, 10)})}
-                variant="outlined"
-                fullWidth
-                InputProps={{endAdornment: <InputAdornment position="end">days</InputAdornment>}}
-              />
-            </Grid>
-            <Grid item xs={12} alignItems="center">
-              <FormControlLabel
-                style={{height: "100%"}}
-                control={<Switch checked={!newSearch.employerOnly} onChange={(e) => setNewSearch({...newSearch, employerOnly: !e.target.checked})} color="primary" />}
-                label="Include jobs from recruiters"
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button color="primary" onClick={() => setDialogOpen(false)}>
-            Cancel
-          </Button>
-          <Button color="primary" onClick={() => create()}>
-            Add
-          </Button>
-        </DialogActions>
+          </DialogContent>
+          <DialogActions>
+            <Button color="primary" onClick={() => setDialogOpen(false)} type="reset">
+              Cancel
+            </Button>
+            <Button color="primary" type="submit">
+              Add
+            </Button>
+          </DialogActions>
+        </form>
       </Dialog>
     </Container>
   );

@@ -63,6 +63,17 @@ namespace JobHunt.Controllers {
              }
         }
 
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] NewJobDto details) {
+            int? result = await _jobService.CreateAsync(details);
+
+            if (result.HasValue) {
+                return new JsonResult(result.Value);
+            } else {
+                return BadRequest();
+            }
+        }
+
         [HttpPatch]
         [Route("{id}")]
         public async Task Seen([FromRoute] int id) {

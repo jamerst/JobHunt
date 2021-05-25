@@ -125,6 +125,37 @@ namespace JobHunt.Services {
             return company;
         }
 
+        public async Task<int?> CreateAsync(CompanyDto details) {
+            Company company = new Company();
+
+            if (string.IsNullOrEmpty(details.Name)) {
+                return null;
+            }
+
+            if (string.IsNullOrEmpty(details.Location)) {
+                return null;
+            }
+
+            company.Name = details.Name;
+            company.Location = details.Location;
+            company.Website = details.Website;
+            company.Glassdoor = details.Glassdoor;
+            company.LinkedIn = details.LinkedIn;
+            company.Endole = details.Endole;
+
+            (double? lat, double? lng) = await _nominatim.Geocode(details.Location);
+            company.Latitude = lat;
+            company.Longitude = lng;
+
+            company.Watched = false;
+            company.Blacklisted = false;
+
+            _context.Companies.Add(company);
+            await _context.SaveChangesAsync();
+
+            return company.Id;
+        }
+
         public async Task<(IEnumerable<CompanyResultDto>, int?)> SearchPagedAsync(Filter filter, int pageNum, int pageSize, bool count) {
             var query = _context.Companies.AsNoTracking();
 
@@ -208,6 +239,13 @@ namespace JobHunt.Services {
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<IEnumerable<CompanyNameDto>> GetAllNamesAsync() {
+            return await _context.Companies
+                .OrderBy(c => c.Name)
+                .Select(c => new CompanyNameDto { CompanyId = c.Id, Name = c.Name })
+                .ToListAsync();
+        }
     }
 
     public interface ICompanyService {
@@ -216,9 +254,11 @@ namespace JobHunt.Services {
         Task CreateAllAsync(IEnumerable<Company> companies);
         Task<IEnumerable<Category>?> UpdateCategoriesAsync(int id, CategoryDto[] categories);
         Task<Company?> UpdateAsync(int id, CompanyDto details);
+        Task<int?> CreateAsync(CompanyDto details);
         Task<(IEnumerable<CompanyResultDto>, int?)> SearchPagedAsync(Filter filter, int pageNum, int pageSize, bool count);
         Task<IEnumerable<Category>> GetCompanyCategoriesAsync();
         Task<bool> ToggleBlacklistAsync(int id);
         Task<bool> ToggleWatchAsync(int id);
+        Task<IEnumerable<CompanyNameDto>> GetAllNamesAsync();
     }
 }

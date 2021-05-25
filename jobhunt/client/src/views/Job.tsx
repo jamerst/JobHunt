@@ -181,7 +181,7 @@ const Job = () => {
                 </Grid>
               </Box>
             ) : null}
-            <Typography variant="subtitle2">From "{jobData.sourceName}"</Typography>
+            <Typography variant="subtitle2">{jobData.sourceName ? `"From "${jobData.sourceName}"` : "Created manually"}</Typography>
             <Box mt={1}>
               <Categories
                 categories={jobData.categories}
@@ -206,9 +206,11 @@ const Job = () => {
                   :
                   (
                     <Fragment>
-                      <Grid item>
-                        <Button variant="contained" color="secondary" startIcon={<Subject/>} endIcon={<OpenInNew/>} component="a" href={jobData.url} target="_blank">View Listing</Button>
-                      </Grid>
+                      { jobData.url ? (
+                        <Grid item>
+                          <Button variant="contained" color="secondary" startIcon={<Subject/>} endIcon={<OpenInNew/>} component="a" href={jobData.url} target="_blank">View Listing</Button>
+                        </Grid>
+                      ) : null}
                       {jobData.latitude && jobData.longitude ? (
                         <Grid item>
                           <Button variant="contained" color="secondary" startIcon={<Map/>} endIcon={<OpenInNew/>} component="a" href={`https://www.google.com/maps/search/?api=1&query=${jobData.latitude},${jobData.longitude}`} target="_blank">View Location</Button>
