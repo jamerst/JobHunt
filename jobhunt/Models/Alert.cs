@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -10,5 +11,6 @@ namespace JobHunt.Models {
         public string Title { get; set; } = null!;
         public string? Message { get; set;}
         public string? Url { get; set; }
+        public DateTime Created { get; set; }
     }
 }

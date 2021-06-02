@@ -3,6 +3,7 @@ import { Divider, Drawer, Grid, IconButton, List, ListItem, ListItemIcon, ListIt
 import { BrightnessHigh, Brightness2, Work, Business, Search, Dashboard  } from "@material-ui/icons";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import { Link } from "react-router-dom";
+import Alerts from "../components/Alerts";
 
 type MainLayoutProps = {
   darkMode: boolean,
@@ -77,14 +78,19 @@ const MainLayout = (props: React.PropsWithChildren<MainLayoutProps>) => {
           <Divider/>
           <ListItem>
             <Grid container justify="center">
-              <Tooltip title="Toggle theme">
-                <IconButton
-                  aria-label="Toggle theme"
-                  onClick={() => { props.setDarkMode(!props.darkMode); localStorage.setItem("theme", props.darkMode ? "light" : "dark") }}
-                >
-                  {props.darkMode ? <BrightnessHigh /> : <Brightness2 />}
-                </IconButton>
-              </Tooltip>
+              <Grid item>
+                <Tooltip title="Toggle theme">
+                  <IconButton
+                    aria-label="Toggle theme"
+                    onClick={() => { props.setDarkMode(!props.darkMode); localStorage.setItem("theme", props.darkMode ? "light" : "dark") }}
+                  >
+                    {props.darkMode ? <BrightnessHigh /> : <Brightness2 />}
+                  </IconButton>
+                </Tooltip>
+              </Grid>
+              <Grid item>
+                <Alerts/>
+              </Grid>
             </Grid>
           </ListItem>
         </List>

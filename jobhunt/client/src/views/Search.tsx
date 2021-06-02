@@ -84,7 +84,7 @@ const Search = () => {
     } else {
       console.error(`API request failed: DELETE /api/search/${id}, HTTP ${response.status}`);
     }
-  }, [id])
+  }, [id, history])
 
   useEffect(() => {
     fetchData();

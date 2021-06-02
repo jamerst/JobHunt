@@ -1,4 +1,9 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+
+using Microsoft.EntityFrameworkCore;
 
 using JobHunt.Data;
 using JobHunt.Models;
@@ -10,12 +15,41 @@ namespace JobHunt.Services {
             _context = context;
         }
         public async Task CreateAsync(Alert alert) {
+            alert.Created = DateTime.Now;
             _context.Alerts.Add(alert);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<Alert>> GetRecentAsync() {
+            return await _context.Alerts.AsNoTracking().OrderByDescending(a => a.Created).Take(20).ToListAsync();
+        }
+
+        public async Task<bool> MarkAsReadAsync(int id) {
+            Alert alert = await _context.Alerts.SingleOrDefaultAsync(a => a.Id == id);
+
+            if (alert == default(Alert)) {
+                return false;
+            }
+
+            alert.Read = true;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task MarkAllAsReadAsync() {
+            List<Alert> alerts = await _context.Alerts.Where(a => !a.Read).ToListAsync();
+
+            alerts.ForEach(a => a.Read = true);
+
             await _context.SaveChangesAsync();
         }
     }
 
     public interface IAlertService {
         Task CreateAsync(Alert alert);
+        Task<IEnumerable<Alert>> GetRecentAsync();
+        Task<bool> MarkAsReadAsync(int id);
+        Task MarkAllAsReadAsync();
     }
 }
