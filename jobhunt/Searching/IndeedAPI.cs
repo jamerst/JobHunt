@@ -26,6 +26,7 @@ namespace JobHunt.Searching {
         private const string _apiUrl = "https://api.indeed.com/ads/apisearch";
         private readonly string _salaryUrl;
         private const string _descUrl = "https://indeed.com/rpc/jobdescs";
+        private readonly IAlertService _alertService;
         private readonly ICompanyService _companyService;
         private readonly IJobService _jobService;
         private readonly ISearchService _searchService;
@@ -36,7 +37,15 @@ namespace JobHunt.Searching {
             PropertyNameCaseInsensitive = true,
             Converters = { new IndeedDateTimeConverter() }
         };
-        public IndeedAPI(ICompanyService companyService, IJobService jobService, ISearchService searchService, IOptions<SearchOptions> options, ILogger<IndeedAPI> logger) {
+        public IndeedAPI(
+            IAlertService alertService,
+            ICompanyService companyService,
+            IJobService jobService,
+            ISearchService searchService,
+            IOptions<SearchOptions> options,
+            ILogger<IndeedAPI> logger
+        ) {
+            _alertService = alertService;
             _companyService = companyService;
             _jobService = jobService;
             _searchService = searchService;
@@ -101,6 +110,8 @@ namespace JobHunt.Searching {
             StringBuilder jobKeys = new StringBuilder();
             int newJobs = 0;
 
+            List<JobAlertData> jobAlerts = new List<JobAlertData>();
+
             while (!existingFound && !token.IsCancellationRequested) {
                 IndeedResponse? response = null;
 
@@ -113,6 +124,7 @@ namespace JobHunt.Searching {
                     } else {
                         sw.Stop();
                         _logger.LogError("Indeed API request failed", httpResponse);
+                        await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", $"Indeed API error: HTTP {(int)httpResponse.StatusCode}");
                         await _searchService.CreateSearchRunAsync(search.Id!, false, $"Indeed API error: HTTP {(int) httpResponse.StatusCode}", 0, 0, (int) sw.Elapsed.TotalSeconds);
                         return;
                     }
@@ -120,6 +132,7 @@ namespace JobHunt.Searching {
 
                 if (response == null || response.Results == null) {
                     sw.Stop();
+                    await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", "Indeed API deserialisation error");
                     await _searchService.CreateSearchRunAsync(search.Id!, false, "Indeed API deserialisation error", 0, 0, (int) sw.Elapsed.TotalSeconds);
                     return;
                 }
@@ -148,6 +161,7 @@ namespace JobHunt.Searching {
                                         salaryResponse = await JsonSerializer.DeserializeAsync<IndeedSalaryResponse>(stream, _jsonOptions);
                                     }
                                 } else {
+                                    await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", $"Indeed Salary API error: HTTP {(int)httpResponse.StatusCode}");
                                     _logger.LogError("Indeed Salary API request failed", httpResponse);
                                 }
                             }
@@ -159,7 +173,14 @@ namespace JobHunt.Searching {
                         }
 
                         Company company = await _companyService.FindByNameAsync(job.Company);
-                        if (company != null) {
+                        if (company != null) { // company already exists
+                            if (company.Watched) {
+                                jobAlerts.Add(new JobAlertData {
+                                    JobKey = job.JobKey,
+                                    CompanyName = company.Name
+                                });
+                            }
+
                             jobs.Add(new Job {
                                 Title = job.JobTitle,
                                 Description = job.Snippet,
@@ -176,7 +197,7 @@ namespace JobHunt.Searching {
                                 SourceId = search.Id!,
                                 Archived = company.Blacklisted
                             });
-                        } else if (company == null && companies.Any(c => c.Name == job.Company)) {
+                        } else if (company == null && companies.Any(c => c.Name == job.Company)) { // company doesn't exist, but has already been encountered
                             Company newCompany = companies.First(c => c.Name == job.Company);
                             newCompany.Jobs.Add(new Job {
                                 Title = job.JobTitle,
@@ -193,7 +214,7 @@ namespace JobHunt.Searching {
                                 SourceId = search.Id!
                             });
                         } else {
-                            companies.Add(new Company {
+                            companies.Add(new Company { // company doesn't exist
                                 Name = job.Company,
                                 Location = job.FormattedLocation,
                                 Latitude = job.Latitude,
@@ -246,6 +267,7 @@ namespace JobHunt.Searching {
                 } else {
                     sw.Stop();
                     _logger.LogError("Indeed Job Descriptions request failed", httpResponse);
+                    await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", $"Indeed Job Descriptions API error: HTTP {(int)httpResponse.StatusCode}");
                     await _searchService.CreateSearchRunAsync(search.Id!, true, $"Job descriptions API error: HTTP {(int) httpResponse.StatusCode}", newJobs, companies.Count, (int) sw.Elapsed.TotalSeconds);
                 }
             }
@@ -271,13 +293,31 @@ namespace JobHunt.Searching {
                 }
             } else {
                 sw.Stop();
-                await _searchService.CreateSearchRunAsync(search.Id!, true, "Job descriptions deserialisation error", newJobs, companies.Count, (int) sw.Elapsed.TotalSeconds);
+                await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", "Indeed job descriptions deserialisation error");
+                await _searchService.CreateSearchRunAsync(search.Id!, true, "Indeed job descriptions deserialisation error", newJobs, companies.Count, (int) sw.Elapsed.TotalSeconds);
             }
 
             await _jobService.CreateAllAsync(jobs);
             await _companyService.CreateAllAsync(companies);
             sw.Stop();
             await _searchService.CreateSearchRunAsync(search.Id!, true, null, newJobs, companies.Count, (int) sw.Elapsed.TotalSeconds);
+
+            foreach (JobAlertData jobAlert in jobAlerts) {
+                Job? job = jobs.FirstOrDefault(j => j.ProviderId == jobAlert.JobKey);
+                if (job != null) {
+                    await _alertService.CreateAsync(new Alert {
+                        Type = AlertType.NewJob,
+                        Title = $"New job posted by {jobAlert.CompanyName}",
+                        Message = $"'{job.Title}'",
+                        Url = $"/job/{job.Id}"
+                    });
+                }
+            }
+        }
+
+        private class JobAlertData {
+            public string JobKey { get; set; } = null!;
+            public string CompanyName { get; set; } = null!;
         }
 
         private class IndeedResponse {

@@ -3,6 +3,8 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.Extensions.Logging;
 
 using JobHunt.Data;
 using JobHunt.DTO;
@@ -246,6 +248,57 @@ namespace JobHunt.Services {
                 .Select(c => new CompanyNameDto { CompanyId = c.Id, Name = c.Name })
                 .ToListAsync();
         }
+
+        public async Task<bool> MergeAsync(int srcId, int destId) {
+            Company src = await _context.Companies
+                .Include(c => c.AlternateNames)
+                .Include(c => c.CompanyCategories)
+                .Include(c => c.Jobs)
+                .Include(c => c.WatchedPages)
+                .SingleOrDefaultAsync(c => c.Id == srcId);
+            Company dest = await _context.Companies
+                .Include(c => c.AlternateNames)
+                .Include(c => c.CompanyCategories)
+                .Include(c => c.Jobs)
+                .Include(c => c.WatchedPages)
+                .SingleOrDefaultAsync(c => c.Id == destId);
+
+            if (src == null || dest == null) {
+                return false;
+            }
+
+            src.AlternateNames.ForEach(an => {
+                if (!dest.AlternateNames.Any(anD => anD.Name == an.Name)) {
+                    an.CompanyId = dest.Id;
+                }
+            });
+
+            src.CompanyCategories.ForEach(cc => {
+                if (!dest.CompanyCategories.Any(ccD => ccD.CategoryId == cc.CategoryId)) {
+                    dest.CompanyCategories.Add(new CompanyCategory { CategoryId = cc.CategoryId});
+                }
+            });
+
+            src.Jobs.ForEach(j => {
+                j.CompanyId = dest.Id;
+            });
+
+            src.WatchedPages.ForEach(wp => {
+                if (!dest.WatchedPages.Any(wpD => wpD.Url == wp.Url)) {
+                    wp.CompanyId = dest.Id;
+                }
+            });
+
+            if (src.Name != dest.Name) {
+                dest.AlternateNames.Add(new CompanyName { Name = src.Name});
+            }
+
+            _context.Companies.Remove(src);
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
     }
 
     public interface ICompanyService {
@@ -260,5 +313,6 @@ namespace JobHunt.Services {
         Task<bool> ToggleBlacklistAsync(int id);
         Task<bool> ToggleWatchAsync(int id);
         Task<IEnumerable<CompanyNameDto>> GetAllNamesAsync();
+        Task<bool> MergeAsync(int srcId, int destId);
     }
 }

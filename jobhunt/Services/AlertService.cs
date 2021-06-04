@@ -20,6 +20,15 @@ namespace JobHunt.Services {
             await _context.SaveChangesAsync();
         }
 
+        public async Task CreateErrorAsync(string title, string? message = null, string? url = null) {
+            await CreateAsync(new Alert {
+                Type = AlertType.Error,
+                Title = title,
+                Message = message,
+                Url = url
+            });
+        }
+
         public async Task<IEnumerable<Alert>> GetRecentAsync() {
             return await _context.Alerts.AsNoTracking().OrderByDescending(a => a.Created).Take(20).ToListAsync();
         }
@@ -48,6 +57,7 @@ namespace JobHunt.Services {
 
     public interface IAlertService {
         Task CreateAsync(Alert alert);
+        Task CreateErrorAsync(string title, string? message = null, string? url = null);
         Task<IEnumerable<Alert>> GetRecentAsync();
         Task<bool> MarkAsReadAsync(int id);
         Task MarkAllAsReadAsync();

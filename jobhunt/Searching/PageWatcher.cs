@@ -87,7 +87,7 @@ namespace JobHunt.Searching {
             if (hash != page.Hash) {
                 await _alertService.CreateAsync(new Alert {
                     Type = AlertType.PageUpdate,
-                    Title = $"'{page.Company.Name}' page updated",
+                    Title = $"{page.Company.Name} page updated",
                     Message = $"'{page.Url}' content has changed",
                     Url = $"/company/{page.Company.Id}"
                 });

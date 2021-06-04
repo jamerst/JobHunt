@@ -158,6 +158,18 @@ namespace JobHunt.Controllers {
             }
         }
 
+        [HttpPatch]
+        [Route("{id}")]
+        public async Task<IActionResult> Merge([FromRoute] int id, [FromBody] int dest) {
+            bool result = await _companyService.MergeAsync(id, dest);
+
+            if (result) {
+                return Ok();
+            } else {
+                return NotFound();
+            }
+        }
+
         [HttpGet]
         public async Task<IActionResult> Names() {
             return new JsonResult(await _companyService.GetAllNamesAsync());

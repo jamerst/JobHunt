@@ -1,9 +1,10 @@
 import React, { Fragment, useCallback, useEffect, useState } from "react"
-import { Box, Button, Container, Chip, Grid, IconButton, Menu, MenuItem, Switch, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, TextField, Tooltip, Typography } from "@material-ui/core"
+import { Box, Button, Container, Chip, Grid, IconButton, Menu, MenuItem, Switch, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, TextField, Tooltip, Typography, Dialog, DialogActions, DialogContent, DialogTitle } from "@material-ui/core"
 import { GridColDef } from "@material-ui/data-grid"
 import { AccountBalance, Block, Delete, LinkedIn, Map, MoreHoriz, OpenInNew, RateReview, Save, Visibility, VisibilityOff, Web } from "@material-ui/icons";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
-import { useParams } from "react-router"
+import Autocomplete from "@material-ui/lab/Autocomplete";
+import { useHistory, useParams } from "react-router"
 import { Link } from "react-router-dom"
 import { Helmet } from "react-helmet"
 import dayjs from "dayjs"
@@ -40,6 +41,11 @@ type CompanyResponse = {
   alternateNames?: string[],
   latitude?: number,
   longitude?: number
+}
+
+type CompanyName = {
+  companyId: number,
+  name: string
 }
 
 type WatchedPage = {
@@ -103,6 +109,10 @@ const jobsColumns: GridColDef[] = [
 const useStyles = makeStyles((theme: Theme) => createStyles({
   unseen: {
     fontWeight: theme.typography.fontWeightBold
+  },
+  dialog: {
+    minWidth: "40em",
+    maxWidth: "100%"
   }
 }));
 
@@ -110,6 +120,7 @@ const Company = () => {
   const classes = useStyles();
 
   const { id }: CompanyRouteParams = useParams();
+  const history = useHistory();
 
   const [companyData, setCompanyData] = useState<CompanyResponse>();
   const [origCompanyData, setOrigCompanyData] = useState<CompanyResponse>();
@@ -117,6 +128,9 @@ const Company = () => {
   const [editing, setEditing] = useState<boolean>(false);
   const [newWatchedPage, setNewWatchedPage] = useState<WatchedPage>({ url: "", enabled: true });
   const [tab, setTab] = useState<number>(0);
+  const [allCompanies, setAllCompanies] = useState<CompanyName[]>([]);
+  const [mergeCompany, setMergeCompany] = useState<CompanyName | null>(null);
+  const [mergeOpen, setMergeOpen] = useState<boolean>(false);
 
   const fetchData = useCallback(async () => {
     const response = await fetch(`/api/companies/${id}`, { method: "GET" });
@@ -128,6 +142,37 @@ const Company = () => {
       console.error(`API request failed: GET /api/companies/${id}, HTTP ${response.status}`);
     }
   }, [id]);
+
+  const fetchCompanies = useCallback(async () => {
+    if (allCompanies.length > 0) {
+      return;
+    }
+
+    const response = await fetch("/api/companies/names");
+    if (response.ok) {
+      const data = await response.json() as CompanyName[];
+      setAllCompanies(data.filter(c => c.companyId !== parseInt(id, 10)));
+    } else {
+      console.error(`API request failed: GET /api/companies/names, HTTP ${response.status}`);
+    }
+  }, [allCompanies, id]);
+
+  const merge = useCallback(async () => {
+    if (mergeCompany) {
+      const response = await fetch(`/api/companies/merge/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(mergeCompany.companyId),
+        headers: { "Content-Type": "application/json" }
+      });
+
+      if (response.ok) {
+        setMergeOpen(false);
+        history.push(`/company/${mergeCompany.companyId}`);
+      } else {
+        console.error(`API request failed: PATCH /api/companies/merge/${id}, HTTP ${response.status}`);
+      }
+    }
+  }, [mergeCompany, history, id]);
 
   const saveChanges = useCallback(async () => {
     const response = await fetch(`/api/companies/${id}`, {
@@ -215,6 +260,7 @@ const Company = () => {
                 >
                   <MenuItem onClick={() => {setEditing(true); setMenuAnchor(null);}}>Edit Company</MenuItem>
                   <MenuItem onClick={() => {toggleBlacklist(); setMenuAnchor(null);}}>{companyData.blacklisted ? "Remove from blacklist" : "Blacklist company"}</MenuItem>
+                  <MenuItem onClick={() => { fetchCompanies(); setMergeOpen(true); setMenuAnchor(null); }}>Merge Company</MenuItem>
                 </Menu>
               </Grid>
             </Grid>
@@ -463,8 +509,8 @@ const Company = () => {
                   {companyData.watchedPages.map(p =>
                     <TableRow key={p.url}>
                       <TableCell><a href={p.url} target="_blank" rel="noreferrer">{p.url}</a></TableCell>
-                      <TableCell>{dayjs(p.lastScraped).fromNow() ?? "Never"}</TableCell>
-                      <TableCell>{dayjs(p.lastUpdated).toDate().toLocaleString() ?? "Never"}</TableCell>
+                      <TableCell>{p.lastScraped ? dayjs(p.lastScraped).fromNow() : "Never"}</TableCell>
+                      <TableCell>{p.lastUpdated ? dayjs(p.lastUpdated).toDate().toLocaleString() : "Never"}</TableCell>
                       <TableCell>{p.statusMessage}</TableCell>
                     </TableRow>
                   )}
@@ -487,6 +533,37 @@ const Company = () => {
           </TabPanel>
         </CardBody>
       </Card>
+      <Dialog open={mergeOpen} onClose={() => setMergeOpen(false)} aria-labelledby="add-dialog-title">
+        <DialogTitle id="add-dialog-title">Merge Company</DialogTitle>
+        <form onSubmit={(e) => { e.preventDefault(); merge(); }}>
+          <DialogContent className={classes.dialog}>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <Typography variant="body1">Select a company to merge with. All jobs, watched pages, categories, and names will be moved to the selected company.</Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Autocomplete
+                  options={allCompanies}
+                  getOptionLabel={(option) => option.name}
+                  renderInput={(params) => <TextField {...params} label="Company" variant="outlined" />}
+                  fullWidth
+                  value={mergeCompany}
+                  onChange={(_, val) => setMergeCompany(val)}
+                />
+
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button color="primary" onClick={() => { setMergeCompany(null); setMergeOpen(false); }} type="reset">
+              Cancel
+            </Button>
+            <Button color="primary" type="submit" disabled={!mergeCompany}>
+              Merge
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
     </Container>
   );
 }

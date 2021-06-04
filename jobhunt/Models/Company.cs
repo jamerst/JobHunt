@@ -13,7 +13,7 @@ namespace JobHunt.Models {
         public string? Notes { get; set; }
         public bool Watched { get; set; } = false;
         public bool Blacklisted { get; set; } = false;
-        public IList<Job> Jobs { get; set; } = null!;
+        public List<Job> Jobs { get; set; } = null!;
         public string? Website { get; set; }
         public short? Rating { get; set; }
         public string? Glassdoor { get; set; }
