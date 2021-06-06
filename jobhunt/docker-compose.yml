@@ -11,11 +11,9 @@ services:
       - db
     volumes:
       - ./:/app
-      - jobhunt-data:/jobhunt-data
       - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro,Z
       - /etc/localtime:/etc/localtime:ro
     environment:
-      Search__IndeedHostName: "uk.indeed.com"
       Search__IndeedFetchSalary: "true"
       Search__NominatimCountryCodes: "gb"
     #   Search__Schedules__0: "* * * * *"
@@ -32,4 +30,3 @@ services:
       - ./init-data/initdb.d:/docker-entrypoint-initdb.d/
 volumes:
   postgres-data:
-  jobhunt-data:

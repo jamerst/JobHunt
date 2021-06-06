@@ -14,6 +14,8 @@ import ApiDataGrid from "../components/ApiDataGrid";
 import { Link, useHistory } from "react-router-dom";
 import { Add } from "@material-ui/icons";
 import CountrySelector from "../components/CountrySelector";
+import { IndeedSupportedCountries } from "../utils/constants";
+import { useResponsive } from "../utils/hooks";
 
 const toggleEnabled = async (id: string) => {
   const response = await fetch(`/api/search/enable/${id}`, { method: "PATCH" });
@@ -30,7 +32,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 }));
 
 dayjs.extend(relativeTime);
-const columns: GridColDef[] = [
+const columns = (small: boolean | undefined): GridColDef[] => [
   { field: "id", hide: true },
   {
     field: "description",
@@ -52,6 +54,7 @@ const columns: GridColDef[] = [
     headerName: "Last Run",
     flex: 1,
     sortable: false,
+    hide: small,
     renderCell: (params) => {
       if (params.value === null) {
         return <Fragment>Never</Fragment>;
@@ -109,6 +112,8 @@ const Searches: FunctionComponent = (props) => {
   }, [newSearch, history])
 
   const classes = useStyles();
+  const r = useResponsive();
+  const small = r({xs: true, md: false});
 
   return (
     <Container>
@@ -122,7 +127,7 @@ const Searches: FunctionComponent = (props) => {
         <CardBody>
           <ApiDataGrid
             url="/api/search"
-            columns={columns}
+            columns={columns(small)}
             disableColumnMenu
             disableColumnSelector
             disableSelectionOnClick
@@ -179,6 +184,8 @@ const Searches: FunctionComponent = (props) => {
                   value={newSearch.country}
                   onChange={(code: string) => setNewSearch({...newSearch, country: code})}
                   required
+                  allowedCountries={newSearch.provider === "Indeed" ? IndeedSupportedCountries : undefined}
+                  hideForbiddenCountries
                 />
               </Grid>
               <Grid item xs={12} md={6}>

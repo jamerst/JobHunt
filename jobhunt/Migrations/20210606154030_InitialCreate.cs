@@ -9,6 +9,24 @@ namespace JobHunt.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "Alerts",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Read = table.Column<bool>(type: "boolean", nullable: false),
+                    Type = table.Column<string>(type: "text", nullable: false),
+                    Title = table.Column<string>(type: "text", nullable: false),
+                    Message = table.Column<string>(type: "text", nullable: true),
+                    Url = table.Column<string>(type: "text", nullable: true),
+                    Created = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Alerts", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Categories",
                 columns: table => new
                 {
@@ -29,6 +47,8 @@ namespace JobHunt.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Name = table.Column<string>(type: "text", nullable: false),
                     Location = table.Column<string>(type: "text", nullable: false),
+                    Latitude = table.Column<double>(type: "double precision", nullable: true),
+                    Longitude = table.Column<double>(type: "double precision", nullable: true),
                     Notes = table.Column<string>(type: "text", nullable: true),
                     Watched = table.Column<bool>(type: "boolean", nullable: false),
                     Blacklisted = table.Column<bool>(type: "boolean", nullable: false),
@@ -59,37 +79,14 @@ namespace JobHunt.Migrations
                     MaxAge = table.Column<int>(type: "integer", nullable: true),
                     LastResultCount = table.Column<int>(type: "integer", nullable: true),
                     LastFetchSuccess = table.Column<bool>(type: "boolean", nullable: true),
+                    Enabled = table.Column<bool>(type: "boolean", nullable: false),
+                    EmployerOnly = table.Column<bool>(type: "boolean", nullable: false),
+                    JobType = table.Column<string>(type: "text", nullable: true),
                     LastRun = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Searches", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "CompanyCareersPages",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    CompanyId = table.Column<int>(type: "integer", nullable: false),
-                    Url = table.Column<string>(type: "text", nullable: false),
-                    Hash = table.Column<string>(type: "text", nullable: true),
-                    CssSelector = table.Column<string>(type: "text", nullable: true),
-                    CssBlacklist = table.Column<string>(type: "text", nullable: true),
-                    LastScraped = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
-                    LastUpdated = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
-                    StatusMessage = table.Column<string>(type: "text", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CompanyCareersPages", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_CompanyCareersPages_Companies_CompanyId",
-                        column: x => x.CompanyId,
-                        principalTable: "Companies",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -137,6 +134,33 @@ namespace JobHunt.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "WatchedPages",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    CompanyId = table.Column<int>(type: "integer", nullable: false),
+                    Url = table.Column<string>(type: "text", nullable: false),
+                    Hash = table.Column<string>(type: "text", nullable: true),
+                    CssSelector = table.Column<string>(type: "text", nullable: true),
+                    CssBlacklist = table.Column<string>(type: "text", nullable: true),
+                    LastScraped = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    LastUpdated = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    StatusMessage = table.Column<string>(type: "text", nullable: true),
+                    Enabled = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WatchedPages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_WatchedPages_Companies_CompanyId",
+                        column: x => x.CompanyId,
+                        principalTable: "Companies",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Jobs",
                 columns: table => new
                 {
@@ -145,11 +169,15 @@ namespace JobHunt.Migrations
                     Title = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false),
                     Salary = table.Column<string>(type: "text", nullable: true),
+                    AvgYearlySalary = table.Column<int>(type: "integer", nullable: true),
                     Location = table.Column<string>(type: "text", nullable: false),
+                    Latitude = table.Column<double>(type: "double precision", nullable: true),
+                    Longitude = table.Column<double>(type: "double precision", nullable: true),
                     Url = table.Column<string>(type: "text", nullable: true),
                     CompanyId = table.Column<int>(type: "integer", nullable: true),
                     Posted = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     Notes = table.Column<string>(type: "text", nullable: true),
+                    Seen = table.Column<bool>(type: "boolean", nullable: false),
                     Archived = table.Column<bool>(type: "boolean", nullable: false),
                     Status = table.Column<string>(type: "text", nullable: false),
                     DateApplied = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
@@ -224,11 +252,6 @@ namespace JobHunt.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_CompanyCareersPages_CompanyId",
-                table: "CompanyCareersPages",
-                column: "CompanyId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_CompanyCategories_CategoryId",
                 table: "CompanyCategories",
                 column: "CategoryId");
@@ -252,12 +275,17 @@ namespace JobHunt.Migrations
                 name: "IX_SearchRuns_SearchId",
                 table: "SearchRuns",
                 column: "SearchId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WatchedPages_CompanyId",
+                table: "WatchedPages",
+                column: "CompanyId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "CompanyCareersPages");
+                name: "Alerts");
 
             migrationBuilder.DropTable(
                 name: "CompanyCategories");
@@ -270,6 +298,9 @@ namespace JobHunt.Migrations
 
             migrationBuilder.DropTable(
                 name: "SearchRuns");
+
+            migrationBuilder.DropTable(
+                name: "WatchedPages");
 
             migrationBuilder.DropTable(
                 name: "Categories");

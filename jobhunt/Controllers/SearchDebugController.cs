@@ -3,11 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Options;
 
-using JobHunt.Configuration;
-using JobHunt.Models;
 using JobHunt.Searching;
 namespace JobHunt.Controllers {
     [ApiController]

@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
@@ -10,15 +12,18 @@ using JobHunt.Data;
 using JobHunt.DTO;
 using JobHunt.Geocoding;
 using JobHunt.Models;
+using JobHunt.Searching;
 
 namespace JobHunt.Services {
     public class CompanyService : ICompanyService {
         private readonly JobHuntContext _context;
         private readonly INominatim _nominatim;
+        private readonly IPageWatcher _pageWatcher;
 
-        public CompanyService(JobHuntContext context, INominatim nominatim) {
+        public CompanyService(JobHuntContext context, INominatim nominatim, IPageWatcher pageWatcher) {
             _context = context;
             _nominatim = nominatim;
+            _pageWatcher = pageWatcher;
         }
 
         public async Task<Company> GetByIdAsync(int id) {
@@ -90,7 +95,7 @@ namespace JobHunt.Services {
                 .Include(c => c.WatchedPages)
                 .Include(c => c.AlternateNames)
                 .AsSingleQuery()
-                .FirstOrDefaultAsync(c => c.Id == id);
+                .SingleOrDefaultAsync(c => c.Id == id);
 
             if (company == default(Company)) {
                 return null;
@@ -106,6 +111,7 @@ namespace JobHunt.Services {
             company.Latitude = details.Latitude;
             company.Longitude = details.Longitude;
 
+            bool newPages = details.WatchedPages.Any(wp1 => !company.WatchedPages.Any(wp2 => wp2.Url == wp1.Url));
             company.WatchedPages.RemoveAll(wp1 => !details.WatchedPages.Any(wp2 => wp1.Url == wp2.Url));
             company.WatchedPages.AddRange(details.WatchedPages
                 .Where(wp1 => !company.WatchedPages.Any(wp2 => wp1.Url == wp2.Url))
@@ -123,6 +129,12 @@ namespace JobHunt.Services {
             );
 
             await _context.SaveChangesAsync();
+
+            if (newPages) {
+                HttpClient client = new HttpClient();
+                CancellationToken token = new CancellationToken();
+                await _pageWatcher.GetInitial(company.Id, client, token);
+            }
 
             return company;
         }

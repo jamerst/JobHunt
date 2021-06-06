@@ -3,8 +3,6 @@ import { Switch, BrowserRouter, Route } from "react-router-dom"
 import { CssBaseline } from "@material-ui/core"
 import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles"
 
-import { useAudibleRenders } from "react-audible-debug"
-
 import Dashboard from "./views/Dashboard"
 import MainLayout from "./layouts/MainLayout"
 import Job from './views/Job';
@@ -14,6 +12,7 @@ import Company from './views/Company';
 import Companies from './views/Companies';
 import Searches from './views/Searches';
 import Search from './views/Search';
+import createBreakpoints from '@material-ui/core/styles/createBreakpoints';
 
 function App() {
   const [darkMode, setDarkMode] = useState<boolean>(
@@ -21,8 +20,7 @@ function App() {
     || (window.matchMedia("(prefers-color-scheme: dark)").matches && localStorage.getItem("theme") === null)
   );
 
-  // useAudibleRenders(true);
-
+  const breakpoints = createBreakpoints({});
   const theme = useMemo(() =>
     createMuiTheme({
       palette: {
@@ -45,6 +43,11 @@ function App() {
               color: "inherit",
               "&:hover": {
                 textDecoration: "underline"
+              }
+            },
+            ".MuiContainer-root": {
+              [breakpoints.down("sm")]: {
+                padding: "0"
               }
             }
           }

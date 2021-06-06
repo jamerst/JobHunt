@@ -141,5 +141,16 @@ namespace JobHunt.Controllers {
                 Name = c.Name
             }));
         }
+
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> Status([FromRoute]int id, [FromBody]string status) {
+            bool result = await _jobService.UpdateStatusAsync(id, status);
+
+            if (!result) {
+                return NotFound();
+            } else {
+                return Ok();
+            }
+        }
     }
 }

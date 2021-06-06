@@ -24,7 +24,6 @@ using JobHunt.Services;
 namespace JobHunt.Searching {
     public class IndeedAPI : IIndeedAPI {
         private const string _apiUrl = "https://api.indeed.com/ads/apisearch";
-        private readonly string _salaryUrl;
         private const string _descUrl = "https://indeed.com/rpc/jobdescs";
         private readonly IAlertService _alertService;
         private readonly ICompanyService _companyService;
@@ -51,7 +50,6 @@ namespace JobHunt.Searching {
             _searchService = searchService;
             _logger = logger;
             _options = options.Value;
-            _salaryUrl = $"https://{_options.IndeedHostName}/viewjob";
         }
 
         public async Task SearchAllAsync(HttpClient client, CancellationToken token) {
@@ -79,7 +77,8 @@ namespace JobHunt.Searching {
                 { "userip", "1.2.3.4" },
                 { "useragent", "Mozilla//4.0(Firefox)" },
                 { "latlong", "1" },
-                { "v", "2" }
+                { "v", "2" },
+                { "filter", "0" }
             };
 
             if (search.Location != null) {
@@ -154,8 +153,11 @@ namespace JobHunt.Searching {
                                 { "vjs", "1" }
                             };
 
+                            // Get the hostname of the job view URL to allow salary to be fetched in local currency
+                            Uri jobUri = new Uri(job.Url);
+
                             IndeedSalaryResponse? salaryResponse = null;
-                            using (var httpResponse = await client.GetAsync(QueryHelpers.AddQueryString(_salaryUrl, salaryQuery), HttpCompletionOption.ResponseHeadersRead)) {
+                            using (var httpResponse = await client.GetAsync(QueryHelpers.AddQueryString($"https://{jobUri.Host}/viewjob", salaryQuery), HttpCompletionOption.ResponseHeadersRead)) {
                                 if (httpResponse.IsSuccessStatusCode) {
                                     using (var stream = await httpResponse.Content.ReadAsStreamAsync()) {
                                         salaryResponse = await JsonSerializer.DeserializeAsync<IndeedSalaryResponse>(stream, _jsonOptions);

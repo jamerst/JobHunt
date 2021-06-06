@@ -143,7 +143,7 @@ namespace JobHunt.Services {
 
         public async Task<bool> UpdateAsync(int id, JobDto details) {
             Job job = await _context.Jobs
-                .FirstOrDefaultAsync(j => j.Id == id);
+                .SingleOrDefaultAsync(j => j.Id == id);
 
             if (job == default(Job)) {
                 return false;
@@ -289,6 +289,21 @@ namespace JobHunt.Services {
                 .Select(g => new Category { Id = g.Key.Id, Name = g.Key.Name})
                 .ToListAsync();
         }
+
+        public async Task<bool> UpdateStatusAsync(int id, string status) {
+            Job job = await _context.Jobs
+                .SingleOrDefaultAsync(j => j.Id == id);
+
+            if (job == default(Job)) {
+                return false;
+            }
+
+            job.Status = status;
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
     }
 
     public interface IJobService {
@@ -305,5 +320,6 @@ namespace JobHunt.Services {
         Task MarkAsArchivedAsync(int id, bool toggle);
         Task<(IEnumerable<JobResultDto>, int?)> SearchPagedAsync(Filter filter, int pageNum, int pageSize, bool count);
         Task<IEnumerable<Category>> GetJobCategoriesAsync();
+        Task<bool> UpdateStatusAsync(int id, string status);
     }
 }

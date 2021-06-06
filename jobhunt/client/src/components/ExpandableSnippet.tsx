@@ -4,7 +4,8 @@ import { Grid, IconButton } from "@material-ui/core";
 import { ExpandLess, ExpandMore } from "@material-ui/icons";
 
 type ExpandableSnippetProps = {
-  maxHeight?: number
+  maxHeight?: number,
+  hidden?: boolean
 }
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
@@ -22,17 +23,19 @@ const ExpandableSnippet = (props:  React.PropsWithChildren<ExpandableSnippetProp
 
   return (
     <Grid container>
-      <Grid item className={collapsed ? classes.collapsed : ""}>
+      <Grid item className={collapsed && !props.hidden ? classes.collapsed : ""}>
         {props.children}
       </Grid>
       <Grid item container justify="center">
-        <IconButton onClick={() => setCollapsed(!collapsed)}>
-          {collapsed ?
-            (<ExpandMore fontSize="large"/>)
-            :
-            (<ExpandLess fontSize="large"/>)
-          }
-        </IconButton>
+        {!props.hidden ? (
+          <IconButton onClick={() => setCollapsed(!collapsed)}>
+            {collapsed ?
+              (<ExpandMore fontSize="large"/>)
+              :
+              (<ExpandLess fontSize="large"/>)
+            }
+          </IconButton>
+        ) : null }
       </Grid>
     </Grid>
   );

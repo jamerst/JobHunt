@@ -10,6 +10,7 @@ import Card from "../components/Card";
 import CardBody from "../components/CardBody";
 import CardHeader from "../components/CardHeader";
 import ApiDataGrid from "../components/ApiDataGrid";
+import { useResponsive } from "../utils/hooks";
 
 type SearchFilter = {
   term?: string,
@@ -50,7 +51,10 @@ type Company = {
 const useStyles = makeStyles((theme: Theme) => createStyles({
   dialog: {
     minWidth: "40em",
-    maxWidth: "100%"
+    maxWidth: "100%",
+    [theme.breakpoints.down("sm")]: {
+      minWidth: 0
+    }
   }
 }));
 
@@ -82,8 +86,8 @@ const Companies: FunctionComponent = (props) => {
   const [newCompany, setNewCompany] = useState<Company>({ name: "", location: "" });
 
   const classes = useStyles();
-
   const history = useHistory();
+  const r = useResponsive();
 
   const create = useCallback(async () => {
     const response = await fetch("/api/companies/create", {
@@ -135,13 +139,13 @@ const Companies: FunctionComponent = (props) => {
          <Typography variant="h4">Saved Companies</Typography>
         </CardHeader>
         <CardBody>
-          <Box mx={8} mb={4}>
+          <Box mx={r({xs: 1, md: 8})} mb={4} mt={1}>
             <form onSubmit={(e) => { e.preventDefault(); setQuery(toQuery(filter)); }}>
             <Grid container spacing={2}>
-              <Grid item md={12}>
+              <Grid item xs={12}>
                 <TextField variant="filled" label="Search Term" fullWidth size="small" value={filter.term ?? ""} onChange={(e) => setFilter({...filter, term: e.target.value})}/>
               </Grid>
-              <Grid item md={6}>
+              <Grid item xs={12} md={6}>
                 <TextField
                   variant="filled"
                   label="Location"
@@ -159,7 +163,7 @@ const Companies: FunctionComponent = (props) => {
                   }}
                 />
               </Grid>
-              <Grid item md={6}>
+              <Grid item xs={12} md={6}>
                 <Typography id="label-distance" gutterBottom>Distance</Typography>
                 <Slider
                   value={filter.distance ?? 15}
@@ -174,7 +178,7 @@ const Companies: FunctionComponent = (props) => {
                   disabled={!filter.location}
                 />
               </Grid>
-              <Grid item container md={12} spacing={1}>
+              <Grid item container xs={12} spacing={1}>
                 {categories.map(c => (
                   <Grid item key={`category-selector-${c.id}`}>
                     <Chip
@@ -186,13 +190,13 @@ const Companies: FunctionComponent = (props) => {
                   </Grid>
                 ))}
               </Grid>
-              <Grid item md={12}>
+              <Grid item xs={12}>
                   <Button variant="contained" color="secondary" onClick={() => setQuery(toQuery(filter))} type="submit">Search</Button>
               </Grid>
             </Grid>
             </form>
           </Box>
-          <Box mx={4}>
+          <Box mx={r({xs: 1, md: 4})}>
             <Typography variant="h6">Search Results</Typography>
             <ApiDataGrid
               url="/api/companies/search"

@@ -1,5 +1,6 @@
 import { Box } from "@material-ui/core";
 import React, { FunctionComponent } from "react"
+import { useResponsive } from "../utils/hooks";
 
 type TabPanelProps = {
   current: number,
@@ -8,6 +9,7 @@ type TabPanelProps = {
 }
 
 const TabPanel:FunctionComponent<TabPanelProps> = (props) => {
+  const r = useResponsive();
   return (
     <div
       role="tabpanel"
@@ -16,7 +18,7 @@ const TabPanel:FunctionComponent<TabPanelProps> = (props) => {
       aria-labelledby={`tab-${props.index}`}
     >
       {(props.current === props.index || props.keepMounted) && (
-        <Box p={3}>
+        <Box py={3} px={r({md: 3})}>
           {props.children}
         </Box>
       )}

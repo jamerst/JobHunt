@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   id="svg8"
+   version="1.1"
+   viewBox="0 0 400 400"
+   height="400mm"
+   width="400mm">
+  <defs
+     id="defs2">
+    <filter
+       id="filter1634"
+       style="color-interpolation-filters:sRGB;">
+      <feFlood
+         id="feFlood1624"
+         result="flood"
+         flood-color="rgb(0,0,0)"
+         flood-opacity="0.639216" />
+      <feComposite
+         id="feComposite1626"
+         result="composite1"
+         operator="in"
+         in2="SourceGraphic"
+         in="flood" />
+      <feGaussianBlur
+         id="feGaussianBlur1628"
+         result="blur"
+         stdDeviation="4.3"
+         in="composite1" />
+      <feOffset
+         id="feOffset1630"
+         result="offset"
+         dy="6.2"
+         dx="0" />
+      <feComposite
+         id="feComposite1632"
+         result="composite2"
+         operator="over"
+         in2="offset"
+         in="SourceGraphic" />
+    </filter>
+    <filter
+       id="filter964"
+       style="color-interpolation-filters:sRGB;">
+      <feFlood
+         id="feFlood954"
+         result="flood"
+         flood-color="rgb(0,0,0)"
+         flood-opacity="0.623529" />
+      <feComposite
+         id="feComposite956"
+         result="composite1"
+         operator="in"
+         in2="SourceGraphic"
+         in="flood" />
+      <feGaussianBlur
+         id="feGaussianBlur958"
+         result="blur"
+         stdDeviation="4.3"
+         in="composite1" />
+      <feOffset
+         id="feOffset960"
+         result="offset"
+         dy="6.2"
+         dx="0" />
+      <feComposite
+         id="feComposite962"
+         result="composite2"
+         operator="over"
+         in2="offset"
+         in="SourceGraphic" />
+    </filter>
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       id="filter973">
+      <feFlood
+         flood-opacity="0.588235"
+         flood-color="rgb(0,0,0)"
+         result="flood"
+         id="feFlood963" />
+      <feComposite
+         in="flood"
+         in2="SourceGraphic"
+         operator="in"
+         result="composite1"
+         id="feComposite965" />
+      <feGaussianBlur
+         in="composite1"
+         stdDeviation="4.3"
+         result="blur"
+         id="feGaussianBlur967" />
+      <feOffset
+         dx="0"
+         dy="5.65759"
+         result="offset"
+         id="feOffset969" />
+      <feComposite
+         in="SourceGraphic"
+         in2="offset"
+         operator="over"
+         result="composite2"
+         id="feComposite971" />
+    </filter>
+  </defs>
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(239.02551,28.308746)"
+     id="layer1">
+    <circle
+       r="200"
+       cy="171.69125"
+       cx="-39.025513"
+       id="path830"
+       style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#2196f3;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2.0857625;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate" />
+    <path
+       d="M 60.991777,102.94108 H 10.991397 V 77.94137 c 0,-13.875139 -11.1250497,-25.000193 -24.999717,-25.000193 h -50.000371 c -13.874675,0 -24.999725,11.125054 -24.999725,25.000193 v 24.99971 h -50.000364 c -13.87467,0 -24.87499,11.12507 -24.87499,25.0002 l -0.14174,137.50032 c 0,13.87467 11.12505,24.99972 24.99971,24.99972 H 60.974767 c 13.87467,0 24.99972,-11.12505 24.99972,-24.99972 V 127.94128 c 0,-13.87513 -11.12506,-25.0002 -24.99972,-25.0002 z m -75.000097,0 H -64.008691 V 77.94137 h 50.000371 z"
+       id="path844"
+       style="fill:#ffffff;fill-opacity:1;stroke-width:12.5;filter:url(#filter973)" />
+  </g>
+</svg>

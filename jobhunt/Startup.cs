@@ -6,8 +6,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 using JobHunt.Configuration;
+using JobHunt.Filters;
 using JobHunt.Geocoding;
 using JobHunt.Searching;
 using JobHunt.Services;
@@ -28,7 +30,9 @@ namespace JobHunt {
                 // .EnableSensitiveDataLogging()
             );
 
-            services.AddControllers();
+            services.AddControllers(options => {
+                options.Filters.Add(typeof(ExceptionLogger));
+            });
 
             // In production, the React files will be served from this directory
             services.AddSpaStaticFiles(configuration => {
@@ -60,7 +64,7 @@ namespace JobHunt {
                 app.UseHsts();
             }
 
-            app.UseHttpsRedirection();
+            // app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseSpaStaticFiles();
 

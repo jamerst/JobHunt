@@ -43,10 +43,17 @@ namespace JobHunt.Services {
                 .Where(wp => wp.Enabled)
                 .ToListAsync();
         }
+
+        public async Task<List<WatchedPage>> GetUnfetchedAsync(int companyId) {
+            return await _context.WatchedPages
+                .Where(wp => wp.CompanyId == companyId && string.IsNullOrEmpty(wp.Hash))
+                .ToListAsync();
+        }
     }
 
     public interface IWatchedPageService {
         Task UpdateStatusAsync(int id, string? hash = null, string? statusMessage = null);
         Task<List<WatchedPage>> GetAllActiveAsync();
+        Task<List<WatchedPage>> GetUnfetchedAsync(int companyId);
     }
 }

@@ -2,28 +2,22 @@ version: "3.3"
 
 services:
   web-prod:
-    image: "jamerst/JobHunt:latest"
+    image: "jamerst/jobhunt:latest"
     ports:
       - "80:80"
       - "443:443"
     depends_on:
       - db
     volumes:
-      - jobhunt-data:/jobhunt-data
-      - /certs:/certs
       - /etc/localtime:/etc/localtime:ro
     environment:
-        ASPNETCORE_URLS: https://+;http://+
-        ASPNETCORE_HTTPS_PORT: 443
-        ASPNETCORE_Kestrel__Certificates__Default__Password: PASSWORD_HERE
-        ASPNETCORE_Kestrel__Certificates__Default__Path: /certs/jobhunt-https.pfx
         Search__IndeedPublisherId: YOUR_PUBLISHER_ID
-        Search__IndeedHostName: "uk.indeed.com"
         Search__IndeedFetchSalary: "true"
         Search__GlassdoorPartnerId: YOUR_PARTNER_ID
         Search__GlassdoorPartnerKey: YOUR_PARTNER_KEY
-        Search__Schedules__0: 0 12 * * *
-        Search__Schedules__1: 0 18 * * *
+        Search__Schedules__0: 0 9 * * *
+        Search__Schedules__1: 0 12 * * *
+        Search__Schedules__2: 0 18 * * *
         Search__NominatimCountryCodes: "gb"
     restart: always
   db:
@@ -40,4 +34,3 @@ services:
     restart: always
 volumes:
   postgres-data:
-  jobhunt-data:

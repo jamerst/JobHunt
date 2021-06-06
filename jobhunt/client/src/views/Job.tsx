@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState, Fragment } from "react"
-import { Box, Button, Container, Divider, Grid, IconButton, Menu, MenuItem, Tab, Tabs, TextField, Typography } from "@material-ui/core"
+import { Box, Button, Container, Divider, FormControl, Grid, IconButton, InputLabel, Menu, MenuItem, Select, Tab, Tabs, TextField, Typography } from "@material-ui/core"
 import { useParams } from "react-router"
 import { Helmet } from "react-helmet"
 
@@ -13,6 +13,7 @@ import TabPanel from "../components/TabPanel";
 import ReactMarkdown from "react-markdown";
 import { Map, MoreHoriz, OpenInNew, Save, Subject } from "@material-ui/icons";
 import { Link } from "react-router-dom";
+import dayjs from "dayjs";
 
 type JobRouteParams = {
   id: string
@@ -88,6 +89,25 @@ const Job = () => {
     }
     setEditing(false);
   }, [jobData, origJobData, id]);
+
+  const updateStatus = useCallback(async (status: string) => {
+    const response = await fetch(`/api/jobs/status/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(status),
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (response.ok) {
+      if (jobData && origJobData) {
+        setJobData({...jobData, status: status});
+        setOrigJobData({...origJobData, status: status});
+      }
+    } else {
+      console.error(`API request failed: PATCH /api/jobs/status/${id}, HTTP ${response.status}`);
+    }
+  }, [id, jobData, origJobData]);
 
   const archiveJob = useCallback(async () => {
     const response = await fetch(`/api/jobs/archive/${id}?toggle=true`, { method: "PATCH" });
@@ -181,7 +201,8 @@ const Job = () => {
                 </Grid>
               </Box>
             ) : null}
-            <Typography variant="subtitle2">{jobData.sourceName ? `"From "${jobData.sourceName}"` : "Created manually"}</Typography>
+            <Typography variant="subtitle1">Posted {dayjs(jobData.posted).format("DD/MM/YYYY HH:mm")}</Typography>
+            <Typography variant="subtitle2">{jobData.sourceName ? `From "${jobData.sourceName}"` : "Created manually"}</Typography>
             <Box mt={1}>
               <Categories
                 categories={jobData.categories}
@@ -189,6 +210,27 @@ const Job = () => {
                 onCategoryAdd={(cats) => setJobData({ ...jobData, categories: cats})}
                 onCategoryRemove={(id) => setJobData({ ...jobData, categories: jobData.categories.filter(c => c.id !== id)})}
               />
+            </Box>
+            <Box my={2}>
+              <Grid container>
+                <Grid item sm={2}>
+                  <FormControl variant="outlined" fullWidth size="small">
+                    <InputLabel id="status-select-label">Status</InputLabel>
+                    <Select
+                      labelId="status-select-label"
+                      value={jobData.status}
+                      onChange={(e) => updateStatus(e.target.value as string)}
+                      label="Status"
+                    >
+                      <MenuItem value="Not Applied">Not Applied</MenuItem>
+                      <MenuItem value="Awaiting Response">Awaiting Response</MenuItem>
+                      <MenuItem value="In Progress">In Progress</MenuItem>
+                      <MenuItem value="Rejected">Rejected</MenuItem>
+                      <MenuItem value="Dropped Out">Dropped Out</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </Grid>
             </Box>
             <Box my={2}>
               <Grid container spacing={2}>
@@ -227,14 +269,14 @@ const Job = () => {
             </Tabs>
             <TabPanel current={tab} index={0}>
               <EditableComponent editing={editing} value={jobData.description} onChange={(e) => setJobData({...jobData, description: e.target.value})} label="Job Description" multiline rows={20}>
-                <ExpandableSnippet>
-                  <ReactMarkdown skipHtml>{jobData.description}</ReactMarkdown>
+                <ExpandableSnippet hidden={!jobData.description}>
+                  <ReactMarkdown skipHtml>{jobData.description ? jobData.description : "_No description available_"}</ReactMarkdown>
                 </ExpandableSnippet>
               </EditableComponent>
             </TabPanel>
             <TabPanel current={tab} index={1}>
               <EditableComponent editing={editing} value={jobData.notes} onChange={(e) => setJobData({...jobData, notes: e.target.value})} label="Notes" multiline rows={20}>
-                <ReactMarkdown skipHtml>{jobData.notes ?? "_No notes added_"}</ReactMarkdown>
+                <ReactMarkdown skipHtml>{jobData.notes ? jobData.notes : "_No notes added_"}</ReactMarkdown>
               </EditableComponent>
             </TabPanel>
           </Box>

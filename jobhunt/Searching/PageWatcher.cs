@@ -84,7 +84,7 @@ namespace JobHunt.Searching {
                 hash = Convert.ToBase64String(sha1.ComputeHash(Encoding.UTF8.GetBytes(content)));
             }
 
-            if (hash != page.Hash) {
+            if (hash != page.Hash && !string.IsNullOrEmpty(page.Hash)) {
                 await _alertService.CreateAsync(new Alert {
                     Type = AlertType.PageUpdate,
                     Title = $"{page.Company.Name} page updated",
@@ -95,10 +95,23 @@ namespace JobHunt.Searching {
 
             await _wpService.UpdateStatusAsync(page.Id, hash);
         }
+
+        public async Task GetInitial(int companyId, HttpClient client, CancellationToken token) {
+            List<WatchedPage> pages = await _wpService.GetUnfetchedAsync(companyId);
+
+            foreach(WatchedPage page in pages) {
+                if (token.IsCancellationRequested) {
+                    break;
+                }
+
+                await RefreshAsync(page, client, token);
+            }
+        }
     }
 
     public interface IPageWatcher {
         Task RefreshAllAsync(HttpClient client, CancellationToken token);
         Task RefreshAsync(WatchedPage page, HttpClient client, CancellationToken token);
+        Task GetInitial(int companyId, HttpClient client, CancellationToken token);
     }
 }

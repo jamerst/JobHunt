@@ -4,6 +4,7 @@ namespace JobHunt.Models {
             NotApplied = "Not Applied",
             AwaitingResponse = "Awaiting Response",
             InProgress = "In Progress",
-            Rejected = "Rejected";
+            Rejected = "Rejected",
+            DroppedOut = "Dropped Out";
     }
 }

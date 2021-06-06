@@ -1,6 +1,6 @@
 import React, { Fragment, useEffect, useState } from "react"
 import { Grid, Typography, Tooltip, Chip } from "@material-ui/core"
-import { GridColDef } from "@material-ui/data-grid"
+import { GridCellParams, GridColDef } from "@material-ui/data-grid"
 import SwipeableView from "react-swipeable-views"
 import { autoPlay } from "react-swipeable-views-utils"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
@@ -15,6 +15,7 @@ import { Link } from "react-router-dom"
 import CardHeader from "../components/CardHeader"
 import CardBody from "../components/CardBody"
 import { Helmet } from "react-helmet"
+import { useResponsive } from "../utils/hooks"
 
 type JobCount = {
   daily: number,
@@ -31,55 +32,58 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 const AutoPlaySwipeableView = autoPlay(SwipeableView);
 
 dayjs.extend(relativeTime);
-const jobsColumns: GridColDef[] = [
-  { field: "id", hide: true },
-  {
-    field: "title",
-    headerName: "Job Title",
-    flex: 2,
-    sortable: false,
-    renderCell: (params) => {
-      return (<Link to={`/job/${params.id}`}>{params.value}</Link>)
-    }
-  },
-  { field: "location", headerName: "Location", flex: 1, sortable: false, },
-  {
-    field: "companyName",
-    headerName: "Company",
-    flex: 2,
-    sortable: false,
-    renderCell: (params) => {
-      return (<Link to={`/company/${params.row.companyId}`}>{params.value}</Link>)
-    }
-  },
-  {
-    field: "posted",
-    headerName: "Posted",
-    type: "datetime",
-    flex: 1.25,
-    sortable: false,
-    renderCell: (params) => {
-      let date = dayjs(params.value as string);
-      if (date.isBefore(dayjs().subtract(14, "day"), "day")) {
-        return (<Fragment>{date.format("DD/MM/YYYY HH:mm")}</Fragment>);
-      } else {
-        let newTag = params.row.seen ? null : (<Chip label="New" color="secondary"/>);
-        return (
-          <Grid container justify="space-between" alignItems="center">
-            <Tooltip
-              title={<Typography variant="body2">{date.format("DD/MM/YYYY HH:mm")}</Typography>}
-              placement="right"
-            >
-              <span>{date.fromNow()}</span>
-            </Tooltip>
-            {newTag}
-          </Grid>
-        );
+const jobsColumns = (small: boolean): GridColDef[] => {
+  return [
+    { field: "id", hide: true },
+    {
+      field: "title",
+      headerName: "Job Title",
+      flex: 2,
+      sortable: false,
+      renderCell: (params: GridCellParams) => {
+        return (<Link to={`/job/${params.id}`}>{params.value}</Link>)
+      }
+    },
+    { field: "location", headerName: "Location", flex: 1, sortable: false, },
+    {
+      field: "companyName",
+      headerName: "Company",
+      flex: 2,
+      sortable: false,
+      renderCell: (params: GridCellParams) => {
+        return (<Link to={`/company/${params.row.companyId}`}>{params.value}</Link>)
+      },
+      hide: small
+    },
+    {
+      field: "posted",
+      headerName: "Posted",
+      type: "datetime",
+      flex: 1.25,
+      sortable: false,
+      hide: small,
+      renderCell: (params: GridCellParams) => {
+        let date = dayjs(params.value as string);
+        if (date.isBefore(dayjs().subtract(14, "day"), "day")) {
+          return (<Fragment>{date.format("DD/MM/YYYY HH:mm")}</Fragment>);
+        } else {
+          let newTag = params.row.seen ? null : (<Chip label="New" color="secondary"/>);
+          return (
+            <Grid container justify="space-between" alignItems="center">
+              <Tooltip
+                title={<Typography variant="body2">{date.format("DD/MM/YYYY HH:mm")}</Typography>}
+                placement="right"
+              >
+                <span>{date.fromNow()}</span>
+              </Tooltip>
+              {newTag}
+            </Grid>
+          );
+        }
       }
     }
-  }
-];
-
+  ];
+}
 const jobActions: ToolbarAction[] = [
   {
     text: "Archive",
@@ -102,6 +106,8 @@ export const Dashboard = () => {
   const [index, setIndex] = useState<number>(0);
 
   const classes = useStyles();
+  const r = useResponsive();
+  const small = r({xs: true, md: false});
 
   useEffect(() => {
     const fetchJobCounts = async () => {
@@ -123,7 +129,7 @@ export const Dashboard = () => {
         <title>Dashboard | JobHunt</title>
       </Helmet>
       <Grid item container xs={12}>
-        <Grid item xs={12} md={3}>
+        <Grid item xs={12} md={4} lg={3}>
           <Card >
             <CardHeader variant="icon" icon={(<Work fontSize="inherit"/>)}/>
             <CardBody>
@@ -155,7 +161,7 @@ export const Dashboard = () => {
           <CardBody>
             <ApiDataGrid
               url="/api/jobs/latest"
-              columns={jobsColumns}
+              columns={jobsColumns(small ?? false)}
               disableColumnMenu
               disableColumnSelector
               getRowClassName={(params) => params.row.seen ? "" : classes.unseen}

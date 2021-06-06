@@ -19,6 +19,7 @@ import CardBody from "../components/CardBody";
 import TabPanel from "../components/TabPanel";
 import ApiDataGrid from "../components/ApiDataGrid";
 import Markdown from "../components/Markdown";
+import { useResponsive } from "../utils/hooks";
 
 type CompanyRouteParams = {
   id: string
@@ -65,7 +66,7 @@ const UpdateArray = <T, >(array: T[], index: number, update: (current: T) => T) 
 }
 
 dayjs.extend(relativeTime);
-const jobsColumns: GridColDef[] = [
+const jobsColumns = (small: boolean | undefined): GridColDef[] => [
   { field: "id", hide: true },
   {
     field: "title",
@@ -76,8 +77,8 @@ const jobsColumns: GridColDef[] = [
       return (<Link to={`/job/${params.id}`}>{params.value}</Link>)
     }
   },
-  { field: "location", headerName: "Location", flex: 1, sortable: false, },
-  { field: "companyName", headerName: "Company", flex: 2, sortable: false, },
+  { field: "location", headerName: "Location", flex: 1, sortable: false, hide: small, },
+  { field: "companyName", headerName: "Company", flex: 2, sortable: false, hide: small },
   {
     field: "posted",
     headerName: "Posted",
@@ -121,9 +122,12 @@ const Company = () => {
 
   const { id }: CompanyRouteParams = useParams();
   const history = useHistory();
+  const r = useResponsive();
+  const small = r({xs: true, md: false});
 
   const [companyData, setCompanyData] = useState<CompanyResponse>();
   const [origCompanyData, setOrigCompanyData] = useState<CompanyResponse>();
+  const [alternateNames, setAlternateNames] = useState<string>("");
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [editing, setEditing] = useState<boolean>(false);
   const [newWatchedPage, setNewWatchedPage] = useState<WatchedPage>({ url: "", enabled: true });
@@ -138,6 +142,7 @@ const Company = () => {
       const data = await response.json() as CompanyResponse;
       setCompanyData(data);
       setOrigCompanyData(data);
+      setAlternateNames(data.alternateNames?.join(", ") ?? "");
     } else {
       console.error(`API request failed: GET /api/companies/${id}, HTTP ${response.status}`);
     }
@@ -175,9 +180,10 @@ const Company = () => {
   }, [mergeCompany, history, id]);
 
   const saveChanges = useCallback(async () => {
+    let data = {...companyData, alternateNames: alternateNames.split(", ").map(n => n.trim())};
     const response = await fetch(`/api/companies/${id}`, {
       method: "PATCH",
-      body: JSON.stringify(companyData),
+      body: JSON.stringify(data),
       headers: {
         "Content-Type": "application/json"
       }
@@ -188,9 +194,10 @@ const Company = () => {
     } else {
       console.error(`API request failed: PATCH /api/companies/${id}, HTTP ${response.status}`);
       setCompanyData(origCompanyData);
+      setAlternateNames(origCompanyData?.alternateNames?.join(", ") ?? "");
     }
     setEditing(false);
-  }, [companyData, origCompanyData, id]);
+  }, [companyData, origCompanyData, id, alternateNames]);
 
   const toggleBlacklist = useCallback(async () => {
     const response = await fetch(`/api/companies/blacklist/${id}`, { method: "PATCH" });
@@ -224,16 +231,30 @@ const Company = () => {
       <Card>
         <CardHeader>
           <Grid container alignItems="center" spacing={1}>
-            <Grid item xs>
-              <EditableComponent editing={editing} value={companyData.name} onChange={(e) => setCompanyData({...companyData, name: e.target.value})} label="Company Name" size="medium" fontSize="h4" colour="#fff">
-                <Grid container alignItems="center" spacing={1}>
-                  <Grid item><Typography variant="h4">{companyData.name}</Typography></Grid>
-                  {companyData.blacklisted ? <Grid item><Tooltip title={<Typography variant="subtitle2">This company is blacklisted.</Typography>}><Block fontSize="large"/></Tooltip></Grid> : null}
-                </Grid>
-              </EditableComponent>
-              <EditableComponent editing={editing} value={companyData.location} onChange={(e) => setCompanyData({...companyData, location: e.target.value})} label="Location" size="medium" fontSize="h6" colour="#fff">
-                <Typography variant="h6">{companyData.location}</Typography>
-              </EditableComponent>
+            <Grid item container direction="column" xs spacing={1}>
+              <Grid item>
+                <EditableComponent editing={editing} value={companyData.name} onChange={(e) => setCompanyData({...companyData, name: e.target.value})} label="Company Name" size="medium" fontSize="h4" colour="#fff">
+                  <Grid item container alignItems="center" spacing={1}>
+                    <Grid item><Typography variant="h4">{companyData.name}</Typography></Grid>
+                    {companyData.blacklisted ? <Grid item><Tooltip title={<Typography variant="subtitle2">This company is blacklisted.</Typography>}><Block fontSize="large"/></Tooltip></Grid> : null}
+                  </Grid>
+                </EditableComponent>
+              </Grid>
+              <Grid item>
+                <EditableComponent
+                  editing={editing}
+                  value={alternateNames}
+                  onChange={(e) => setAlternateNames(e.target.value)}
+                  label="Alternate Names (comma separated)"
+                >
+                  {companyData.alternateNames?.length ? <Typography variant="subtitle1">Also known as {companyData.alternateNames.join(", ")}</Typography> : null}
+                </EditableComponent>
+              </Grid>
+              <Grid item>
+                <EditableComponent editing={editing} value={companyData.location} onChange={(e) => setCompanyData({...companyData, location: e.target.value})} label="Location" size="medium" fontSize="h6" colour="#fff">
+                  <Typography variant="h6">{companyData.location}</Typography>
+                </EditableComponent>
+              </Grid>
             </Grid>
             <Grid item>
               <Grid container alignItems="center" spacing={1}>
@@ -283,7 +304,7 @@ const Company = () => {
                     <Button variant="contained" color="primary" startIcon={<Save/>} onClick={() => saveChanges()}>Save Changes</Button>
                   </Grid>
                   <Grid item>
-                    <Button variant="contained" color="default" onClick={() => { setEditing(false); setCompanyData(origCompanyData); }}>Discard</Button>
+                    <Button variant="contained" color="default" onClick={() => { setEditing(false); setCompanyData(origCompanyData); setAlternateNames(origCompanyData?.alternateNames?.join(", ") ?? ""); }}>Discard</Button>
                   </Grid>
                 </Grid>
               )
@@ -369,7 +390,7 @@ const Company = () => {
           </Tabs>
 
           <TabPanel current={tab} index={0}>
-            <EditableComponent editing={editing} value={companyData.notes} onChange={(e) => setCompanyData({...companyData, notes: e.target.value})} label="Notes" multiline rows={20}>
+            <EditableComponent editing={editing} value={companyData.notes ?? ""} onChange={(e) => setCompanyData({...companyData, notes: e.target.value})} label="Notes" multiline rows={20}>
               {companyData.notes ?
                 (<Markdown value={companyData.notes ?? ""}/>)
                 : null
@@ -524,11 +545,11 @@ const Company = () => {
           <TabPanel current={tab} index={2} keepMounted>
             <ApiDataGrid
               url={`/api/companies/${id}/jobs`}
-              columns={jobsColumns}
+              columns={jobsColumns(small)}
               disableColumnMenu
               disableColumnSelector
               getRowClassName={(params) => params.row.seen ? "" : classes.unseen}
-              checkboxSelection
+              checkboxSelection={false}
             />
           </TabPanel>
         </CardBody>

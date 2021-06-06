@@ -1,9 +1,10 @@
-import React, { Fragment } from "react"
-import { Divider, Drawer, Grid, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Tooltip, Typography } from "@material-ui/core"
-import { BrightnessHigh, Brightness2, Work, Business, Search, Dashboard  } from "@material-ui/icons";
+import React, { Fragment, useState } from "react"
+import { Divider, Drawer, Grid, Hidden, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Tooltip, Typography } from "@material-ui/core"
+import { BrightnessHigh, Brightness2, Work, Business, Search, Dashboard, Menu  } from "@material-ui/icons";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import { Link } from "react-router-dom";
 import Alerts from "../components/Alerts";
+import { useResponsive } from "../utils/hooks";
 
 type MainLayoutProps = {
   darkMode: boolean,
@@ -18,9 +19,12 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     width: "100vw"
   },
   mainContainer: {
-    marginLeft: drawerWidth,
-    padding: theme.spacing(2),
-    paddingTop: 0
+    padding: theme.spacing(1),
+    paddingTop: 0,
+    [theme.breakpoints.up("md")] : {
+      marginLeft: drawerWidth,
+      padding: theme.spacing(2),
+    }
   },
   themeIcon: {
     color: "inherit"
@@ -41,37 +45,46 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
   title: {
     width: "100%",
     textAlign: "center"
+  },
+  toolbar: {
+    [theme.breakpoints.down("md")]: {
+      padding: 0,
+    }
   }
 }));
 
 const MainLayout = (props: React.PropsWithChildren<MainLayoutProps>) => {
   const classes = useStyles();
+  const r = useResponsive();
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
     <Fragment>
       <Drawer
-        variant="permanent"
+        variant={r({xs: "temporary", md: "permanent"})}
         anchor="left"
         className={classes.drawer}
+        open={r({xs: drawerOpen, md: true})}
+        onClose={() => setDrawerOpen(false)}
       >
         <List>
           <ListItem>
             <Typography className={classes.title} variant="h5">JobHunt</Typography>
           </ListItem>
           <Divider />
-          <ListItem button component={ Link } to="/">
+          <ListItem button component={ Link } to="/" onClick={() => setDrawerOpen(false)}>
             <ListItemIcon><Dashboard/></ListItemIcon>
             <ListItemText primary="Dashboard"/>
           </ListItem>
-          <ListItem button component={ Link } to="/jobs">
+          <ListItem button component={ Link } to="/jobs" onClick={() => setDrawerOpen(false)}>
             <ListItemIcon><Work/></ListItemIcon>
             <ListItemText primary="Jobs"/>
           </ListItem>
-          <ListItem button component={Link} to="/companies">
+          <ListItem button component={Link} to="/companies" onClick={() => setDrawerOpen(false)}>
             <ListItemIcon><Business/></ListItemIcon>
             <ListItemText primary="Companies"/>
           </ListItem>
-          <ListItem button component={Link} to="/searches">
+          <ListItem button component={Link} to="/searches" onClick={() => setDrawerOpen(false)}>
             <ListItemIcon><Search/></ListItemIcon>
             <ListItemText primary="Searches"/>
           </ListItem>
@@ -96,8 +109,14 @@ const MainLayout = (props: React.PropsWithChildren<MainLayoutProps>) => {
         </List>
       </Drawer>
       <main className={classes.mainContainer}>
-        <Toolbar>
-          <Typography variant="h4">{props.pageTitle ? props.pageTitle : null}</Typography>
+        <Toolbar className={classes.toolbar}>
+          <Hidden mdUp>
+            <IconButton onClick={() => setDrawerOpen(true)}>
+              <Menu/>
+            </IconButton>
+          </Hidden>
+          <Typography variant="h4">
+            {props.pageTitle ? props.pageTitle : null}</Typography>
         </Toolbar>
         {props.children}
       </main>

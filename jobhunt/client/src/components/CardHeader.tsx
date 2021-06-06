@@ -1,6 +1,7 @@
 import React, { FunctionComponent, ReactElement } from "react"
 import { Box, Grid } from "@material-ui/core";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
+import { useResponsive } from "../utils/hooks";
 
 type CardHeaderProps = {
   variant?: "icon" | "text",
@@ -34,10 +35,11 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 
 const CardHeader: FunctionComponent<CardHeaderProps> = (props) => {
   const classes = useStyles(props);
+  const r = useResponsive();
 
   if (props.variant === "text") {
     return (
-      <Box mx={3} mt={-3} px={3} py={2} className={classes.bar}>
+      <Box mx={r({xs: 1, md: 3})} mt={-3} px={3} py={2} className={classes.bar}>
         <Grid container alignItems="center" spacing={2}>
           {props.icon ? (<Grid item className={classes.icon}>{props.icon}</Grid>) : null}
           <Grid item xs={12}>

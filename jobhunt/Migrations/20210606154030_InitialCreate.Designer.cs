@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace JobHunt.Migrations
 {
     [DbContext(typeof(JobHuntContext))]
-    [Migration("20210501110554_InitialCreate")]
+    [Migration("20210606154030_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -20,6 +20,38 @@ namespace JobHunt.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63)
                 .HasAnnotation("ProductVersion", "5.0.5")
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+            modelBuilder.Entity("JobHunt.Models.Alert", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Message")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Read")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Url")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Alerts");
+                });
 
             modelBuilder.Entity("JobHunt.Models.Category", b =>
                 {
@@ -59,12 +91,18 @@ namespace JobHunt.Migrations
                     b.Property<float?>("GlassdoorRating")
                         .HasColumnType("real");
 
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision");
+
                     b.Property<string>("LinkedIn")
                         .HasColumnType("text");
 
                     b.Property<string>("Location")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -85,45 +123,6 @@ namespace JobHunt.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Companies");
-                });
-
-            modelBuilder.Entity("JobHunt.Models.CompanyCareersPage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
-
-                    b.Property<int>("CompanyId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("CssBlacklist")
-                        .HasColumnType("text");
-
-                    b.Property<string>("CssSelector")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Hash")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("LastScraped")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<DateTime?>("LastUpdated")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("StatusMessage")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Url")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CompanyId");
-
-                    b.ToTable("CompanyCareersPages");
                 });
 
             modelBuilder.Entity("JobHunt.Models.CompanyCategory", b =>
@@ -169,6 +168,9 @@ namespace JobHunt.Migrations
                     b.Property<bool>("Archived")
                         .HasColumnType("boolean");
 
+                    b.Property<int?>("AvgYearlySalary")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("CompanyId")
                         .HasColumnType("integer");
 
@@ -179,9 +181,15 @@ namespace JobHunt.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision");
+
                     b.Property<string>("Location")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision");
 
                     b.Property<string>("Notes")
                         .HasColumnType("text");
@@ -197,6 +205,9 @@ namespace JobHunt.Migrations
 
                     b.Property<string>("Salary")
                         .HasColumnType("text");
+
+                    b.Property<bool>("Seen")
+                        .HasColumnType("boolean");
 
                     b.Property<int?>("SourceId")
                         .HasColumnType("integer");
@@ -249,6 +260,15 @@ namespace JobHunt.Migrations
 
                     b.Property<int?>("Distance")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("EmployerOnly")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("JobType")
+                        .HasColumnType("text");
 
                     b.Property<bool?>("LastFetchSuccess")
                         .HasColumnType("boolean");
@@ -313,15 +333,46 @@ namespace JobHunt.Migrations
                     b.ToTable("SearchRuns");
                 });
 
-            modelBuilder.Entity("JobHunt.Models.CompanyCareersPage", b =>
+            modelBuilder.Entity("JobHunt.Models.WatchedPage", b =>
                 {
-                    b.HasOne("JobHunt.Models.Company", "Company")
-                        .WithMany("CareersPages")
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-                    b.Navigation("Company");
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("CssBlacklist")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CssSelector")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Hash")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("LastScraped")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("LastUpdated")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("StatusMessage")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.ToTable("WatchedPages");
                 });
 
             modelBuilder.Entity("JobHunt.Models.CompanyCategory", b =>
@@ -401,6 +452,17 @@ namespace JobHunt.Migrations
                     b.Navigation("Search");
                 });
 
+            modelBuilder.Entity("JobHunt.Models.WatchedPage", b =>
+                {
+                    b.HasOne("JobHunt.Models.Company", "Company")
+                        .WithMany("WatchedPages")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+                });
+
             modelBuilder.Entity("JobHunt.Models.Category", b =>
                 {
                     b.Navigation("CompanyCategories");
@@ -412,11 +474,11 @@ namespace JobHunt.Migrations
                 {
                     b.Navigation("AlternateNames");
 
-                    b.Navigation("CareersPages");
-
                     b.Navigation("CompanyCategories");
 
                     b.Navigation("Jobs");
+
+                    b.Navigation("WatchedPages");
                 });
 
             modelBuilder.Entity("JobHunt.Models.Job", b =>
