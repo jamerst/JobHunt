@@ -85,7 +85,7 @@ type Search = {
   query: string,
   country: string,
   location?: string,
-  distance?: number,
+  distance: number,
   maxAge?: number,
   jobType?: string,
   employerOnly: boolean
@@ -93,7 +93,7 @@ type Search = {
 
 const Searches: FunctionComponent = (props) => {
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
-  const [newSearch, setNewSearch] = useState<Search>({ provider: "Indeed", query: "", country: "gb", employerOnly: false });
+  const [newSearch, setNewSearch] = useState<Search>({ provider: "Indeed", query: "", country: "gb", employerOnly: false, distance: 15 });
   const history = useHistory();
 
   const create = useCallback(async () => {
@@ -168,7 +168,7 @@ const Searches: FunctionComponent = (props) => {
               <Grid item xs={12} md={6}>
                 <Typography id="label-distance" gutterBottom>Distance (mi/km)</Typography>
                   <Slider
-                    value={newSearch.distance ?? 15}
+                    value={newSearch.distance}
                     onChange={(_, val) => setNewSearch({...newSearch, distance: val as number})}
                     step={5}
                     marks

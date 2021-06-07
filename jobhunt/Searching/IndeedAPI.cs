@@ -7,8 +7,10 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 
 using Html2Markdown;
 using Microsoft.AspNetCore.WebUtilities;
@@ -89,8 +91,10 @@ namespace JobHunt.Searching {
                 query.Add("radius", search.Distance.Value.ToString());
             }
 
+            DateTime maxAge = DateTime.MinValue;
             if (search.MaxAge.HasValue) {
                 query.Add("fromage", search.MaxAge.Value.ToString());
+                maxAge = DateTime.Now.Date.AddDays(-1 * search.MaxAge.Value);
             }
 
             if (search.EmployerOnly) {
@@ -101,6 +105,7 @@ namespace JobHunt.Searching {
                 query.Add("jt", search.JobType);
             }
 
+
             int start = 0;
             bool existingFound = false;
 
@@ -110,6 +115,7 @@ namespace JobHunt.Searching {
             int newJobs = 0;
 
             List<JobAlertData> jobAlerts = new List<JobAlertData>();
+            int salaryFailCount = 0;
 
             while (!existingFound && !token.IsCancellationRequested) {
                 IndeedResponse? response = null;
@@ -141,13 +147,18 @@ namespace JobHunt.Searching {
                         break;
                     }
 
+                    if (job.Date < maxAge) {
+                        existingFound = true;
+                        _logger.LogInformation($"Found job older than MaxAge={maxAge:s}, JobKey={job.JobKey}");
+                    }
+
                     if (!await _jobService.AnyWithSourceIdAsync(SearchProviderName.Indeed, job.JobKey)) {
                         jobKeys.Append(job.JobKey + ",");
                         newJobs++;
 
                         string? salary = null;
                         int? avgYearlySalary = null;
-                        if (_options.IndeedFetchSalary) {
+                        if (false && _options.IndeedFetchSalary && salaryFailCount <= 5) {
                             Dictionary<string, string?> salaryQuery = new Dictionary<string, string?> {
                                 { "jk", job.JobKey },
                                 { "vjs", "1" }
@@ -160,7 +171,12 @@ namespace JobHunt.Searching {
                             using (var httpResponse = await client.GetAsync(QueryHelpers.AddQueryString($"https://{jobUri.Host}/viewjob", salaryQuery), HttpCompletionOption.ResponseHeadersRead)) {
                                 if (httpResponse.IsSuccessStatusCode) {
                                     using (var stream = await httpResponse.Content.ReadAsStreamAsync()) {
-                                        salaryResponse = await JsonSerializer.DeserializeAsync<IndeedSalaryResponse>(stream, _jsonOptions);
+                                        try {
+                                            salaryResponse = await JsonSerializer.DeserializeAsync<IndeedSalaryResponse>(stream, _jsonOptions);
+                                        } catch (JsonException) {
+                                            _logger.LogError("Indeed Salary deserialisation failed - likely requires a captcha");
+                                            salaryFailCount++;
+                                        }
                                     }
                                 } else {
                                     await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", $"Indeed Salary API error: HTTP {(int)httpResponse.StatusCode}");
@@ -171,6 +187,7 @@ namespace JobHunt.Searching {
                             if (salaryResponse != null && salaryResponse.ExpectedSalary != null) {
                                 salary = salaryResponse.FormattedSalary;
                                 avgYearlySalary = salaryResponse.ExpectedSalary.GetYearlyAverage();
+                                salaryFailCount = 0;
                             }
                         }
 
@@ -278,8 +295,18 @@ namespace JobHunt.Searching {
             if (jobDescs != null && jobDescs.Keys.Count > 0) {
                 for (int i = 0; i < jobs.Count; i++) {
                     if (jobDescs.TryGetValue(jobs[i].ProviderId!, out string? desc)) {
+
+                        // remove empty list elements as Html2Markdown cannot handle them
+                        desc = desc.Replace("<li></li>", "");
+
+                        // fix invalid lists - lists with children which are not list elements - why do you return invalid HTML indeed???
+                        string newDesc = InvalidList.Replace(desc, ReplaceInvalidList);
+                        if (desc != newDesc) {
+                            _logger.LogInformation($"Removed invalid HTML list from Indeed job description, JobKey={jobs[i].ProviderId}");
+                        }
+
                         try {
-                            jobs[i].Description = mdConverter.Convert(desc);
+                            jobs[i].Description = mdConverter.Convert(newDesc);
                         } catch (InvalidOperationException) {
                             _logger.LogError($"Failed to convert Indeed job description to markdown. JobKey={jobs[i].ProviderId}");
                         }
@@ -289,7 +316,11 @@ namespace JobHunt.Searching {
                 for (int i = 0; i < companies.Count; i++) {
                     for (int j = 0; j < companies[i].Jobs.Count; j++) {
                         if (jobDescs.TryGetValue(companies[i].Jobs[j].ProviderId!, out string? desc)) {
-                            companies[i].Jobs[j].Description = mdConverter.Convert(desc);
+                            try {
+                                companies[i].Jobs[j].Description = mdConverter.Convert(desc);
+                            } catch (Exception e) {
+                                _logger.LogError($"Exception: {e.Message}");
+                            }
                         }
                     }
                 }
@@ -315,6 +346,20 @@ namespace JobHunt.Searching {
                     });
                 }
             }
+        }
+        private static readonly Regex InvalidList = new Regex(@"(?s)\<(?<tag>ul|ol)[^<]*\>\s*(?<children>(?:\<(?<childTag>(?!li).+)\>.*?\<\/\k<childTag>\>\s*)+)\<\/\k<tag>\>");
+        private static readonly Regex InvalidListChild = new Regex(@"(?s)\<(?<childTag>(?!li).+)\>.*?\<\/\k<childTag>\>");
+
+        private string ReplaceInvalidList(Match match) {
+            if (!match.Groups["children"].Success) {
+                return "";
+            }
+
+            return InvalidListChild.Replace(match.Groups["children"].Value, ReplaceInvalidListChild);
+        }
+
+        private string ReplaceInvalidListChild(Match match) {
+            return $"<li>{match.Value}</li>";
         }
 
         private class JobAlertData {
