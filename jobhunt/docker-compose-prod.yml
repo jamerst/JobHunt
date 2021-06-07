@@ -4,21 +4,21 @@ services:
   web-prod:
     image: "jamerst/jobhunt:latest"
     ports:
-      - "80:80"
-      - "443:443"
+      - "80:5000"
     depends_on:
       - db
     volumes:
       - /etc/localtime:/etc/localtime:ro
     environment:
-        Search__IndeedPublisherId: YOUR_PUBLISHER_ID
-        Search__IndeedFetchSalary: "true"
-        Search__GlassdoorPartnerId: YOUR_PARTNER_ID
-        Search__GlassdoorPartnerKey: YOUR_PARTNER_KEY
-        Search__Schedules__0: 0 9 * * *
-        Search__Schedules__1: 0 12 * * *
-        Search__Schedules__2: 0 18 * * *
-        Search__NominatimCountryCodes: "gb"
+      ASPNETCORE_ENVIRONMENT: Production
+      Search__IndeedPublisherId: YOUR_PUBLISHER_ID
+      Search__IndeedFetchSalary: "true"
+      Search__GlassdoorPartnerId: YOUR_PARTNER_ID
+      Search__GlassdoorPartnerKey: YOUR_PARTNER_KEY
+      Search__Schedules__0: 0 9 * * *
+      Search__Schedules__1: 0 12 * * *
+      Search__Schedules__2: 0 18 * * *
+      Search__NominatimCountryCodes: "gb"
     restart: always
   db:
     image: "postgres:13.2"
