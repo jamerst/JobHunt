@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from "react"
 import { Box } from "@material-ui/core"
-import { useResponsive } from "../utils/hooks";
+import { useResponsive } from "utils/hooks";
 
 const CardBody: FunctionComponent = (props) => {
   const r = useResponsive();

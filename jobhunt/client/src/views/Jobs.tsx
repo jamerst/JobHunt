@@ -1,5 +1,6 @@
 import React, { FunctionComponent, useEffect, useState, useCallback, Fragment } from "react"
-import { Box, Button, Chip, Container, FormControl, FormControlLabel, Grid, InputLabel, MenuItem, Select, Slider, Switch, TextField, Tooltip, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Fab } from "@material-ui/core";
+import { Box, Button, Chip, Container, FormControl, FormControlLabel, InputLabel, MenuItem, Select, Slider, Switch, TextField, Tooltip, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Fab } from "@material-ui/core";
+import Grid from "components/Grid";
 import { KeyboardDatePicker, MuiPickersUtilsProvider } from "@material-ui/pickers";
 import { GridColDef } from "@material-ui/data-grid"
 import Autocomplete from "@material-ui/lab/Autocomplete";
@@ -10,13 +11,13 @@ import { Link, useHistory } from "react-router-dom";
 
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
-import DayjsUtils from "../utils/dayjs-utils"
+import DayjsUtils from "utils/dayjs-utils"
 
-import Card from "../components/Card";
-import CardBody from "../components/CardBody";
-import CardHeader from "../components/CardHeader";
-import ApiDataGrid from "../components/ApiDataGrid";
-import { useResponsive } from "../utils/hooks";
+import Card from "components/Card";
+import CardBody from "components/CardBody";
+import CardHeader from "components/CardHeader";
+import ApiDataGrid from "components/ApiDataGrid";
+import { useResponsive } from "utils/hooks";
 
 type SearchFilter = {
   term?: string,

@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { DataGrid, DataGridProps, GridFeatureModeConstant, GridPageChangeParams, GridRowData, GridRowId } from "@material-ui/data-grid"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
-import { Button, Grid, Box } from "@material-ui/core";
+import { Button, Box } from "@material-ui/core";
+import Grid from "components/Grid";
 
 // have to remove the "rows" property since that shouldn't be passed to the DataGrid
 type ApiDataGridProps = Omit<ApiDataGridPropsRows, "rows">;

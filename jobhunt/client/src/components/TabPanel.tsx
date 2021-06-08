@@ -1,6 +1,6 @@
 import { Box } from "@material-ui/core";
 import React, { FunctionComponent } from "react"
-import { useResponsive } from "../utils/hooks";
+import { useResponsive } from "utils/hooks";
 
 type TabPanelProps = {
   current: number,

@@ -2,7 +2,7 @@ import { useTheme } from "@material-ui/core/styles"
 import useMediaQuery from "@material-ui/core/useMediaQuery"
 import { findLast } from "ramda"
 
-type Breakpoint = "xs" | "sm" | "md" | "lg" | "xl"
+type Breakpoint = "xs" | "sm" | "md" | "lg" | "xl" | "xxl"
 
 type ResponsiveValues<P> = {
   [key in Breakpoint]?: P
@@ -17,6 +17,7 @@ export const useResponsive = () => {
     md: useMediaQuery(theme.breakpoints.up("md")),
     lg: useMediaQuery(theme.breakpoints.up("lg")),
     xl: useMediaQuery(theme.breakpoints.up("xl")),
+    xxl: useMediaQuery(theme.breakpoints.up("xxl")),
   }
 
   return function <P>(responsiveValues: ResponsiveValues<P>) {

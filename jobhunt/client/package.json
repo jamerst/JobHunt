@@ -16,6 +16,7 @@
     "@types/node": "^12.20.10",
     "@types/react": "^17.0.3",
     "@types/react-dom": "^17.0.3",
+    "classnames": "^2.3.1",
     "country-region-data": "^1.7.0",
     "dayjs": "^1.10.4",
     "ramda": "^0.27.1",

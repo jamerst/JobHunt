@@ -1,5 +1,6 @@
 import React, { FunctionComponent, useCallback, useState } from "react"
-import { IconButton, Chip, Grid, Tooltip, InputBase } from "@material-ui/core"
+import { IconButton, Chip, Tooltip, InputBase } from "@material-ui/core"
+import Grid from "components/Grid";
 import { Add } from "@material-ui/icons"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 

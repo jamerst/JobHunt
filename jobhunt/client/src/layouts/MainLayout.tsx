@@ -1,10 +1,11 @@
 import React, { Fragment, useState } from "react"
-import { Divider, Drawer, Grid, Hidden, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Tooltip, Typography } from "@material-ui/core"
+import { Divider, Drawer, Hidden, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Tooltip, Typography } from "@material-ui/core"
+import Grid from "components/Grid";
 import { BrightnessHigh, Brightness2, Work, Business, Search, Dashboard, Menu  } from "@material-ui/icons";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import { Link } from "react-router-dom";
-import Alerts from "../components/Alerts";
-import { useResponsive } from "../utils/hooks";
+import Alerts from "components/Alerts";
+import { useResponsive } from "utils/hooks";
 
 type MainLayoutProps = {
   darkMode: boolean,

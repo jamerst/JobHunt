@@ -1,5 +1,6 @@
 import React, { Fragment, useEffect, useState } from "react"
-import { Grid, Typography, Tooltip, Chip } from "@material-ui/core"
+import { Typography, Tooltip, Chip } from "@material-ui/core"
+import Grid from "components/Grid";
 import { GridCellParams, GridColDef } from "@material-ui/data-grid"
 import SwipeableView from "react-swipeable-views"
 import { autoPlay } from "react-swipeable-views-utils"
@@ -8,14 +9,14 @@ import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
 
-import ApiDataGrid, { ToolbarAction } from "../components/ApiDataGrid"
-import Card from "../components/Card"
+import ApiDataGrid, { ToolbarAction } from "components/ApiDataGrid"
+import Card from "components/Card"
 import { Archive, Work } from "@material-ui/icons"
 import { Link } from "react-router-dom"
-import CardHeader from "../components/CardHeader"
-import CardBody from "../components/CardBody"
+import CardHeader from "components/CardHeader"
+import CardBody from "components/CardBody"
 import { Helmet } from "react-helmet"
-import { useResponsive } from "../utils/hooks"
+import { useResponsive } from "utils/hooks"
 
 type JobCount = {
   daily: number,
@@ -152,7 +153,7 @@ export const Dashboard = () => {
           </Card>
         </Grid>
       </Grid>
-      <Grid item xs={12} lg={8} xl={6}>
+      <Grid item xs={12} lg={8} xxl={6}>
         <Card>
           <CardHeader>
             <Typography variant="h6">Recent Jobs</Typography>

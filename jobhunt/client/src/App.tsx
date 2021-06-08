@@ -3,15 +3,15 @@ import { Switch, BrowserRouter, Route } from "react-router-dom"
 import { CssBaseline } from "@material-ui/core"
 import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles"
 
-import Dashboard from "./views/Dashboard"
-import MainLayout from "./layouts/MainLayout"
-import Job from './views/Job';
-import Jobs from './views/Jobs';
+import Dashboard from "views/Dashboard"
+import MainLayout from "layouts/MainLayout"
+import Job from 'views/Job';
+import Jobs from 'views/Jobs';
 import { blue, purple } from '@material-ui/core/colors';
-import Company from './views/Company';
-import Companies from './views/Companies';
-import Searches from './views/Searches';
-import Search from './views/Search';
+import Company from 'views/Company';
+import Companies from 'views/Companies';
+import Searches from 'views/Searches';
+import Search from 'views/Search';
 import createBreakpoints from '@material-ui/core/styles/createBreakpoints';
 
 function App() {
@@ -51,6 +51,16 @@ function App() {
               }
             }
           }
+        }
+      },
+      breakpoints: {
+        values: {
+          xs: 0,
+          sm: 600,
+          md: 960,
+          lg: 1280,
+          xl: 1920,
+          xxl: 2500
         }
       }
     }),
@@ -104,3 +114,14 @@ function App() {
 }
 
 export default App;
+
+declare module "@material-ui/core/styles/createBreakpoints" {
+  interface BreakpointOverrides {
+    xs: true;
+    sm: true;
+    md: true;
+    lg: true;
+    xl: true;
+    xxl: true;
+  }
+}

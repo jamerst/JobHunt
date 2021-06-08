@@ -1,5 +1,6 @@
 import React, { FunctionComponent, Fragment, useState, useCallback } from "react"
-import { Button, Box, Chip, Container, Dialog, DialogActions, DialogContent, DialogTitle, Fab, Grid, Switch, Typography, TextField, FormControl, InputLabel, Select, MenuItem, Slider, FormControlLabel, InputAdornment } from "@material-ui/core";
+import { Button, Box, Chip, Container, Dialog, DialogActions, DialogContent, DialogTitle, Fab, Switch, Typography, TextField, FormControl, InputLabel, Select, MenuItem, Slider, FormControlLabel, InputAdornment } from "@material-ui/core";
+import Grid from "components/Grid";
 import { GridColDef } from "@material-ui/data-grid"
 import { Helmet } from "react-helmet";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
@@ -7,15 +8,15 @@ import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
 
-import Card from "../components/Card";
-import CardBody from "../components/CardBody";
-import CardHeader from "../components/CardHeader";
-import ApiDataGrid from "../components/ApiDataGrid";
+import Card from "components/Card";
+import CardBody from "components/CardBody";
+import CardHeader from "components/CardHeader";
+import ApiDataGrid from "components/ApiDataGrid";
 import { Link, useHistory } from "react-router-dom";
 import { Add } from "@material-ui/icons";
-import CountrySelector from "../components/CountrySelector";
-import { IndeedSupportedCountries } from "../utils/constants";
-import { useResponsive } from "../utils/hooks";
+import CountrySelector from "components/CountrySelector";
+import { IndeedSupportedCountries } from "utils/constants";
+import { useResponsive } from "utils/hooks";
 
 const toggleEnabled = async (id: string) => {
   const response = await fetch(`/api/search/enable/${id}`, { method: "PATCH" });

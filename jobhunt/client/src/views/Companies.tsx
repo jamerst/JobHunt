@@ -1,16 +1,17 @@
 import React, { FunctionComponent, useEffect, useState, useCallback } from "react"
-import { Box, Button, Chip, Container, Grid, Slider, TextField, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Fab } from "@material-ui/core";
+import { Box, Button, Chip, Container, Slider, TextField, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Fab } from "@material-ui/core";
+import Grid from "components/Grid";
 import { GridColDef } from "@material-ui/data-grid"
 import { Helmet } from "react-helmet";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import { Add } from "@material-ui/icons";
 import { Link, useHistory } from "react-router-dom";
 
-import Card from "../components/Card";
-import CardBody from "../components/CardBody";
-import CardHeader from "../components/CardHeader";
-import ApiDataGrid from "../components/ApiDataGrid";
-import { useResponsive } from "../utils/hooks";
+import Card from "components/Card";
+import CardBody from "components/CardBody";
+import CardHeader from "components/CardHeader";
+import ApiDataGrid from "components/ApiDataGrid";
+import { useResponsive } from "utils/hooks";
 
 type SearchFilter = {
   term?: string,

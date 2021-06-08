@@ -1,7 +1,8 @@
 import React, { FunctionComponent, ReactElement } from "react"
-import { Box, Grid } from "@material-ui/core";
+import { Box, } from "@material-ui/core";
+import Grid from "components/Grid";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
-import { useResponsive } from "../utils/hooks";
+import { useResponsive } from "utils/hooks";
 
 type CardHeaderProps = {
   variant?: "icon" | "text",

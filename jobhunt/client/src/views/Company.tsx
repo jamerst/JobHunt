@@ -1,5 +1,6 @@
 import React, { Fragment, useCallback, useEffect, useState } from "react"
-import { Box, Button, Container, Chip, Grid, IconButton, Menu, MenuItem, Switch, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, TextField, Tooltip, Typography, Dialog, DialogActions, DialogContent, DialogTitle } from "@material-ui/core"
+import { Box, Button, Container, Chip, IconButton, Menu, MenuItem, Switch, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, TextField, Tooltip, Typography, Dialog, DialogActions, DialogContent, DialogTitle } from "@material-ui/core"
+import Grid from "components/Grid";
 import { GridColDef } from "@material-ui/data-grid"
 import { AccountBalance, Block, Delete, LinkedIn, Map, MoreHoriz, OpenInNew, RateReview, Save, Visibility, VisibilityOff, Web } from "@material-ui/icons";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
@@ -10,16 +11,16 @@ import { Helmet } from "react-helmet"
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
 
-import Card from "../components/Card";
-import Categories, { Category } from "../components/Categories";
-import EditableComponent from "../components/EditableComponent";
-import CardHeader from "../components/CardHeader";
-import CardBody from "../components/CardBody";
+import Card from "components/Card";
+import Categories, { Category } from "components/Categories";
+import EditableComponent from "components/EditableComponent";
+import CardHeader from "components/CardHeader";
+import CardBody from "components/CardBody";
 
-import TabPanel from "../components/TabPanel";
-import ApiDataGrid from "../components/ApiDataGrid";
-import Markdown from "../components/Markdown";
-import { useResponsive } from "../utils/hooks";
+import TabPanel from "components/TabPanel";
+import ApiDataGrid from "components/ApiDataGrid";
+import Markdown from "components/Markdown";
+import { useResponsive } from "utils/hooks";
 
 type CompanyRouteParams = {
   id: string

@@ -1,15 +1,16 @@
 import React, { useCallback, useEffect, useState, Fragment } from "react"
-import { Box, Button, Container, Divider, FormControl, Grid, IconButton, InputLabel, Menu, MenuItem, Select, Tab, Tabs, TextField, Typography } from "@material-ui/core"
+import { Box, Button, Container, Divider, FormControl, IconButton, InputLabel, Menu, MenuItem, Select, Tab, Tabs, TextField, Typography } from "@material-ui/core"
+import Grid from "components/Grid";
 import { useParams } from "react-router"
 import { Helmet } from "react-helmet"
 
-import Card from "../components/Card";
-import ExpandableSnippet from "../components/ExpandableSnippet";
-import Categories, { Category } from "../components/Categories";
-import EditableComponent from "../components/EditableComponent";
-import CardHeader from "../components/CardHeader";
-import CardBody from "../components/CardBody";
-import TabPanel from "../components/TabPanel";
+import Card from "components/Card";
+import ExpandableSnippet from "components/ExpandableSnippet";
+import Categories, { Category } from "components/Categories";
+import EditableComponent from "components/EditableComponent";
+import CardHeader from "components/CardHeader";
+import CardBody from "components/CardBody";
+import TabPanel from "components/TabPanel";
 import ReactMarkdown from "react-markdown";
 import { Map, MoreHoriz, OpenInNew, Save, Subject } from "@material-ui/icons";
 import { Link } from "react-router-dom";
