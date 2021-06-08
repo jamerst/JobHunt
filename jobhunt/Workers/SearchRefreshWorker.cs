@@ -59,22 +59,26 @@ namespace JobHunt.Workers {
         }
 
         public async Task DoRefresh(CancellationToken token) {
-            using (IServiceScope scope = _provider.CreateScope())
             using (HttpClient client = new HttpClient()) {
                 List<Task> tasks = new List<Task>();
 
-                IIndeedAPI? indeed = scope.ServiceProvider.GetService<IIndeedAPI>();
-                if (indeed != null) {
-                    tasks.Add(indeed.SearchAllAsync(client, token));
-                } else {
-                    _logger.LogError("SearchRefreshWorker: failed to get instance of IndeedAPI");
+                using (IServiceScope scope = _provider.CreateScope()) {
+                    IIndeedAPI? indeed = scope.ServiceProvider.GetService<IIndeedAPI>();
+                    if (indeed != null) {
+                        tasks.Add(indeed.SearchAllAsync(client, token));
+                    } else {
+                        _logger.LogError("SearchRefreshWorker: failed to get instance of IndeedAPI");
+                    }
                 }
 
-                IPageWatcher? pageWatcher = scope.ServiceProvider.GetService<IPageWatcher>();
-                if (pageWatcher != null) {
-                    tasks.Add(pageWatcher.RefreshAllAsync(client, token));
-                } else {
-                    _logger.LogError("SearchRefreshWorker: failed to get instance of PageWatcher");
+                // needs a separate scope to prevent threading issues with DbContext
+                using (IServiceScope scope = _provider.CreateScope()) {
+                    IPageWatcher? pageWatcher = scope.ServiceProvider.GetService<IPageWatcher>();
+                    if (pageWatcher != null) {
+                        tasks.Add(pageWatcher.RefreshAllAsync(client, token));
+                    } else {
+                        _logger.LogError("SearchRefreshWorker: failed to get instance of PageWatcher");
+                    }
                 }
 
                 await Task.WhenAll(tasks);

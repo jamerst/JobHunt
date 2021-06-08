@@ -23,7 +23,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     textAlign: "center"
   },
   popper: {
-    zIndex: 1200
+    zIndex: 1300
   },
   paper: {
     transformOrigin: "top right",
@@ -79,6 +79,7 @@ const Alerts = () => {
       const alertIndex = newAlerts.findIndex(a => a.id === id);
       newAlerts[alertIndex].read = true;
       setAlerts(newAlerts);
+      setAlertAnchor(null);
     } else {
       console.error(`API request failed: PATCH /api/alerts/read/${id}, HTTP ${response.status}`);
     }

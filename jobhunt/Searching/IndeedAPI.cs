@@ -158,7 +158,7 @@ namespace JobHunt.Searching {
 
                         string? salary = null;
                         int? avgYearlySalary = null;
-                        if (false && _options.IndeedFetchSalary && salaryFailCount <= 5) {
+                        if (_options.IndeedFetchSalary && salaryFailCount <= 10) {
                             Dictionary<string, string?> salaryQuery = new Dictionary<string, string?> {
                                 { "jk", job.JobKey },
                                 { "vjs", "1" }
