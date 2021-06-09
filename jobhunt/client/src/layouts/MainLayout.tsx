@@ -103,7 +103,7 @@ const MainLayout = (props: React.PropsWithChildren<MainLayoutProps>) => {
                 </Tooltip>
               </Grid>
               <Grid item>
-                <Alerts/>
+                <Alerts onAlertClick={() => setDrawerOpen(false) }/>
               </Grid>
             </Grid>
           </ListItem>

@@ -111,10 +111,12 @@ namespace JobHunt.Services {
             company.Latitude = details.Latitude;
             company.Longitude = details.Longitude;
 
-            bool newPages = details.WatchedPages.Any(wp1 => !company.WatchedPages.Any(wp2 => wp2.Url == wp1.Url));
-            company.WatchedPages.RemoveAll(wp1 => !details.WatchedPages.Any(wp2 => wp1.Url == wp2.Url));
-            company.WatchedPages.AddRange(details.WatchedPages
-                .Where(wp1 => !company.WatchedPages.Any(wp2 => wp1.Url == wp2.Url))
+            IEnumerable<WatchedPageBase> sentPages = details.WatchedPages.Select(wp => wp as WatchedPageBase);
+
+            bool pagesModified = sentPages.Any(wp => !company.WatchedPages.Contains(wp));
+            company.WatchedPages.RemoveAll(wp => !sentPages.Contains(wp));
+            company.WatchedPages.AddRange(sentPages
+                .Where(wp => !company.WatchedPages.Contains(wp) && !string.IsNullOrEmpty(wp.Url))
                 .Select(wp => new WatchedPage {
                     Url = wp.Url,
                     CssSelector = wp.CssSelector,
@@ -124,13 +126,13 @@ namespace JobHunt.Services {
 
             company.AlternateNames.RemoveAll(n1 => !details.AlternateNames.Any(n2 => n1.Name == n2));
             company.AlternateNames.AddRange(details.AlternateNames
-                .Where(n1 => !company.AlternateNames.Any(n2 => n1 == n2.Name))
+                .Where(n1 => !company.AlternateNames.Any(n2 => n1 == n2.Name) && !string.IsNullOrEmpty(n1))
                 .Select(n => new CompanyName { Name = n })
             );
 
             await _context.SaveChangesAsync();
 
-            if (newPages) {
+            if (pagesModified) {
                 HttpClient client = new HttpClient();
                 CancellationToken token = new CancellationToken();
                 await _pageWatcher.GetInitial(company.Id, client, token);
@@ -267,12 +269,14 @@ namespace JobHunt.Services {
                 .Include(c => c.CompanyCategories)
                 .Include(c => c.Jobs)
                 .Include(c => c.WatchedPages)
+                .AsSplitQuery()
                 .SingleOrDefaultAsync(c => c.Id == srcId);
             Company dest = await _context.Companies
                 .Include(c => c.AlternateNames)
                 .Include(c => c.CompanyCategories)
                 .Include(c => c.Jobs)
                 .Include(c => c.WatchedPages)
+                .AsSplitQuery()
                 .SingleOrDefaultAsync(c => c.Id == destId);
 
             if (src == null || dest == null) {

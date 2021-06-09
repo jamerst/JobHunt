@@ -1,5 +1,5 @@
 import React, { Fragment, useState, useCallback, useEffect } from "react"
-import { Badge, ClickAwayListener, IconButton, List, ListItem, Paper, Popper, Tooltip, Typography } from "@material-ui/core"
+import { Badge, ClickAwayListener, Fade, IconButton, List, ListItem, Paper, Popper, Tooltip, Typography } from "@material-ui/core"
 import Grid from "components/Grid";
 import { Notifications, ClearAll  } from "@material-ui/icons";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
@@ -7,6 +7,10 @@ import { Link } from "react-router-dom";
 
 import dayjs, { Dayjs } from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
+
+type AlertProps = {
+  onAlertClick?: () => void
+}
 
 type Alert = {
   id: number,
@@ -67,13 +71,13 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 }));
 
 dayjs.extend(relativeTime);
-const Alerts = () => {
+const Alerts = (props: AlertProps) => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [alertAnchor, setAlertAnchor] = useState<null | HTMLElement>(null);
 
   const classes = useStyles();
 
-  const markRead = useCallback(async (id: number) => {
+  const onClick = useCallback(async (id: number) => {
     const response = await fetch(`/api/alerts/read/${id}`, { method: "PATCH" });
     if (response.ok) {
       let newAlerts = [...alerts];
@@ -81,6 +85,9 @@ const Alerts = () => {
       newAlerts[alertIndex].read = true;
       setAlerts(newAlerts);
       setAlertAnchor(null);
+      if (props.onAlertClick) {
+        props.onAlertClick();
+      }
     } else {
       console.error(`API request failed: PATCH /api/alerts/read/${id}, HTTP ${response.status}`);
     }
@@ -126,44 +133,49 @@ const Alerts = () => {
         open={alertAnchor !== null}
         placement="bottom-end"
         className={classes.popper}
+        transition
       >
+        {({ TransitionProps }) => (
         <ClickAwayListener onClickAway={() => setAlertAnchor(null)}>
-          <Paper className={classes.paper}>
-            <Grid container justify="space-between" alignItems="center" className={classes.header}>
-              <Grid item>
-                <Typography variant="h6">Alerts</Typography>
+          <Fade {...TransitionProps}>
+            <Paper className={classes.paper}>
+              <Grid container justify="space-between" alignItems="center" className={classes.header}>
+                <Grid item>
+                  <Typography variant="h6">Alerts</Typography>
+                </Grid>
+                <Grid item>
+                  <Tooltip title="Mark all as read">
+                    <IconButton onClick={() => markAllRead()}>
+                      <ClearAll/>
+                    </IconButton>
+                  </Tooltip>
+                </Grid>
               </Grid>
-              <Grid item>
-                <Tooltip title="Mark all as read">
-                  <IconButton onClick={() => markAllRead()}>
-                    <ClearAll/>
-                  </IconButton>
-                </Tooltip>
-              </Grid>
-            </Grid>
-            <List className={classes.list}>
-              {alerts.map(a => (
-                <ListItem key={a.id} className={classes.listItem}>
-                  {a.url ? (
-                    <Link to={a.url} onClick={() => markRead(a.id)}>
-                      {a.read ? null : <div className={classes.unread}></div>}
-                      <Typography>{a.title}</Typography>
-                      <Typography variant="body2">{a.message}</Typography>
-                      <Typography variant="caption">{a.created.isBefore(dayjs().subtract(1, "day"), "day") ? a.created.format("DD/MM/YYYY HH:mm") : a.created.fromNow() }</Typography>
-                    </Link>
-                  ) : (
-                    <Fragment>
-                      {a.read ? null : <div className={classes.unread}></div>}
-                      <Typography>{a.title}</Typography>
-                      <Typography variant="body2">{a.message}</Typography>
-                      <Typography variant="caption">{a.created.isBefore(dayjs().subtract(1, "day"), "day") ? a.created.format("DD/MM/YYYY HH:mm") : a.created.fromNow() }</Typography>
-                    </Fragment>
-                  )}
-                </ListItem>
-              ))}
-            </List>
-          </Paper>
+              <List className={classes.list}>
+                {alerts.map(a => (
+                  <ListItem key={a.id} className={classes.listItem}>
+                    {a.url ? (
+                      <Link to={a.url} onClick={() => onClick(a.id)}>
+                        {a.read ? null : <div className={classes.unread}></div>}
+                        <Typography>{a.title}</Typography>
+                        <Typography variant="body2">{a.message}</Typography>
+                        <Typography variant="caption">{a.created.isBefore(dayjs().subtract(1, "day"), "day") ? a.created.format("DD/MM/YYYY HH:mm") : a.created.fromNow() }</Typography>
+                      </Link>
+                    ) : (
+                      <Fragment>
+                        {a.read ? null : <div className={classes.unread}></div>}
+                        <Typography>{a.title}</Typography>
+                        <Typography variant="body2">{a.message}</Typography>
+                        <Typography variant="caption">{a.created.isBefore(dayjs().subtract(1, "day"), "day") ? a.created.format("DD/MM/YYYY HH:mm") : a.created.fromNow() }</Typography>
+                      </Fragment>
+                    )}
+                  </ListItem>
+                ))}
+              </List>
+            </Paper>
+          </Fade>
         </ClickAwayListener>
+        )}
       </Popper>
     </Fragment>
   )

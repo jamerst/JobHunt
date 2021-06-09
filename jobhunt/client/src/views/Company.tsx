@@ -181,7 +181,9 @@ const Company = () => {
   }, [mergeCompany, history, id]);
 
   const saveChanges = useCallback(async () => {
-    let data = {...companyData, alternateNames: alternateNames.split(", ").map(n => n.trim())};
+    if (!companyData) return;
+    let names = alternateNames.split(",").map(n => n.trim()).filter(n => n !== "");
+    let data:CompanyResponse = {...companyData, alternateNames: names};
     const response = await fetch(`/api/companies/${id}`, {
       method: "PATCH",
       body: JSON.stringify(data),
@@ -191,11 +193,12 @@ const Company = () => {
     });
 
     if (response.ok) {
-      setOrigCompanyData(companyData);
+      setCompanyData(data);
+      setOrigCompanyData(data);
     } else {
       console.error(`API request failed: PATCH /api/companies/${id}, HTTP ${response.status}`);
       setCompanyData(origCompanyData);
-      setAlternateNames(origCompanyData?.alternateNames?.join(", ") ?? "");
+      setAlternateNames(origCompanyData?.alternateNames?.join(",") ?? "");
     }
     setEditing(false);
   }, [companyData, origCompanyData, id, alternateNames]);
@@ -247,6 +250,7 @@ const Company = () => {
                   value={alternateNames}
                   onChange={(e) => setAlternateNames(e.target.value)}
                   label="Alternate Names (comma separated)"
+                  colour="#fff"
                 >
                   {companyData.alternateNames?.length ? <Typography variant="subtitle1">Also known as {companyData.alternateNames.join(", ")}</Typography> : null}
                 </EditableComponent>
