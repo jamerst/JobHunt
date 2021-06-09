@@ -96,8 +96,20 @@ namespace JobHunt.Searching {
             await _wpService.UpdateStatusAsync(page.Id, hash);
         }
 
-        public async Task GetInitial(int companyId, HttpClient client, CancellationToken token) {
+        public async Task GetInitialAsync(int companyId, HttpClient client, CancellationToken token) {
             List<WatchedPage> pages = await _wpService.GetUnfetchedAsync(companyId);
+
+            foreach(WatchedPage page in pages) {
+                if (token.IsCancellationRequested) {
+                    break;
+                }
+
+                await RefreshAsync(page, client, token);
+            }
+        }
+
+        public async Task RefreshCompanyAsync(int companyId, HttpClient client, CancellationToken token) {
+            List<WatchedPage> pages = await _wpService.GetByCompanyAsync(companyId);
 
             foreach(WatchedPage page in pages) {
                 if (token.IsCancellationRequested) {
@@ -112,6 +124,7 @@ namespace JobHunt.Searching {
     public interface IPageWatcher {
         Task RefreshAllAsync(HttpClient client, CancellationToken token);
         Task RefreshAsync(WatchedPage page, HttpClient client, CancellationToken token);
-        Task GetInitial(int companyId, HttpClient client, CancellationToken token);
+        Task GetInitialAsync(int companyId, HttpClient client, CancellationToken token);
+        Task RefreshCompanyAsync(int companyId, HttpClient client, CancellationToken token);
     }
 }

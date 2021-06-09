@@ -8,6 +8,6 @@ namespace JobHunt.DTO {
         public DateTime? LastScraped { get; set; }
         public DateTime? LastUpdated { get; set; }
         public string? StatusMessage { get; set; }
-        public bool Enabled { get; set; }
+        public override bool Enabled { get; set; }
     }
 }

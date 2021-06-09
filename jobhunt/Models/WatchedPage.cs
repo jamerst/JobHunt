@@ -15,6 +15,6 @@ namespace JobHunt.Models {
         public DateTime? LastScraped { get; set; }
         public DateTime? LastUpdated { get; set; }
         public string? StatusMessage { get; set; }
-        public bool Enabled { get; set; } = true;
+        public override bool Enabled { get; set; } = true;
     }
 }

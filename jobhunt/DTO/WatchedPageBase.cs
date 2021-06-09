@@ -4,16 +4,16 @@ namespace JobHunt.DTO {
         public abstract string Url { get; set; }
         public abstract string? CssSelector { get; set; }
         public abstract string? CssBlacklist { get; set; }
+        public abstract bool Enabled { get; set; }
 
         public override bool Equals(object? obj)
         {
-            if (obj == null || GetType() != obj.GetType())
+            if (obj == null || !(obj is WatchedPageBase wp))
             {
                 return false;
             }
 
-            WatchedPageBase wp = (WatchedPageBase)obj;
-            return this.Url == wp.Url && this.CssSelector == wp.CssSelector && this.CssBlacklist == wp.CssBlacklist;
+            return this.Url == wp.Url && this.CssSelector == wp.CssSelector && this.CssBlacklist == wp.CssBlacklist && this.Enabled == wp.Enabled;
         }
 
         public override int GetHashCode()

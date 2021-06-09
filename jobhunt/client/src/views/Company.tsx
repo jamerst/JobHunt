@@ -537,7 +537,7 @@ const Company = () => {
                       <TableCell><a href={p.url} target="_blank" rel="noreferrer">{p.url}</a></TableCell>
                       <TableCell>{p.lastScraped ? dayjs(p.lastScraped).fromNow() : "Never"}</TableCell>
                       <TableCell>{p.lastUpdated ? dayjs(p.lastUpdated).toDate().toLocaleString() : "Never"}</TableCell>
-                      <TableCell>{p.statusMessage}</TableCell>
+                      <TableCell>{p.enabled ? p.statusMessage : "Disabled"}</TableCell>
                     </TableRow>
                   )}
                   {companyData.watchedPages.length === 0 ? <TableRow><TableCell colSpan={4} align="center"><em>No pages being watched</em></TableCell></TableRow> : null}
