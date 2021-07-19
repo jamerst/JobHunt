@@ -9,7 +9,8 @@ import dayjs, { Dayjs } from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
 
 type AlertProps = {
-  onAlertClick?: () => void
+  onAlertClick?: () => void,
+  setAlertCount?: (count: number) => void
 }
 
 type Alert = {
@@ -88,10 +89,13 @@ const Alerts = (props: AlertProps) => {
       if (props.onAlertClick) {
         props.onAlertClick();
       }
+      if (props.setAlertCount) {
+        props.setAlertCount(newAlerts.filter(a => !a.read).length);
+      }
     } else {
       console.error(`API request failed: PATCH /api/alerts/read/${id}, HTTP ${response.status}`);
     }
-  }, [alerts]);
+  }, [alerts, props]);
 
   const markAllRead = useCallback(async () => {
     const response = await fetch(`/api/alerts/allread`, { method: "PATCH" });
@@ -111,13 +115,16 @@ const Alerts = (props: AlertProps) => {
         const data = await response.json() as Alert[];
         data.forEach(a => a.created = dayjs(a.created));
         setAlerts(data);
+        if (props.setAlertCount) {
+          props.setAlertCount(data.filter(a => !a.read).length);
+        }
       } else {
         console.error(`API request failed: GET /api/alerts, HTTP ${response.status}`);
       }
     }
 
     fetchAlerts();
-  }, []);
+  }, [props]);
 
   return (
     <Fragment>

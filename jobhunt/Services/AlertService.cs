@@ -11,6 +11,7 @@ using JobHunt.Models;
 namespace JobHunt.Services {
     public class AlertService : IAlertService {
         private readonly JobHuntContext _context;
+        private const int MaxAlerts = 20;
         public AlertService(JobHuntContext context) {
             _context = context;
         }
@@ -30,7 +31,7 @@ namespace JobHunt.Services {
         }
 
         public async Task<IEnumerable<Alert>> GetRecentAsync() {
-            return await _context.Alerts.AsNoTracking().OrderByDescending(a => a.Created).Take(20).ToListAsync();
+            return await _context.Alerts.AsNoTracking().OrderByDescending(a => a.Created).Take(MaxAlerts).ToListAsync();
         }
 
         public async Task<bool> MarkAsReadAsync(int id) {
@@ -53,6 +54,15 @@ namespace JobHunt.Services {
 
             await _context.SaveChangesAsync();
         }
+
+        public async Task<int> GetUnreadCountAsync() {
+            int count = await _context.Alerts.CountAsync(a => !a.Read);
+            if (count < MaxAlerts) {
+                return count;
+            } else {
+                return MaxAlerts;
+            }
+        }
     }
 
     public interface IAlertService {
@@ -61,5 +71,6 @@ namespace JobHunt.Services {
         Task<IEnumerable<Alert>> GetRecentAsync();
         Task<bool> MarkAsReadAsync(int id);
         Task MarkAllAsReadAsync();
+        Task<int> GetUnreadCountAsync();
     }
 }

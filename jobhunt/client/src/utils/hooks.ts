@@ -30,6 +30,3 @@ export const useResponsive = () => {
     return match && responsiveValues[match]
   }
 }
-
-
-export default {}

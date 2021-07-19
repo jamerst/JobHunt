@@ -291,24 +291,18 @@ namespace JobHunt.Searching {
                 }
             }
 
-            var mdConverter = new Converter();
             if (jobDescs != null && jobDescs.Keys.Count > 0) {
                 for (int i = 0; i < jobs.Count; i++) {
                     if (jobDescs.TryGetValue(jobs[i].ProviderId!, out string? desc)) {
-
-                        // remove empty list elements as Html2Markdown cannot handle them
-                        desc = desc.Replace("<li></li>", "");
-
-                        // fix invalid lists - lists with children which are not list elements - why do you return invalid HTML indeed???
-                        string newDesc = InvalidList.Replace(desc, ReplaceInvalidList);
-                        if (desc != newDesc) {
-                            _logger.LogInformation($"Removed invalid HTML list from Indeed job description, JobKey={jobs[i].ProviderId}");
-                        }
-
                         try {
-                            jobs[i].Description = mdConverter.Convert(newDesc);
-                        } catch (InvalidOperationException) {
-                            _logger.LogError($"Failed to convert Indeed job description to markdown. JobKey={jobs[i].ProviderId}");
+                            (bool success, string output) = await PandocConverter.Convert("html", "markdown_strict", desc);
+                            if (success) {
+                                jobs[i].Description = output;
+                            } else {
+                                _logger.LogError($"Failed to convert Indeed job description to markdown (JobKey={jobs[i].ProviderId}) - {output}");
+                            }
+                        } catch (Exception e) {
+                            _logger.LogError($"Failed to convert Indeed job description to markdown (JobKey={jobs[i].ProviderId}) - {e}");
                         }
                     }
                 }
@@ -317,9 +311,14 @@ namespace JobHunt.Searching {
                     for (int j = 0; j < companies[i].Jobs.Count; j++) {
                         if (jobDescs.TryGetValue(companies[i].Jobs[j].ProviderId!, out string? desc)) {
                             try {
-                                companies[i].Jobs[j].Description = mdConverter.Convert(desc);
+                                (bool success, string output) = await PandocConverter.Convert("html", "markdown_strict", desc);
+                                if (success) {
+                                    companies[i].Jobs[j].Description = output;
+                                } else {
+                                    _logger.LogError($"Failed to convert Indeed job description to markdown (JobKey={companies[i].Jobs[j].ProviderId}) - {output}");
+                                }
                             } catch (Exception e) {
-                                _logger.LogError($"Exception: {e.Message}");
+                                _logger.LogError($"Failed to convert Indeed job description to markdown (JobKey={companies[i].Jobs[j].ProviderId}) - {e}");
                             }
                         }
                     }
@@ -346,20 +345,6 @@ namespace JobHunt.Searching {
                     });
                 }
             }
-        }
-        private static readonly Regex InvalidList = new Regex(@"(?s)\<(?<tag>ul|ol)[^<]*\>\s*(?<children>(?:\<(?<childTag>(?!li).+)\>.*?\<\/\k<childTag>\>\s*)+)\<\/\k<tag>\>");
-        private static readonly Regex InvalidListChild = new Regex(@"(?s)\<(?<childTag>(?!li).+)\>.*?\<\/\k<childTag>\>");
-
-        private string ReplaceInvalidList(Match match) {
-            if (!match.Groups["children"].Success) {
-                return "";
-            }
-
-            return InvalidListChild.Replace(match.Groups["children"].Value, ReplaceInvalidListChild);
-        }
-
-        private string ReplaceInvalidListChild(Match match) {
-            return $"<li>{match.Value}</li>";
         }
 
         private class JobAlertData {

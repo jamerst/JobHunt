@@ -64,7 +64,7 @@ function App() {
         }
       }
     }),
-    [darkMode],
+    [darkMode, breakpoints],
   );
 
   return (

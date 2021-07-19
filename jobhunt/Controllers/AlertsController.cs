@@ -23,6 +23,11 @@ namespace JobHunt.Controllers {
             return new JsonResult(await _alertService.GetRecentAsync());
         }
 
+        [HttpGet]
+        public async Task<IActionResult> UnreadCount() {
+            return new JsonResult(await _alertService.GetUnreadCountAsync());
+        }
+
         [HttpPatch("{id}")]
         public async Task<IActionResult> Read([FromRoute] int id) {
             bool result = await _alertService.MarkAsReadAsync(id);

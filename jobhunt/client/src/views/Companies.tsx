@@ -205,6 +205,7 @@ const Companies: FunctionComponent = (props) => {
               disableColumnMenu
               disableColumnSelector
               queryParams={query}
+              alwaysUpdateCount
             />
           </Box>
           <Box mt={2}>

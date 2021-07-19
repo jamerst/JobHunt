@@ -17,6 +17,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:5.0
 WORKDIR /app
 RUN apt-get update
 RUN curl -sL https://deb.nodesource.com/setup_16.x |  bash -
-RUN apt-get install -y nodejs unzip libfreetype6 libfontconfig1 ca-certificates
+RUN apt-get install -y nodejs unzip libfreetype6 libfontconfig1 ca-certificates pandoc
 COPY --from=build-env /app/out .
 ENTRYPOINT ["dotnet", "JobHunt.dll"]

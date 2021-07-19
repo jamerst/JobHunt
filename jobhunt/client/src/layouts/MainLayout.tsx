@@ -1,11 +1,12 @@
 import React, { Fragment, useState } from "react"
-import { Divider, Drawer, Hidden, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Tooltip, Typography } from "@material-ui/core"
+import { Badge, Divider, Drawer, Hidden, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Tooltip, Typography } from "@material-ui/core"
 import Grid from "components/Grid";
 import { BrightnessHigh, Brightness2, Work, Business, Search, Dashboard, Menu  } from "@material-ui/icons";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import { Link } from "react-router-dom";
 import Alerts from "components/Alerts";
 import { useResponsive } from "utils/hooks";
+import { useEffect } from "react";
 
 type MainLayoutProps = {
   darkMode: boolean,
@@ -58,6 +59,20 @@ const MainLayout = (props: React.PropsWithChildren<MainLayoutProps>) => {
   const classes = useStyles();
   const r = useResponsive();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [alertCount, setAlertCount] = useState(0);
+
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      const response = await fetch("/api/alerts/unreadcount");
+      if (response.ok) {
+        setAlertCount(await response.json() as number);
+      } else {
+        console.error(`API request failed: GET /api/alerts/unreadcount, HTTP ${response.status}`);
+      }
+    }
+
+    fetchUnreadCount();
+  }, [])
 
   return (
     <Fragment>
@@ -103,7 +118,7 @@ const MainLayout = (props: React.PropsWithChildren<MainLayoutProps>) => {
                 </Tooltip>
               </Grid>
               <Grid item>
-                <Alerts onAlertClick={() => setDrawerOpen(false) }/>
+                <Alerts onAlertClick={ () => setDrawerOpen(false) } setAlertCount={ (count) => setAlertCount(count) }/>
               </Grid>
             </Grid>
           </ListItem>
@@ -113,7 +128,9 @@ const MainLayout = (props: React.PropsWithChildren<MainLayoutProps>) => {
         <Toolbar className={classes.toolbar}>
           <Hidden mdUp>
             <IconButton onClick={() => setDrawerOpen(true)}>
-              <Menu/>
+              <Badge badgeContent={alertCount} color="secondary">
+                <Menu/>
+              </Badge>
             </IconButton>
           </Hidden>
           <Typography variant="h4">
