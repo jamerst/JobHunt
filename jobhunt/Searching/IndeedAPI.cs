@@ -62,7 +62,11 @@ namespace JobHunt.Searching {
                     break;
                 }
 
-                await SearchAsync(search, client, token);
+                try {
+                    await SearchAsync(search, client, token);
+                } catch (Exception e) {
+                    _logger.LogError(e, "Uncaught IndeedAPI exception");
+                }
             }
         }
 
@@ -156,6 +160,9 @@ namespace JobHunt.Searching {
                         jobKeys.Append(job.JobKey + ",");
                         newJobs++;
 
+                        // Get the hostname of the job view URL to allow salary to be fetched in local currency
+                        Uri jobUri = new Uri(job.Url);
+
                         string? salary = null;
                         int? avgYearlySalary = null;
                         if (_options.IndeedFetchSalary && salaryFailCount <= 10) {
@@ -163,9 +170,6 @@ namespace JobHunt.Searching {
                                 { "jk", job.JobKey },
                                 { "vjs", "1" }
                             };
-
-                            // Get the hostname of the job view URL to allow salary to be fetched in local currency
-                            Uri jobUri = new Uri(job.Url);
 
                             IndeedSalaryResponse? salaryResponse = null;
                             using (var httpResponse = await client.GetAsync(QueryHelpers.AddQueryString($"https://{jobUri.Host}/viewjob", salaryQuery), HttpCompletionOption.ResponseHeadersRead)) {
@@ -208,7 +212,7 @@ namespace JobHunt.Searching {
                                 Location = job.FormattedLocation,
                                 Latitude = job.Latitude,
                                 Longitude = job.Longitude,
-                                Url = $"https://indeed.com/viewjob?jk={job.JobKey}",
+                                Url = $"https://{jobUri.Host}/viewjob?jk={job.JobKey}",
                                 CompanyId = company.Id,
                                 Posted = job.Date,
                                 Provider = SearchProviderName.Indeed,
@@ -226,7 +230,7 @@ namespace JobHunt.Searching {
                                 Location = job.FormattedLocation,
                                 Latitude = job.Latitude,
                                 Longitude = job.Longitude,
-                                Url = $"https://indeed.com/viewjob?jk={job.JobKey}",
+                                Url = $"https://{jobUri.Host}/viewjob?jk={job.JobKey}",
                                 Posted = job.Date,
                                 Provider = SearchProviderName.Indeed,
                                 ProviderId = job.JobKey,
@@ -247,7 +251,7 @@ namespace JobHunt.Searching {
                                         Location = job.FormattedLocation,
                                         Latitude = job.Latitude,
                                         Longitude = job.Longitude,
-                                        Url = $"https://indeed.com/viewjob?jk={job.JobKey}",
+                                        Url = $"https://{jobUri.Host}/viewjob?jk={job.JobKey}",
                                         Posted = job.Date,
                                         Provider = SearchProviderName.Indeed,
                                         ProviderId = job.JobKey,
@@ -386,8 +390,6 @@ namespace JobHunt.Searching {
             public string? Type { get; set; }
             public int? GetYearlyAverage() {
                 switch (Type) {
-                    case null:
-                        return null;
                     case IndeedSalaryTypes.Yearly:
                         return (int) Average;
                     case IndeedSalaryTypes.Monthly:
@@ -398,6 +400,7 @@ namespace JobHunt.Searching {
                         return (int) (Average * 48 * 5);
                     case IndeedSalaryTypes.Hourly:
                         return (int) (Average * 48 * 5 * 8);
+                    case null:
                     default:
                         return null;
                 }

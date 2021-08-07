@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Logging;
+
 using AngleSharp;
 using AngleSharp.Html.Parser;
 
@@ -16,9 +18,11 @@ namespace JobHunt.Searching {
     public class PageWatcher : IPageWatcher {
         private readonly IWatchedPageService _wpService;
         private readonly IAlertService _alertService;
-        public PageWatcher(IAlertService alertService, IWatchedPageService wpService) {
+        private readonly ILogger _logger;
+        public PageWatcher(IAlertService alertService, IWatchedPageService wpService, ILogger<PageWatcher> logger) {
             _alertService = alertService;
             _wpService = wpService;
+            _logger = logger;
         }
 
         public async Task RefreshAllAsync(HttpClient client, CancellationToken token) {
@@ -29,19 +33,29 @@ namespace JobHunt.Searching {
                     break;
                 }
 
-                await RefreshAsync(page, client, token);
+                try {
+                    await RefreshAsync(page, client, token);
+                } catch (Exception e) {
+                    _logger.LogError(e, "Uncaught PageWatcher exception");
+                }
             }
         }
 
         public async Task RefreshAsync(WatchedPage page, HttpClient client, CancellationToken token) {
             string response = "";
-            using (var httpResponse = await client.GetAsync(page.Url, HttpCompletionOption.ResponseHeadersRead)) {
-                if (httpResponse.IsSuccessStatusCode) {
-                    response = await httpResponse.Content.ReadAsStringAsync();
-                } else {
-                    await _wpService.UpdateStatusAsync(page.Id, null, $"Request failed, HTTP {(int)httpResponse.StatusCode}");
-                    return;
+            try {
+                using (var httpResponse = await client.GetAsync(page.Url, HttpCompletionOption.ResponseHeadersRead)) {
+                    if (httpResponse.IsSuccessStatusCode) {
+                        response = await httpResponse.Content.ReadAsStringAsync();
+                    } else {
+                        await _wpService.UpdateStatusAsync(page.Id, null, $"Request failed, HTTP {(int)httpResponse.StatusCode}");
+                        return;
+                    }
                 }
+            } catch (HttpRequestException e) {
+                _logger.LogError(e, $"HTTP Request failed: url={page.Url}");
+                await _wpService.UpdateStatusAsync(page.Id, null, "HTTP request error");
+                return;
             }
 
             if (string.IsNullOrEmpty(response)) {
