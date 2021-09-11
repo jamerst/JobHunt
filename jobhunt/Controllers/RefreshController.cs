@@ -22,16 +22,14 @@ namespace JobHunt.Controllers {
 
         [HttpGet]
         public async Task Indeed() {
-            HttpClient client = new HttpClient();
             CancellationToken token = new CancellationToken();
-            await _indeed.SearchAllAsync(client, token);
+            await _indeed.SearchAllAsync(token);
         }
 
         [HttpGet]
         public async Task PageWatcher() {
-            HttpClient client = new HttpClient();
             CancellationToken token = new CancellationToken();
-            await _pageWatcher.RefreshAllAsync(client, token);
+            await _pageWatcher.RefreshAllAsync(token);
         }
 
         [HttpGet]

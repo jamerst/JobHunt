@@ -4,8 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
-using Html2Markdown;
 
+using JobHunt.Converters;
 using JobHunt.Data;
 using JobHunt.DTO;
 using JobHunt.Geocoding;
@@ -199,8 +199,10 @@ namespace JobHunt.Services {
             }
 
             if (!string.IsNullOrEmpty(details.Description)) {
-                var mdConverter = new Converter();
-                job.Description = mdConverter.Convert(details.Description);
+                (bool success, string output) = await PandocConverter.Convert("html", "markdown_strict", details.Description);
+                if (success) {
+                    job.Description = output;
+                }
             } else {
                 job.Description = "";
             }

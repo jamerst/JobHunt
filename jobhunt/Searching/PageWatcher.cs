@@ -18,14 +18,16 @@ namespace JobHunt.Searching {
     public class PageWatcher : IPageWatcher {
         private readonly IWatchedPageService _wpService;
         private readonly IAlertService _alertService;
+        private readonly HttpClient _client;
         private readonly ILogger _logger;
-        public PageWatcher(IAlertService alertService, IWatchedPageService wpService, ILogger<PageWatcher> logger) {
+        public PageWatcher(IAlertService alertService, IWatchedPageService wpService, HttpClient client, ILogger<PageWatcher> logger) {
             _alertService = alertService;
             _wpService = wpService;
+            _client = client;
             _logger = logger;
         }
 
-        public async Task RefreshAllAsync(HttpClient client, CancellationToken token) {
+        public async Task RefreshAllAsync(CancellationToken token) {
             List<WatchedPage> pages = await _wpService.GetAllActiveAsync();
 
             foreach(WatchedPage page in pages) {
@@ -34,17 +36,17 @@ namespace JobHunt.Searching {
                 }
 
                 try {
-                    await RefreshAsync(page, client, token);
+                    await RefreshAsync(page, token);
                 } catch (Exception e) {
                     _logger.LogError(e, "Uncaught PageWatcher exception");
                 }
             }
         }
 
-        public async Task RefreshAsync(WatchedPage page, HttpClient client, CancellationToken token) {
+        public async Task RefreshAsync(WatchedPage page, CancellationToken token) {
             string response = "";
             try {
-                using (var httpResponse = await client.GetAsync(page.Url, HttpCompletionOption.ResponseHeadersRead)) {
+                using (var httpResponse = await _client.GetAsync(page.Url, HttpCompletionOption.ResponseHeadersRead)) {
                     if (httpResponse.IsSuccessStatusCode) {
                         response = await httpResponse.Content.ReadAsStringAsync();
                     } else {
@@ -53,7 +55,7 @@ namespace JobHunt.Searching {
                     }
                 }
             } catch (HttpRequestException e) {
-                _logger.LogError(e, $"HTTP Request failed: url={page.Url}");
+                _logger.LogError(e, $"HTTP Request failed", page);
                 await _wpService.UpdateStatusAsync(page.Id, null, "HTTP request error");
                 return;
             }
@@ -110,7 +112,7 @@ namespace JobHunt.Searching {
             await _wpService.UpdateStatusAsync(page.Id, hash);
         }
 
-        public async Task GetInitialAsync(int companyId, HttpClient client, CancellationToken token) {
+        public async Task GetInitialAsync(int companyId, CancellationToken token) {
             List<WatchedPage> pages = await _wpService.GetUnfetchedAsync(companyId);
 
             foreach(WatchedPage page in pages) {
@@ -118,11 +120,11 @@ namespace JobHunt.Searching {
                     break;
                 }
 
-                await RefreshAsync(page, client, token);
+                await RefreshAsync(page, token);
             }
         }
 
-        public async Task RefreshCompanyAsync(int companyId, HttpClient client, CancellationToken token) {
+        public async Task RefreshCompanyAsync(int companyId, CancellationToken token) {
             List<WatchedPage> pages = await _wpService.GetByCompanyAsync(companyId);
 
             foreach(WatchedPage page in pages) {
@@ -130,15 +132,15 @@ namespace JobHunt.Searching {
                     break;
                 }
 
-                await RefreshAsync(page, client, token);
+                await RefreshAsync(page, token);
             }
         }
     }
 
     public interface IPageWatcher {
-        Task RefreshAllAsync(HttpClient client, CancellationToken token);
-        Task RefreshAsync(WatchedPage page, HttpClient client, CancellationToken token);
-        Task GetInitialAsync(int companyId, HttpClient client, CancellationToken token);
-        Task RefreshCompanyAsync(int companyId, HttpClient client, CancellationToken token);
+        Task RefreshAllAsync(CancellationToken token);
+        Task RefreshAsync(WatchedPage page, CancellationToken token);
+        Task GetInitialAsync(int companyId, CancellationToken token);
+        Task RefreshCompanyAsync(int companyId, CancellationToken token);
     }
 }

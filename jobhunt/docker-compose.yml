@@ -16,7 +16,14 @@ services:
     environment:
       Search__IndeedFetchSalary: "true"
       Search__NominatimCountryCodes: "gb"
-    #   Search__Schedules__0: "* * * * *"
+      #   Search__Schedules__0: "* * * * *"
+      Serilog__WriteTo__0__Name: "Console"
+      # Serilog__WriteTo__0__Name: "Elasticsearch"
+      # Serilog__WriteTo__0__Args__nodeUris: "http://elasticsearch:9200"
+      # Serilog__WriteTo__0__Args__indexFormat: "jobhunt-serilog-{0:yyyy.MM}"
+    networks:
+      - jobhunt
+      - docker_logging
   db:
     image: "postgres:13.1"
     environment:
@@ -28,5 +35,14 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./init-data/initdb.d:/docker-entrypoint-initdb.d/
+    networks:
+      - jobhunt
+
 volumes:
   postgres-data:
+
+networks:
+  jobhunt:
+    driver: bridge
+  docker_logging:
+    external: true

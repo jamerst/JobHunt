@@ -1,7 +1,7 @@
 import React, { Fragment, useCallback, useEffect, useState } from "react"
 import { Box, Button, Container, Chip, IconButton, Menu, MenuItem, Switch, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, TextField, Tooltip, Typography, Dialog, DialogActions, DialogContent, DialogTitle } from "@material-ui/core"
 import Grid from "components/Grid";
-import { GridColDef } from "@material-ui/data-grid"
+import { GridColDef } from "@mui/x-data-grid"
 import { AccountBalance, Block, Delete, LinkedIn, Map, MoreHoriz, OpenInNew, RateReview, Save, Visibility, VisibilityOff, Web } from "@material-ui/icons";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import Autocomplete from "@material-ui/lab/Autocomplete";

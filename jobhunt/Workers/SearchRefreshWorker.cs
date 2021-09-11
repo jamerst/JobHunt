@@ -61,20 +61,19 @@ namespace JobHunt.Workers {
         public async Task DoRefresh(CancellationToken token) {
             // needs multiple separate scopes to prevent threading issues with DbContext
             using (IServiceScope indeedScope = _provider.CreateScope())
-            using (IServiceScope pageScope = _provider.CreateScope())
-            using (HttpClient client = new HttpClient()) {
+            using (IServiceScope pageScope = _provider.CreateScope()) {
                 List<Task> tasks = new List<Task>();
 
                 IIndeedAPI? indeed = indeedScope.ServiceProvider.GetService<IIndeedAPI>();
                 if (indeed != null) {
-                    tasks.Add(indeed.SearchAllAsync(client, token));
+                    tasks.Add(indeed.SearchAllAsync(token));
                 } else {
                     _logger.LogError("SearchRefreshWorker: failed to get instance of IndeedAPI");
                 }
 
                 IPageWatcher? pageWatcher = pageScope.ServiceProvider.GetService<IPageWatcher>();
                 if (pageWatcher != null) {
-                    tasks.Add(pageWatcher.RefreshAllAsync(client, token));
+                    tasks.Add(pageWatcher.RefreshAllAsync(token));
                 } else {
                     _logger.LogError("SearchRefreshWorker: failed to get instance of PageWatcher");
                 }

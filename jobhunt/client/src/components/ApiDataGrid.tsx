@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react"
-import { DataGrid, DataGridProps, GridFeatureModeConstant, GridPageChangeParams, GridRowData, GridRowId } from "@material-ui/data-grid"
+import { DataGrid, DataGridProps, GridFeatureModeConstant, GridRowData, GridRowId } from "@mui/x-data-grid"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import { Button, Box } from "@material-ui/core";
 import Grid from "components/Grid";
@@ -119,8 +119,8 @@ const ApiDataGrid = (props:ApiDataGridProps) => {
       pageSize={pageSettings.size}
       rowsPerPageOptions={[10, 15, 20, 50]}
       paginationMode={GridFeatureModeConstant.server}
-      onPageChange={(params: GridPageChangeParams) => { setPageSettings({ ...pageSettings, page: params.page }); setSelected([]); }}
-      onPageSizeChange={(params: GridPageChangeParams) => { setPageSettings({ ...pageSettings, size: params.pageSize }); setSelected([]); }}
+      onPageChange={(page) => { setPageSettings({ ...pageSettings, page: page}); setSelected([]); }}
+      onPageSizeChange={(page) => { setPageSettings({ ...pageSettings, size: page }); setSelected([]); }}
       autoHeight
       ref={React.createRef()}
       {...props}
@@ -129,7 +129,7 @@ const ApiDataGrid = (props:ApiDataGridProps) => {
       loading={loading}
       className={classes.root + " " + props.className}
       selectionModel={selected}
-      onSelectionModelChange={(s) => setSelected(s.selectionModel)}
+      onSelectionModelChange={(s) => setSelected(s)}
       components={{ Toolbar: props.toolbarActions ? ApiDataGridToolbar : undefined }}
       componentsProps={{
         toolbar: {

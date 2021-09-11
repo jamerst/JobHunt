@@ -21,12 +21,14 @@ JobHunt is dockerised, so installation is very simple. Install docker and docker
 Before running some configuration is required. All the configuration options are in `docker-compose-prod.yml`.
 
 #### Indeed Publisher ID
-You must provide your own Indeed Publisher ID by setting the value of `Search__IndeedPublisherId`. Unfortunately the API used is deprecated, and you can no longer obtain a publisher ID. Thankfully there are **many** publisher IDs left in the source code of other projects here on GitHub.
-
-I'll leave it to you to find one (hint: search for "apisearch?publisher=" on GitHub, or "indpubnum=" in search engine result URLs - the publisher ID is contained in the URLs returned by the API, slight security flaw there!).
-
+You must provide your own Indeed Publisher ID by setting the value of `Search__IndeedPublisherId`. Unfortunately the API used is deprecated, and you can no longer obtain a publisher ID. Thankfully there are **many** publisher IDs left in the source code of other projects here on GitHub. I'll leave it to you to find one.
 #### Scheduling
 Edit the `Search__Schedules` variables to customise the schedule on which results will be fetched and watched pages checked. These use the standard Cron syntax. By default the refresh will run at 9am, 12pm, and 6pm every day. You may encounter issues with rate limiting or IP blacklisting if you set the schedule to be too frequent.
+
+#### Logging
+Logging with JobHunt is provided by Serilog, which means it can support logging to multiple locations. By default JobHunt simply writes logs to the console, however it also supports logging to an ElasticSearch instance. To enable this simply uncomment the alternative Serilog configuration.
+
+This is configured based on your ElasticSearch instance also being dockerised and part of the network `docker_logging`. If you use a non-dockerised instance simply remove all references to the `docker_logging` network and add in the appropriate Uri for your instance.
 
 #### Other Options
 - `Search__IndeedFetchSalary` - fetching accurate salary information from Indeed requires an extra request for every result, which may cause issues with rate limiting or IP blacklisting, especially for searches with a large number of results. You can disable this if you don't care about fetching salary.

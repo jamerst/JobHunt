@@ -1,3 +1,4 @@
+using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
@@ -8,7 +9,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
+using Polly;
+using Polly.Extensions.Http;
+using Serilog;
+
 using JobHunt.Configuration;
+using JobHunt.Extensions;
 using JobHunt.Filters;
 using JobHunt.Geocoding;
 using JobHunt.Searching;
@@ -39,6 +45,18 @@ namespace JobHunt {
                 configuration.RootPath = "client/build";
             });
             services.Configure<SearchOptions>(Configuration.GetSection(SearchOptions.Position));
+
+            services.AddHttpClient();
+
+            // retry requests on fail for Indeed requests - getting increased request failures recently
+            var retryPolicy = HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .WaitAndRetryAsync(
+                    5,
+                    attempt => TimeSpan.FromSeconds(attempt),
+                    (result, _, count, _) => Log.Logger.Warning($"HTTP Request failed, retrying for {count.ToOrdinalString()} time", result.Exception)
+                );
+            services.AddHttpClient<IIndeedAPI>().AddPolicyHandler(retryPolicy);
 
             services.AddTransient<IAlertService, AlertService>();
             services.AddTransient<ICompanyService, CompanyService>();

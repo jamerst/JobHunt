@@ -1,5 +1,5 @@
 import React, { forwardRef } from 'react';
-import { Grid as MuiGrid, GridProps } from '@material-ui/core';
+import { Grid as MuiGrid, GridProps as MuiGridProps, GridSize } from '@material-ui/core';
 import { makeStyles, StyleRules } from '@material-ui/core/styles';
 import classNames from 'classnames';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
@@ -8,7 +8,9 @@ import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
   Sourced from https://github.com/mui-org/material-ui/issues/22281
 */
 
-const sizes:Breakpoint[] = ['xs', 'sm', 'md', 'lg', 'xl', 'xxl'];
+type GridProps = MuiGridProps & { xxl?: boolean | GridSize | undefined };
+
+const sizes: Breakpoint[] = ['xs', 'sm', 'md', 'lg', 'xl', 'xxl'];
 
 const useStyles = makeStyles((theme) => {
   const styles:StyleRules = {};

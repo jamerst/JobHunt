@@ -2,7 +2,7 @@ import React, { FunctionComponent, useEffect, useState, useCallback, Fragment } 
 import { Box, Button, Chip, Container, FormControl, FormControlLabel, InputLabel, MenuItem, Select, Slider, Switch, TextField, Tooltip, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Fab } from "@material-ui/core";
 import Grid from "components/Grid";
 import { KeyboardDatePicker, MuiPickersUtilsProvider } from "@material-ui/pickers";
-import { GridColDef } from "@material-ui/data-grid"
+import { GridColDef } from "@mui/x-data-grid"
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import { Helmet } from "react-helmet";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"

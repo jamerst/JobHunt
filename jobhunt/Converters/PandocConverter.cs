@@ -5,14 +5,14 @@ using System.Threading.Tasks;
 
 using Medallion.Shell;
 
-namespace JobHunt.Searching {
+namespace JobHunt.Converters {
     public static class PandocConverter {
         public static async Task<(bool, string)> Convert(string from, string to, string input) {
             if (!PandocInputFormats.Contains(from)) {
                 throw new InvalidOperationException($"'{from}' is not a supported pandoc input format.");
             }
 
-            if (!PandocInputFormats.Contains(to)) {
+            if (!PandocOutputFormats.Contains(to)) {
                 throw new InvalidOperationException($"'{to}' is not a supported pandoc output format.");
             }
 

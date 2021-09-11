@@ -148,13 +148,11 @@ namespace JobHunt.Services {
             await _context.SaveChangesAsync();
 
             if (pagesModified) {
-                HttpClient client = new HttpClient();
                 CancellationToken token = new CancellationToken();
-                await _pageWatcher.RefreshCompanyAsync(company.Id, client, token);
+                await _pageWatcher.RefreshCompanyAsync(company.Id, token);
             } else if (newPages) {
-                HttpClient client = new HttpClient();
                 CancellationToken token = new CancellationToken();
-                await _pageWatcher.GetInitialAsync(company.Id, client, token);
+                await _pageWatcher.GetInitialAsync(company.Id, token);
             }
 
             return company;

@@ -1,7 +1,7 @@
 import React, { FunctionComponent, Fragment, useState, useCallback } from "react"
 import { Button, Box, Chip, Container, Dialog, DialogActions, DialogContent, DialogTitle, Fab, Switch, Typography, TextField, FormControl, InputLabel, Select, MenuItem, Slider, FormControlLabel, InputAdornment } from "@material-ui/core";
 import Grid from "components/Grid";
-import { GridColDef } from "@material-ui/data-grid"
+import { GridColDef } from "@mui/x-data-grid"
 import { Helmet } from "react-helmet";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 

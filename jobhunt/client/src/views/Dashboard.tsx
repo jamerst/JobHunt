@@ -1,7 +1,7 @@
 import React, { Fragment, useEffect, useState } from "react"
 import { Typography, Tooltip, Chip } from "@material-ui/core"
 import Grid from "components/Grid";
-import { GridCellParams, GridColDef } from "@material-ui/data-grid"
+import { GridCellParams, GridColDef } from "@mui/x-data-grid"
 import SwipeableView from "react-swipeable-views"
 import { autoPlay } from "react-swipeable-views-utils"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
