@@ -3,6 +3,8 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Routing.Attributes;
 
 using JobHunt.DTO;
 using JobHunt.Models;
@@ -17,6 +19,12 @@ namespace JobHunt.Controllers {
         public CompaniesController(ICompanyService companyService, IJobService jobService) {
             _companyService = companyService;
             _jobService = jobService;
+        }
+
+        [EnableQuery]
+        [ODataAttributeRouting]
+        public IActionResult Query() {
+            return Ok(_companyService.GetSet());
         }
 
         [HttpGet]

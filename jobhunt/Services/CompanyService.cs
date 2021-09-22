@@ -332,6 +332,10 @@ namespace JobHunt.Services {
 
             return true;
         }
+
+        public DbSet<Company> GetSet() {
+            return _context.Companies;
+        }
     }
 
     public interface ICompanyService {
@@ -347,5 +351,6 @@ namespace JobHunt.Services {
         Task<bool> ToggleWatchAsync(int id);
         Task<IEnumerable<CompanyNameDto>> GetAllNamesAsync();
         Task<bool> MergeAsync(int srcId, int destId);
+        DbSet<Company> GetSet();
     }
 }

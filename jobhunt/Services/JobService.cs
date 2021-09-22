@@ -306,6 +306,10 @@ namespace JobHunt.Services {
 
             return true;
         }
+
+        public DbSet<Job> GetSet() {
+            return _context.Jobs;
+        }
     }
 
     public interface IJobService {
@@ -323,5 +327,6 @@ namespace JobHunt.Services {
         Task<(IEnumerable<JobResultDto>, int?)> SearchPagedAsync(Filter filter, int pageNum, int pageSize, bool count);
         Task<IEnumerable<Category>> GetJobCategoriesAsync();
         Task<bool> UpdateStatusAsync(int id, string status);
+        DbSet<Job> GetSet();
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
+using Microsoft.AspNetCore.OData;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,6 +15,7 @@ using Polly.Extensions.Http;
 using Serilog;
 
 using JobHunt.Configuration;
+using JobHunt.Data;
 using JobHunt.Extensions;
 using JobHunt.Filters;
 using JobHunt.Geocoding;
@@ -31,14 +33,23 @@ namespace JobHunt {
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services) {
 
-            services.AddDbContext<Data.JobHuntContext>(options =>
+            services.AddDbContext<JobHuntContext>(options =>
                 options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"))
                 // .EnableSensitiveDataLogging()
             );
 
             services.AddControllers(options => {
-                options.Filters.Add(typeof(ExceptionLogger));
-            });
+                    options.Filters.Add(typeof(ExceptionLogger));
+                })
+                .AddOData(options =>
+                    options.AddRouteComponents("api/odata", ODataModelBuilder.Build())
+                        .Filter()
+                        .Select()
+                        .Expand()
+                        .Count()
+                        .OrderBy()
+                        .SkipToken()
+                );
 
             // In production, the React files will be served from this directory
             services.AddSpaStaticFiles(configuration => {
