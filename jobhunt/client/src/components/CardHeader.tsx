@@ -1,8 +1,7 @@
 import React, { FunctionComponent, ReactElement } from "react"
-import { Box, } from "@material-ui/core";
+import { Box, } from "@mui/material";
 import Grid from "components/Grid";
-import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
-import { useResponsive } from "utils/hooks";
+import makeStyles from "makeStyles";
 
 type CardHeaderProps = {
   variant?: "icon" | "text",
@@ -10,17 +9,17 @@ type CardHeaderProps = {
   colour?: string
 }
 
-const useStyles = makeStyles((theme: Theme) => createStyles({
+const useStyles = makeStyles<CardHeaderProps>()((theme, props) => ({
   bar: {
-    backgroundColor: (props: CardHeaderProps) => props.colour ? props.colour : theme.palette.primary.main,
-    color: (props: CardHeaderProps) => theme.palette.getContrastText(props.colour ? props.colour : theme.palette.primary.main),
+    backgroundColor: props.colour ? props.colour : theme.palette.primary.main,
+    color: theme.palette.getContrastText(props.colour ? props.colour : theme.palette.primary.main),
     zIndex: 100,
     borderRadius: theme.shape.borderRadius,
     boxShadow: theme.shadows[5],
-    display: (props: CardHeaderProps) => props.variant === "text" ? "block": "inline-block",
-    width: (props:CardHeaderProps) => props.variant === "text" ? "auto" : "2em",
-    height: (props:CardHeaderProps) => props.variant === "text" ? "auto" : "2em",
-    position: (props:CardHeaderProps) => props.variant === "text" ? "static" : "absolute",
+    display: props.variant === "text" ? "block": "inline-block",
+    width: props.variant === "text" ? "auto" : "2em",
+    height: props.variant === "text" ? "auto" : "2em",
+    position: props.variant === "text" ? "static" : "absolute",
     "& *": {
       color: "inherit"
     }
@@ -35,12 +34,11 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 }));
 
 const CardHeader: FunctionComponent<CardHeaderProps> = (props) => {
-  const classes = useStyles(props);
-  const r = useResponsive();
+  const { classes, cx } = useStyles(props);
 
   if (props.variant === "text") {
     return (
-      <Box mx={r({xs: 1, md: 3})} mt={-3} px={3} py={2} className={classes.bar}>
+      <Box sx={{mx: { xs: 1, md: 3}}} mt={-3} px={3} py={2} className={classes.bar}>
         <Grid container alignItems="center" spacing={2}>
           {props.icon ? (<Grid item className={classes.icon}>{props.icon}</Grid>) : null}
           <Grid item xs={12}>
@@ -51,7 +49,7 @@ const CardHeader: FunctionComponent<CardHeaderProps> = (props) => {
     )
   } else {
     return (
-      <Box mx={3} mt={-3} p={3} className={classes.bar + " " + classes.icon}>
+      <Box mx={3} mt={-3} p={3} className={cx(classes.bar, classes.icon)}>
         {props.icon ? props.icon : null}
       </Box>
     )

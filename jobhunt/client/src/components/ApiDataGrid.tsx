@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { DataGrid, DataGridProps, GridFeatureModeConstant, GridRowData, GridRowId } from "@mui/x-data-grid"
-import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
-import { Button, Box } from "@material-ui/core";
+import makeStyles from "makeStyles";
+import { Button, Box } from "@mui/material";
 import Grid from "components/Grid";
 
 // have to remove the "rows" property since that shouldn't be passed to the DataGrid
@@ -29,7 +29,7 @@ type ToolbarActionResponse = {
   refresh: boolean
 }
 
-const useStyles = makeStyles((theme: Theme) => createStyles({
+const useStyles = makeStyles()((theme) => ({
   root: {
     '& .MuiDataGrid-columnsContainer': {
       background: theme.palette.background.default,
@@ -54,7 +54,7 @@ const ApiDataGrid = (props:ApiDataGridProps) => {
   const firstLoad = useRef<boolean>(true);
   const [selected, setSelected] = useState<GridRowId[]>([]);
 
-  const classes = useStyles();
+  const { classes, cx } = useStyles();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -127,7 +127,7 @@ const ApiDataGrid = (props:ApiDataGridProps) => {
       rows={rows}
       rowCount={rowCount}
       loading={loading}
-      className={classes.root + " " + props.className}
+      className={cx(classes.root, props.className)}
       selectionModel={selected}
       onSelectionModelChange={(s) => setSelected(s)}
       components={{ Toolbar: props.toolbarActions ? ApiDataGridToolbar : undefined }}
@@ -136,7 +136,8 @@ const ApiDataGrid = (props:ApiDataGridProps) => {
           actions: props.toolbarActions,
           selected: selected,
           handleResponse: handleToolbarResponse
-        }}}
+        }
+      }}
     />
   )
 }

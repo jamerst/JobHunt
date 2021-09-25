@@ -1,8 +1,8 @@
 import React, { FunctionComponent, useCallback, useState } from "react"
-import { IconButton, Chip, Tooltip, InputBase } from "@material-ui/core"
+import { IconButton, Chip, Tooltip, InputBase } from "@mui/material"
 import Grid from "components/Grid";
-import { Add } from "@material-ui/icons"
-import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
+import { Add } from "@mui/icons-material"
+import makeStyles from "makeStyles";
 
 export type Category = {
   id?: number,
@@ -17,7 +17,7 @@ type CategoriesProps = {
   onCategoryRemove: (id: number) => void
 }
 
-const useStyles = makeStyles((theme: Theme) => createStyles({
+const useStyles = makeStyles()((theme) => ({
   input: {
     fontSize: "0.8125rem",
     paddingLeft: "12px",
@@ -30,7 +30,7 @@ const Categories:FunctionComponent<CategoriesProps> = (props) => {
   const [adding, setAdding] = useState<boolean>(false);
   const [newName, setNewName] = useState<string>("");
 
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   const addCategory = useCallback(async (name: string) => {
     const newCategories = [...props.categories];

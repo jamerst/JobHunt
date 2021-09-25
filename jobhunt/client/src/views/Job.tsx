@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState, Fragment } from "react"
-import { Box, Button, Container, Divider, FormControl, IconButton, InputLabel, Menu, MenuItem, Select, Tab, Tabs, TextField, Typography } from "@material-ui/core"
+import { Box, Button, Container, Divider, FormControl, IconButton, InputLabel, Menu, MenuItem, Select, Tab, Tabs, TextField, Typography, Link } from "@mui/material"
 import Grid from "components/Grid";
 import { useParams } from "react-router"
 import { Helmet } from "react-helmet"
@@ -12,8 +12,8 @@ import CardHeader from "components/CardHeader";
 import CardBody from "components/CardBody";
 import TabPanel from "components/TabPanel";
 import ReactMarkdown from "react-markdown";
-import { Map, MoreHoriz, OpenInNew, Save, Subject } from "@material-ui/icons";
-import { Link } from "react-router-dom";
+import { Map, MoreHoriz, OpenInNew, Save, Subject } from "@mui/icons-material";
+import { Link as RouterLink } from "react-router-dom";
 import dayjs from "dayjs";
 
 type JobRouteParams = {
@@ -137,11 +137,11 @@ const Job = () => {
               <EditableComponent editing={editing} value={jobData.title} onChange={(e) => setJobData({...jobData, title: e.target.value})} label="Job Title" size="medium" fontSize="h4" colour="#fff">
                 <Typography variant="h4">{jobData.title}</Typography>
               </EditableComponent>
-              <Typography variant="h6"><Link to={`/company/${jobData.companyId}`}>{jobData.companyName}</Link>, {jobData.location}</Typography>
+              <Typography variant="h6"><Link component={RouterLink} to={`/company/${jobData.companyId}`}>{jobData.companyName}</Link>, {jobData.location}</Typography>
               {jobData.archived ? (<Typography variant="subtitle1"><em>Archived</em></Typography>) : null}
             </Grid>
             <Grid item>
-              <IconButton onClick={(e) => setMenuAnchor(e.currentTarget)}>
+              <IconButton onClick={(e) => setMenuAnchor(e.currentTarget)} size="large">
                 <MoreHoriz/>
               </IconButton>
               <Menu
@@ -149,7 +149,7 @@ const Job = () => {
                 keepMounted
                 open={Boolean(menuAnchor)}
                 onClose={() => setMenuAnchor(null)}
-                getContentAnchorEl={null}
+                // getContentAnchorEl={null}
                 anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
                 transformOrigin={{ vertical: "top", horizontal: "right" }}
               >
@@ -242,7 +242,9 @@ const Job = () => {
                         <Button variant="contained" color="primary" startIcon={<Save/>} onClick={() => saveChanges()}>Save Changes</Button>
                       </Grid>
                       <Grid item>
-                        <Button variant="contained" color="default" onClick={() => { setEditing(false); setJobData(origJobData); }}>Discard</Button>
+                        <Button
+                          variant="contained"
+                          onClick={() => { setEditing(false); setJobData(origJobData); }}>Discard</Button>
                       </Grid>
                     </Fragment>
                   )

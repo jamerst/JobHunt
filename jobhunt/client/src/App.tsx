@@ -1,18 +1,24 @@
 import React, { useState, useMemo } from 'react';
 import { Switch, BrowserRouter, Route } from "react-router-dom"
-import { CssBaseline } from "@material-ui/core"
-import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles"
+import { CssBaseline, gridClasses } from "@mui/material";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { CacheProvider } from "@emotion/react";
+import createCache from "tss-react/@emotion/cache";
 
 import Dashboard from "views/Dashboard"
 import MainLayout from "layouts/MainLayout"
 import Job from 'views/Job';
 import Jobs from 'views/Jobs';
-import { blue, purple } from '@material-ui/core/colors';
+import { blue, purple } from '@mui/material/colors';
 import Company from 'views/Company';
 import Companies from 'views/Companies';
 import Searches from 'views/Searches';
 import Search from 'views/Search';
-import createBreakpoints from '@material-ui/core/styles/createBreakpoints';
+
+export const muiCache = createCache({
+  key: "mui",
+  prepend: true
+});
 
 function App() {
   const [darkMode, setDarkMode] = useState<boolean>(
@@ -20,35 +26,47 @@ function App() {
     || (window.matchMedia("(prefers-color-scheme: dark)").matches && localStorage.getItem("theme") === null)
   );
 
-  const breakpoints = createBreakpoints({});
-  const theme = useMemo(() =>
-    createMuiTheme({
+  const theme = useMemo(() => {
+    const theme = createTheme({
       palette: {
-        type: darkMode ? "dark" : "light",
+        mode: darkMode ? "dark" : "light",
         primary: {
           main: blue[500],
           dark: blue[700]
         },
         secondary: {
           main: purple[500]
+        },
+        background: {
+          default: darkMode ? "#303030" : "#fafafa",
+          paper: darkMode ? "#424242" : "#fff"
         }
       },
-      overrides: {
-        MuiCssBaseline: {
-          "@global": {
-            ".MuiGrid-item:empty": {
-              padding: "0 !important" // remove padding on empty grid items
-            },
-            "a": {
+      components: {
+        MuiLink: {
+          styleOverrides: {
+            root: {
               color: "inherit",
+              textDecoration: "none",
               "&:hover": {
                 textDecoration: "underline"
               }
-            },
-            ".MuiContainer-root": {
-              [breakpoints.down("sm")]: {
-                padding: "0"
+            }
+          }
+        },
+        MuiGrid: {
+          styleOverrides: {
+            root: {
+              [`& .${gridClasses.item}:empty`]: {
+                padding: "0 !important"
               }
+            }
+          }
+        },
+        MuiPaper: {
+          styleOverrides: {
+            root: {
+              backgroundImage: "none"
             }
           }
         }
@@ -63,59 +81,74 @@ function App() {
           xxl: 2500
         }
       }
-    }),
-    [darkMode, breakpoints],
-  );
+    });
+
+    if (theme?.components) {
+      theme.components.MuiContainer = {
+        styleOverrides: {
+          root: {
+            [theme.breakpoints.down("sm")]: {
+              padding: 0
+            }
+          }
+        }
+      }
+    }
+
+    return theme;
+  }, [darkMode]);
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <BrowserRouter>
-        <Switch>
-          <Route exact path="/">
-            <MainLayout pageTitle="Dashboard" darkMode={darkMode} setDarkMode={setDarkMode}>
-              <Dashboard/>
-            </MainLayout>
-          </Route>
-          <Route exact path="/jobs">
-            <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
-              <Jobs/>
-            </MainLayout>
-          </Route>
-          <Route exact path="/job/:id">
-            <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
-              <Job/>
-            </MainLayout>
-          </Route>
-          <Route exact path="/companies">
-            <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
-              <Companies/>
-            </MainLayout>
-          </Route>
-          <Route exact path="/company/:id">
-            <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
-              <Company/>
-            </MainLayout>
-          </Route>
-          <Route exact path="/searches">
-            <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
-              <Searches/>
-            </MainLayout>
-          </Route>
-          <Route exact path="/search/:id">
-            <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
-              <Search/>
-            </MainLayout>
-          </Route>
-        </Switch>
-      </BrowserRouter>
-    </ThemeProvider>
+    <CacheProvider value={muiCache}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <BrowserRouter>
+          <Switch>
+            <Route exact path="/">
+              <MainLayout pageTitle="Dashboard" darkMode={darkMode} setDarkMode={setDarkMode}>
+                <Dashboard/>
+              </MainLayout>
+            </Route>
+            <Route exact path="/jobs">
+              <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+                <Jobs/>
+              </MainLayout>
+            </Route>
+            <Route exact path="/job/:id">
+              <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+                <Job/>
+              </MainLayout>
+            </Route>
+            <Route exact path="/companies">
+              <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+                <Companies/>
+              </MainLayout>
+            </Route>
+            <Route exact path="/company/:id">
+              <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+                <Company/>
+              </MainLayout>
+            </Route>
+            <Route exact path="/searches">
+              <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+                <Searches/>
+              </MainLayout>
+            </Route>
+            <Route exact path="/search/:id">
+              <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+                <Search/>
+              </MainLayout>
+            </Route>
+          </Switch>
+        </BrowserRouter>
+      </ThemeProvider>
+    </CacheProvider>
   );
 }
 
 export default App;
 
-declare module "@material-ui/core/styles/createBreakpoints" {
+declare module "@mui/material/styles" {
   interface BreakpointOverrides {
     xs: true;
     sm: true;

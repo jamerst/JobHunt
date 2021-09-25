@@ -1,33 +1,27 @@
 import React, { FunctionComponent } from "react"
-import { makeStyles, Theme, TypographyVariant } from "@material-ui/core";
-import Typography from "@material-ui/core/Typography";
-import { CSSProperties } from "@material-ui/styles";
 import ReactMarkdown from "react-markdown";
+import makeStyles from "makeStyles";
 
 type MarkdownProps = {
   value: string
 }
 
-const useStyles = makeStyles((theme: Theme) => {
-  const tags:TypographyVariant[] = ["h1", "h2", "h3", "h4", "h5", "h6"];
-  const nestedRules:CSSProperties = {
-    "& ul": {
-      marginTop: theme.spacing(1),
-      marginBottom: theme.spacing(2)
+const useStyles = makeStyles()((theme) => ({
+  root: {
+    "& h1, h2, h3, h4, h5, h6, p, li": {
+      fontFamily: theme.typography.fontFamily,
+      fontWeight: theme.typography.fontWeightRegular
+    },
+    "& h1, h3": {
+      fontWeight: theme.typography.fontWeightMedium
     }
-  };
-  tags.forEach((tag) => {
-    nestedRules[`& ${tag}`] = { ...theme.typography[tag], marginTop: theme.spacing(2), marginBottom: theme.spacing(1) };
-  });
-  return {
-    root: nestedRules
-  };
-});
+  }
+}));
 
 const Markdown:FunctionComponent<MarkdownProps> = (props) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
 
-  return <Typography variant="body1" className={classes.root}><ReactMarkdown skipHtml>{props.value}</ReactMarkdown></Typography>
+  return <div className={classes.root}><ReactMarkdown skipHtml>{props.value}</ReactMarkdown></div>
 }
 
 export default Markdown;

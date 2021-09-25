@@ -1,24 +1,24 @@
 import React, { useState } from "react"
-import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
-import { IconButton } from "@material-ui/core";
+import makeStyles from "makeStyles";
+import { IconButton } from "@mui/material";
 import Grid from "components/Grid";
-import { ExpandLess, ExpandMore } from "@material-ui/icons";
+import { ExpandLess, ExpandMore } from "@mui/icons-material";
 
 type ExpandableSnippetProps = {
   maxHeight?: number,
   hidden?: boolean
 }
 
-const useStyles = makeStyles((theme: Theme) => createStyles({
+const useStyles = makeStyles<ExpandableSnippetProps>()((theme, props) => ({
   collapsed: {
-    maxHeight: (props:ExpandableSnippetProps) => props.maxHeight ?? "30em",
+    maxHeight: props.maxHeight ?? "30em",
     overflow: "hidden",
     maskImage: "linear-gradient(to bottom, black 90%, transparent 100%)"
   }
 }));
 
 const ExpandableSnippet = (props:  React.PropsWithChildren<ExpandableSnippetProps>) => {
-  const classes = useStyles(props);
+  const { classes } = useStyles(props);
 
   const [collapsed, setCollapsed] = useState<boolean>(true);
 
@@ -27,9 +27,9 @@ const ExpandableSnippet = (props:  React.PropsWithChildren<ExpandableSnippetProp
       <Grid item className={collapsed && !props.hidden ? classes.collapsed : ""}>
         {props.children}
       </Grid>
-      <Grid item container justify="center">
+      <Grid item container justifyContent="center">
         {!props.hidden ? (
-          <IconButton onClick={() => setCollapsed(!collapsed)}>
+          <IconButton onClick={() => setCollapsed(!collapsed)} size="large">
             {collapsed ?
               (<ExpandMore fontSize="large"/>)
               :

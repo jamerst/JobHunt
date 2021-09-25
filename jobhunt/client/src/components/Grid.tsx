@@ -1,73 +1,48 @@
 import React, { forwardRef } from 'react';
-import { Grid as MuiGrid, GridProps as MuiGridProps, GridSize } from '@material-ui/core';
-import { makeStyles, StyleRules } from '@material-ui/core/styles';
-import classNames from 'classnames';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
-
-/*
-  Sourced from https://github.com/mui-org/material-ui/issues/22281
-*/
+import { Grid as MuiGrid, GridProps as MuiGridProps, GridSize } from '@mui/material';
+import makeStyles from 'makeStyles';
+import { CSSObject } from 'tss-react';
 
 type GridProps = MuiGridProps & { xxl?: boolean | GridSize | undefined };
 
-const sizes: Breakpoint[] = ['xs', 'sm', 'md', 'lg', 'xl', 'xxl'];
-
-const useStyles = makeStyles((theme) => {
-  const styles:StyleRules = {};
-
-  // Add a set of styles for each media breakpoint for each size
-  sizes.forEach((size) => {
-    // Media query based on user-defined custom breakpoints in theme
-    const media = theme.breakpoints.up(size);
-
-    // Add the styles for sizes 1-12
-    for (let i = 1; i <= 12; i++) {
-      const percentage = `${(i / 12) * 100}%`;
-
-      styles[`${size}-${i}`] = {
-        [media]: {
+const useStyles = makeStyles<GridProps>()((theme, props) => {
+  let root: CSSObject = {};
+  if (props.xxl) {
+    let percentage;
+    const i = props.xxl as number;
+    if (i) {
+      percentage = `${(i / 12) * 100}%`;
+      root = {
+        [theme.breakpoints.up("xxl")]: {
           flexGrow: 0,
           maxWidth: percentage,
-          flexBasis: percentage,
-        },
-      };
+          flexBasis: percentage
+        }
+      }
+    } else {
+      root = {
+        [theme.breakpoints.up("xxl")]: {
+          flexGrow: 1,
+          maxWidth: "100%",
+          flexBasis: 0
+        }
+      }
     }
+  }
 
-    // Add the "true" auto sizing style
-    styles[`${size}-true`] = {
-      [media]: {
-        flexGrow: 1,
-        maxWidth: '100%',
-        flexBasis: 0,
-      },
-    };
-  });
-
-  return styles;
+  return { root: root };
 });
 
 const Grid = forwardRef((props:GridProps, ref:React.ForwardedRef<HTMLDivElement>) => {
-  const { item, className: propsClassName } = props;
-  const classes = useStyles(props);
-  let className = propsClassName;
+  const { classes, cx } = useStyles(props);
+  let className = props.className;
+  let muiProps = { ...props, xxl: undefined };
 
-  if (item) {
-    sizes.forEach((size) => {
-      const value = props[size];
-
-      // Nothing to do if value is one of these
-      if (value === undefined || value === null || value === false || value === "auto") return;
-
-      let classKey;
-      if (value === true) classKey = 'true';
-      else classKey = value;
-
-      // Add class name for this size
-      className = classNames(className, classes[`${size}-${classKey}`]);
-    });
+  if (props.item) {
+    className = cx(className, classes.root);
   }
 
-  return <MuiGrid ref={ref} {...props} className={className} />;
+  return <MuiGrid ref={ref} {...muiProps} className={className} />;
 });
 
 export default Grid;

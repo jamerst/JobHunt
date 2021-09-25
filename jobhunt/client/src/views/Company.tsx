@@ -1,12 +1,14 @@
 import React, { Fragment, useCallback, useEffect, useState } from "react"
-import { Box, Button, Container, Chip, IconButton, Menu, MenuItem, Switch, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, TextField, Tooltip, Typography, Dialog, DialogActions, DialogContent, DialogTitle } from "@material-ui/core"
+import { Box, Button, Container, Chip, IconButton, Menu, MenuItem, Switch, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, TextField, Tooltip, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Link, useMediaQuery } from "@mui/material"
 import Grid from "components/Grid";
 import { GridColDef } from "@mui/x-data-grid"
-import { AccountBalance, Block, Delete, LinkedIn, Map, MoreHoriz, OpenInNew, RateReview, Save, Visibility, VisibilityOff, Web } from "@material-ui/icons";
-import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
-import Autocomplete from "@material-ui/lab/Autocomplete";
+import { AccountBalance, Block, Delete, LinkedIn, Map, MoreHoriz, OpenInNew, RateReview, Save, Visibility, VisibilityOff, Web } from "@mui/icons-material";
+import makeStyles from "makeStyles";
+import Autocomplete from '@mui/material/Autocomplete';
+import { useTheme } from "@mui/system";
+
 import { useHistory, useParams } from "react-router"
-import { Link } from "react-router-dom"
+import { Link as RouterLink } from "react-router-dom"
 import { Helmet } from "react-helmet"
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
@@ -20,7 +22,6 @@ import CardBody from "components/CardBody";
 import TabPanel from "components/TabPanel";
 import ApiDataGrid from "components/ApiDataGrid";
 import Markdown from "components/Markdown";
-import { useResponsive } from "utils/hooks";
 
 type CompanyRouteParams = {
   id: string
@@ -75,7 +76,7 @@ const jobsColumns = (small: boolean | undefined): GridColDef[] => [
     flex: 2,
     sortable: false,
     renderCell: (params) => {
-      return (<Link to={`/job/${params.id}`}>{params.value}</Link>)
+      return (<Link component={RouterLink} to={`/job/${params.id}`}>{params.value}</Link>)
     }
   },
   { field: "location", headerName: "Location", flex: 1, sortable: false, hide: small, },
@@ -93,7 +94,7 @@ const jobsColumns = (small: boolean | undefined): GridColDef[] => [
       } else {
         let newTag = params.row.seen ? null : (<Chip label="New" color="secondary"/>);
         return (
-          <Grid container justify="space-between" alignItems="center">
+          <Grid container justifyContent="space-between" alignItems="center">
             <Tooltip
               title={<Typography variant="body2">{date.format("DD/MM/YYYY HH:mm")}</Typography>}
               placement="right"
@@ -108,7 +109,7 @@ const jobsColumns = (small: boolean | undefined): GridColDef[] => [
   }
 ];
 
-const useStyles = makeStyles((theme: Theme) => createStyles({
+const useStyles = makeStyles()((theme) => ({
   unseen: {
     fontWeight: theme.typography.fontWeightBold
   },
@@ -119,12 +120,12 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 }));
 
 const Company = () => {
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   const { id }: CompanyRouteParams = useParams();
   const history = useHistory();
-  const r = useResponsive();
-  const small = r({xs: true, md: false});
+  const theme = useTheme();
+  const small = useMediaQuery(theme.breakpoints.down("md"));
 
   const [companyData, setCompanyData] = useState<CompanyResponse>();
   const [origCompanyData, setOrigCompanyData] = useState<CompanyResponse>();
@@ -265,13 +266,13 @@ const Company = () => {
               <Grid container alignItems="center" spacing={1}>
                 <Grid item>
                   <Tooltip title={<Typography variant="subtitle2">{companyData.watched ? "Unwatch Company" : "Watch Company"}</Typography>}>
-                    <IconButton onClick={() => toggleWatched()}>
+                    <IconButton onClick={() => toggleWatched()} size="large">
                       {companyData.watched ? <Visibility/> : <VisibilityOff/>}
                     </IconButton>
                   </Tooltip>
                 </Grid>
                 <Grid item>
-                  <IconButton onClick={(e) => setMenuAnchor(e.currentTarget)}>
+                  <IconButton onClick={(e) => setMenuAnchor(e.currentTarget)} size="large">
                     <MoreHoriz/>
                   </IconButton>
                 </Grid>
@@ -280,7 +281,7 @@ const Company = () => {
                   keepMounted
                   open={Boolean(menuAnchor)}
                   onClose={() => setMenuAnchor(null)}
-                  getContentAnchorEl={null}
+                  // getContentAnchorEl={null}
                   anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
                   transformOrigin={{ vertical: "top", horizontal: "right" }}
                 >
@@ -309,7 +310,9 @@ const Company = () => {
                     <Button variant="contained" color="primary" startIcon={<Save/>} onClick={() => saveChanges()}>Save Changes</Button>
                   </Grid>
                   <Grid item>
-                    <Button variant="contained" color="default" onClick={() => { setEditing(false); setCompanyData(origCompanyData); setAlternateNames(origCompanyData?.alternateNames?.join(", ") ?? ""); }}>Discard</Button>
+                    <Button
+                      variant="contained"
+                      onClick={() => { setEditing(false); setCompanyData(origCompanyData); setAlternateNames(origCompanyData?.alternateNames?.join(", ") ?? ""); }}>Discard</Button>
                   </Grid>
                 </Grid>
               )
@@ -466,7 +469,7 @@ const Company = () => {
                                 newPages.splice(i, 1);
                                 setCompanyData({...companyData, watchedPages: newPages})
                               }}
-                            >
+                              size="large">
                               <Delete/>
                             </IconButton>
                           </TableCell>
@@ -534,7 +537,7 @@ const Company = () => {
                 <TableBody>
                   {companyData.watchedPages.map(p =>
                     <TableRow key={p.url}>
-                      <TableCell><a href={p.url} target="_blank" rel="noreferrer">{p.url}</a></TableCell>
+                      <TableCell><Link href={p.url} target="_blank" rel="noreferrer">{p.url}</Link></TableCell>
                       <TableCell>{p.lastScraped ? dayjs(p.lastScraped).fromNow() : "Never"}</TableCell>
                       <TableCell>{p.lastUpdated ? dayjs(p.lastUpdated).toDate().toLocaleString() : "Never"}</TableCell>
                       <TableCell>{p.enabled ? p.statusMessage : "Disabled"}</TableCell>

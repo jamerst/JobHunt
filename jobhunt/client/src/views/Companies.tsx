@@ -1,17 +1,16 @@
 import React, { FunctionComponent, useEffect, useState, useCallback } from "react"
-import { Box, Button, Chip, Container, Slider, TextField, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Fab } from "@material-ui/core";
+import { Box, Button, Chip, Container, Slider, TextField, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Fab, Link } from "@mui/material";
 import Grid from "components/Grid";
 import { GridColDef } from "@mui/x-data-grid"
 import { Helmet } from "react-helmet";
-import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
-import { Add } from "@material-ui/icons";
-import { Link, useHistory } from "react-router-dom";
+import makeStyles from "makeStyles";
+import { Add } from "@mui/icons-material";
+import { Link as RouterLink, useHistory } from "react-router-dom";
 
 import Card from "components/Card";
 import CardBody from "components/CardBody";
 import CardHeader from "components/CardHeader";
 import ApiDataGrid from "components/ApiDataGrid";
-import { useResponsive } from "utils/hooks";
 
 type SearchFilter = {
   term?: string,
@@ -49,11 +48,11 @@ type Company = {
   endole?: string
 }
 
-const useStyles = makeStyles((theme: Theme) => createStyles({
+const useStyles = makeStyles()((theme) => ({
   dialog: {
     minWidth: "40em",
     maxWidth: "100%",
-    [theme.breakpoints.down("sm")]: {
+    [theme.breakpoints.down('md')]: {
       minWidth: 0
     }
   }
@@ -67,7 +66,7 @@ const columns: GridColDef[] = [
     flex: 2,
     sortable: false,
     renderCell: (params) => {
-      return (<Link to={`/company/${params.id}`}>{params.value}</Link>)
+      return (<Link component={RouterLink} to={`/company/${params.id}`}>{params.value}</Link>)
     }
   },
   {
@@ -86,9 +85,8 @@ const Companies: FunctionComponent = (props) => {
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [newCompany, setNewCompany] = useState<Company>({ name: "", location: "" });
 
-  const classes = useStyles();
+  const { classes } = useStyles();
   const history = useHistory();
-  const r = useResponsive();
 
   const create = useCallback(async () => {
     const response = await fetch("/api/companies/create", {
@@ -140,7 +138,7 @@ const Companies: FunctionComponent = (props) => {
          <Typography variant="h4">Saved Companies</Typography>
         </CardHeader>
         <CardBody>
-          <Box mx={r({xs: 1, md: 8})} mb={4} mt={1}>
+          <Box sx={{mx: {xs: 1, md: 8}}} mb={4} mt={1}>
             <form onSubmit={(e) => { e.preventDefault(); setQuery(toQuery(filter)); }}>
             <Grid container spacing={2}>
               <Grid item xs={12}>
@@ -197,7 +195,7 @@ const Companies: FunctionComponent = (props) => {
             </Grid>
             </form>
           </Box>
-          <Box mx={r({xs: 1, md: 4})}>
+          <Box sx={{mx: {xs: 1, md: 4 }}}>
             <Typography variant="h6">Search Results</Typography>
             <ApiDataGrid
               url="/api/companies/search"
@@ -209,7 +207,7 @@ const Companies: FunctionComponent = (props) => {
             />
           </Box>
           <Box mt={2}>
-            <Grid container justify="flex-end">
+            <Grid container justifyContent="flex-end">
               <Fab color="secondary" aria-label="add" onClick={() => setDialogOpen(!dialogOpen)}>
                 <Add/>
               </Fab>

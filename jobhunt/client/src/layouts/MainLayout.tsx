@@ -1,8 +1,10 @@
 import React, { Fragment, useState } from "react"
-import { Badge, Divider, Drawer, Hidden, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Tooltip, Typography } from "@material-ui/core"
+import { Badge, Divider, Drawer, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Tooltip, Typography } from "@mui/material"
 import Grid from "components/Grid";
-import { BrightnessHigh, Brightness2, Work, Business, Search, Dashboard, Menu  } from "@material-ui/icons";
-import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
+import { BrightnessHigh, Brightness2, Work, Business, Search, Dashboard, Menu  } from "@mui/icons-material";
+
+import makeStyles from "makeStyles";
+
 import { Link } from "react-router-dom";
 import Alerts from "components/Alerts";
 import { useResponsive } from "utils/hooks";
@@ -16,7 +18,7 @@ type MainLayoutProps = {
 
 const drawerWidth = 240;
 
-const useStyles = makeStyles((theme: Theme) => createStyles({
+const useStyles = makeStyles()((theme) => ({
   root: {
     width: "100vw"
   },
@@ -49,14 +51,14 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     textAlign: "center"
   },
   toolbar: {
-    [theme.breakpoints.down("md")]: {
+    [theme.breakpoints.down('lg')]: {
       padding: 0,
     }
   }
 }));
 
 const MainLayout = (props: React.PropsWithChildren<MainLayoutProps>) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const r = useResponsive();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [alertCount, setAlertCount] = useState(0);
@@ -106,13 +108,13 @@ const MainLayout = (props: React.PropsWithChildren<MainLayoutProps>) => {
           </ListItem>
           <Divider/>
           <ListItem>
-            <Grid container justify="center">
+            <Grid container justifyContent="center">
               <Grid item>
                 <Tooltip title="Toggle theme">
                   <IconButton
                     aria-label="Toggle theme"
                     onClick={() => { props.setDarkMode(!props.darkMode); localStorage.setItem("theme", props.darkMode ? "light" : "dark") }}
-                  >
+                    size="large">
                     {props.darkMode ? <BrightnessHigh /> : <Brightness2 />}
                   </IconButton>
                 </Tooltip>
@@ -126,20 +128,19 @@ const MainLayout = (props: React.PropsWithChildren<MainLayoutProps>) => {
       </Drawer>
       <main className={classes.mainContainer}>
         <Toolbar className={classes.toolbar}>
-          <Hidden mdUp>
-            <IconButton onClick={() => setDrawerOpen(true)}>
-              <Badge badgeContent={alertCount} color="secondary">
-                <Menu/>
-              </Badge>
-            </IconButton>
-          </Hidden>
+          <IconButton onClick={() => setDrawerOpen(true)} size="large" sx={{ display: { md: "none", xs: "block" }}}>
+            <Badge badgeContent={alertCount} color="secondary">
+              <Menu/>
+            </Badge>
+          </IconButton>
+
           <Typography variant="h4">
             {props.pageTitle ? props.pageTitle : null}</Typography>
         </Toolbar>
         {props.children}
       </main>
     </Fragment>
-  )
+  );
 }
 
 export default MainLayout;

@@ -1,6 +1,6 @@
 import React, { Fragment, PropsWithChildren } from "react"
-import { TextField, TextFieldProps } from "@material-ui/core"
-import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
+import { TextField, TextFieldProps } from "@mui/material"
+import makeStyles from "makeStyles"
 
 type EditableComponentProps<T> = TextFieldProps & {
   variant?: string,
@@ -11,22 +11,22 @@ type EditableComponentProps<T> = TextFieldProps & {
   renderEdit?: (data: T[]) => React.ReactNode
 }
 
-const useStyles = makeStyles((theme: Theme) => createStyles({
+const useStyles = makeStyles<EditableComponentProps<any>>()((theme, props) => ({
   root: {
     "& input": {
-      fontSize: (props: EditableComponentProps<any>) => theme.typography[props.fontSize ?? "body1"].fontSize,
+      fontSize: theme.typography[props.fontSize ?? "body1"].fontSize,
     },
     "& .MuiFormLabel-root.Mui-focused": {
-      color: (props: EditableComponentProps<any>) => props.colour ?? theme.palette.primary.main
+      color: props.colour ?? theme.palette.primary.main
     },
     "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
-      borderColor: (props: EditableComponentProps<any>) => props.colour ?? theme.palette.primary.main
+      borderColor: props.colour ?? theme.palette.primary.main
     }
   }
 }));
 
 const EditableComponent= <T, >(props: PropsWithChildren<EditableComponentProps<T>>) => {
-  const classes = useStyles(props);
+  const { classes } = useStyles(props);
 
   if (props.editing) {
     if (!props.data || !Array.isArray(props.data)) {

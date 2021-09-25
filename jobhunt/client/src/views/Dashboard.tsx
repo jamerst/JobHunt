@@ -1,22 +1,25 @@
 import React, { Fragment, useEffect, useState } from "react"
-import { Typography, Tooltip, Chip } from "@material-ui/core"
+import { Typography, Tooltip, Chip, Link, useMediaQuery } from "@mui/material"
 import Grid from "components/Grid";
 import { GridCellParams, GridColDef } from "@mui/x-data-grid"
+import { useTheme } from "@mui/system";
+
 import SwipeableView from "react-swipeable-views"
 import { autoPlay } from "react-swipeable-views-utils"
-import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
+import { Helmet } from "react-helmet"
+
+import makeStyles from "makeStyles";
 
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
 
 import ApiDataGrid, { ToolbarAction } from "components/ApiDataGrid"
 import Card from "components/Card"
-import { Archive, Work } from "@material-ui/icons"
-import { Link } from "react-router-dom"
+import { Archive, Work } from "@mui/icons-material"
+import { Link as RouterLink } from "react-router-dom"
 import CardHeader from "components/CardHeader"
 import CardBody from "components/CardBody"
-import { Helmet } from "react-helmet"
-import { useResponsive } from "utils/hooks"
+
 
 type JobCount = {
   daily: number,
@@ -24,7 +27,7 @@ type JobCount = {
   monthly: number
 }
 
-const useStyles = makeStyles((theme: Theme) => createStyles({
+const useStyles = makeStyles()((theme) => ({
   unseen: {
     fontWeight: theme.typography.fontWeightBold
   }
@@ -42,7 +45,7 @@ const jobsColumns = (small: boolean): GridColDef[] => {
       flex: 2,
       sortable: false,
       renderCell: (params: GridCellParams) => {
-        return (<Link to={`/job/${params.id}`}>{params.value}</Link>)
+        return (<Link component={RouterLink} to={`/job/${params.id}`}>{params.value}</Link>)
       }
     },
     { field: "location", headerName: "Location", flex: 1, sortable: false, },
@@ -52,7 +55,7 @@ const jobsColumns = (small: boolean): GridColDef[] => {
       flex: 2,
       sortable: false,
       renderCell: (params: GridCellParams) => {
-        return (<Link to={`/company/${params.row.companyId}`}>{params.value}</Link>)
+        return (<Link component={RouterLink} to={`/company/${params.row.companyId}`}>{params.value}</Link>)
       },
       hide: small
     },
@@ -70,7 +73,7 @@ const jobsColumns = (small: boolean): GridColDef[] => {
         } else {
           let newTag = params.row.seen ? null : (<Chip label="New" color="secondary"/>);
           return (
-            <Grid container justify="space-between" alignItems="center">
+            <Grid container justifyContent="space-between" alignItems="center">
               <Tooltip
                 title={<Typography variant="body2">{date.format("DD/MM/YYYY HH:mm")}</Typography>}
                 placement="right"
@@ -106,9 +109,9 @@ export const Dashboard = () => {
   const [jobCounts, setJobCounts] = useState<JobCount>({ daily: -1, weekly: -1, monthly: -1 });
   const [index, setIndex] = useState<number>(0);
 
-  const classes = useStyles();
-  const r = useResponsive();
-  const small = r({xs: true, md: false});
+  const { classes } = useStyles();
+  const theme = useTheme();
+  const small = useMediaQuery(theme.breakpoints.down("md"));
 
   useEffect(() => {
     const fetchJobCounts = async () => {

@@ -1,9 +1,11 @@
 import React, { FunctionComponent, Fragment, useState, useCallback } from "react"
-import { Button, Box, Chip, Container, Dialog, DialogActions, DialogContent, DialogTitle, Fab, Switch, Typography, TextField, FormControl, InputLabel, Select, MenuItem, Slider, FormControlLabel, InputAdornment } from "@material-ui/core";
+import { Button, Box, Chip, Container, Dialog, DialogActions, DialogContent, DialogTitle, Fab, Switch, Typography, TextField, FormControl, InputLabel, Select, MenuItem, Slider, FormControlLabel, InputAdornment, Link, useMediaQuery } from "@mui/material";
 import Grid from "components/Grid";
 import { GridColDef } from "@mui/x-data-grid"
+import { useTheme } from "@mui/system";
 import { Helmet } from "react-helmet";
-import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
+
+import makeStyles from "makeStyles";
 
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
@@ -12,11 +14,10 @@ import Card from "components/Card";
 import CardBody from "components/CardBody";
 import CardHeader from "components/CardHeader";
 import ApiDataGrid from "components/ApiDataGrid";
-import { Link, useHistory } from "react-router-dom";
-import { Add } from "@material-ui/icons";
+import { Link as RouterLink, useHistory } from "react-router-dom";
+import { Add } from "@mui/icons-material";
 import CountrySelector from "components/CountrySelector";
 import { IndeedSupportedCountries } from "utils/constants";
-import { useResponsive } from "utils/hooks";
 
 const toggleEnabled = async (id: string) => {
   const response = await fetch(`/api/search/enable/${id}`, { method: "PATCH" });
@@ -25,7 +26,7 @@ const toggleEnabled = async (id: string) => {
   }
 }
 
-const useStyles = makeStyles((theme: Theme) => createStyles({
+const useStyles = makeStyles()((theme) => ({
   dialog: {
     minWidth: "40em",
     maxWidth: "100%"
@@ -41,7 +42,7 @@ const columns = (small: boolean | undefined): GridColDef[] => [
     flex: 2,
     sortable: false,
     renderCell: (params) => {
-      return (<Link to={`/search/${params.id}`}>{params.value}</Link>)
+      return (<Link component={RouterLink} to={`/search/${params.id}`}>{params.value}</Link>)
     }
   },
   {
@@ -112,9 +113,9 @@ const Searches: FunctionComponent = (props) => {
     }
   }, [newSearch, history])
 
-  const classes = useStyles();
-  const r = useResponsive();
-  const small = r({xs: true, md: false});
+  const { classes } = useStyles();
+  const theme = useTheme();
+  const small = useMediaQuery(theme.breakpoints.down("md"));
 
   return (
     <Container>
@@ -134,7 +135,7 @@ const Searches: FunctionComponent = (props) => {
             disableSelectionOnClick
           />
           <Box mt={2}>
-            <Grid container justify="flex-end">
+            <Grid container justifyContent="flex-end">
               <Fab color="secondary" aria-label="add" onClick={() => setDialogOpen(!dialogOpen)}>
                 <Add/>
               </Fab>

@@ -1,23 +1,27 @@
 import React, { FunctionComponent, useEffect, useState, useCallback, Fragment } from "react"
-import { Box, Button, Chip, Container, FormControl, FormControlLabel, InputLabel, MenuItem, Select, Slider, Switch, TextField, Tooltip, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Fab } from "@material-ui/core";
+import { Box, Button, Chip, Container, FormControl, FormControlLabel, InputLabel, MenuItem, Select, Slider, Switch, TextField, Tooltip, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Fab, Link, useMediaQuery } from "@mui/material";
 import Grid from "components/Grid";
-import { KeyboardDatePicker, MuiPickersUtilsProvider } from "@material-ui/pickers";
+import { DatePicker } from "@mui/lab";
+import DateAdapter from "@mui/lab/AdapterDayjs";
+import LocalizationProvider from "@mui/lab/LocalizationProvider";
 import { GridColDef } from "@mui/x-data-grid"
-import Autocomplete from "@material-ui/lab/Autocomplete";
+import Autocomplete from '@mui/material/Autocomplete';
+import { useTheme } from "@mui/system";
+import { Add } from "@mui/icons-material";
+
+import makeStyles from "makeStyles";
+
+import { Link as RouterLink, useHistory } from "react-router-dom";
 import { Helmet } from "react-helmet";
-import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
-import { Add } from "@material-ui/icons";
-import { Link, useHistory } from "react-router-dom";
 
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
-import DayjsUtils from "utils/dayjs-utils"
+import enGB from "dayjs/locale/en-gb"
 
 import Card from "components/Card";
 import CardBody from "components/CardBody";
 import CardHeader from "components/CardHeader";
 import ApiDataGrid from "components/ApiDataGrid";
-import { useResponsive } from "utils/hooks";
 
 type SearchFilter = {
   term?: string,
@@ -29,7 +33,7 @@ type SearchFilter = {
   showArchived: boolean
 }
 
-const toQuery = (f: SearchFilter) =>  {
+const toQuery = (f: SearchFilter) => {
   let result:[string, string | undefined][] = [
     ["term", f.term],
     ["location", f.location],
@@ -65,19 +69,12 @@ type Company = {
   name: string
 }
 
-const useStyles = makeStyles((theme: Theme) => createStyles({
+const useStyles = makeStyles()((theme) => ({
   unseen: {
     fontWeight: theme.typography.fontWeightBold
   },
   archived: {
     fontStyle: "italic"
-  },
-  dialog: {
-    minWidth: "40em",
-    maxWidth: "100%",
-    [theme.breakpoints.down("sm")]: {
-      minWidth: 0
-    }
   }
 }));
 
@@ -90,7 +87,7 @@ const jobsColumns = (small: boolean | undefined): GridColDef[] => [
     flex: 2,
     sortable: false,
     renderCell: (params) => {
-      return (<Link to={`/job/${params.id}`}>{params.value}</Link>)
+      return (<Link component={RouterLink} to={`/job/${params.id}`}>{params.value}</Link>)
     }
   },
   {
@@ -106,7 +103,7 @@ const jobsColumns = (small: boolean | undefined): GridColDef[] => [
     flex: 2,
     sortable: false,
     renderCell: (params) => {
-      return (<Link to={`/company/${params.row.companyId}`}>{params.value}</Link>)
+      return (<Link component={RouterLink} to={`/company/${params.row.companyId}`}>{params.value}</Link>)
     },
     hide: small
   },
@@ -124,7 +121,7 @@ const jobsColumns = (small: boolean | undefined): GridColDef[] => [
       } else {
         let newTag = !params.row.seen && !params.row.archived ? (<Chip label="New" color="secondary"/>) : null;
         return (
-          <Grid container justify="space-between" alignItems="center">
+          <Grid container justifyContent="space-between" alignItems="center">
             <Tooltip
               title={<Typography variant="body2">{date.format("DD/MM/YYYY HH:mm")}</Typography>}
               placement="right"
@@ -142,14 +139,16 @@ const jobsColumns = (small: boolean | undefined): GridColDef[] => [
 const Jobs: FunctionComponent = (props) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [filter, setFilter] = useState<SearchFilter>({ categories: [], showArchived: false });
-  const [query, setQuery] = useState<[string, string | undefined][]>(toQuery(filter));
+  const [query, setQuery] = useState<[string, string | undefined][]>();
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [newJob, setNewJob] = useState<Job>({ title: "" });
   const [companies, setCompanies] = useState<Company[]>([]);
 
   const history = useHistory();
-  const r = useResponsive();
-  const small = r({xs: true, md: false});
+
+  const { classes } = useStyles();
+  const theme = useTheme();
+  const small = useMediaQuery(theme.breakpoints.down("md"));
 
   const create = useCallback(async () => {
     const response = await fetch("/api/jobs/create", {
@@ -179,8 +178,6 @@ const Jobs: FunctionComponent = (props) => {
       console.error(`API request failed: GET /api/companies/names, HTTP ${response.status}`);
     }
   }, [companies]);
-
-  const classes = useStyles();
 
   useEffect(() => {
     (async () => {
@@ -217,27 +214,22 @@ const Jobs: FunctionComponent = (props) => {
          <Typography variant="h4">Saved Jobs</Typography>
         </CardHeader>
         <CardBody>
-          <Box mx={r({xs: 1, md: 8})} mb={4} mt={1}>
+          <Box sx={{mx: { xs: 1, md: 8 }}} mb={4} mt={1}>
             <form onSubmit={(e) => { e.preventDefault(); setQuery(toQuery(filter)); }}>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={8}>
                   <TextField variant="filled" label="Search Term" fullWidth size="small" value={filter.term ?? ""} onChange={(e) => setFilter({...filter, term: e.target.value})} />
                 </Grid>
                 <Grid item xs={12} md={4}>
-                  <MuiPickersUtilsProvider utils={DayjsUtils}>
-                    <KeyboardDatePicker
+                  <LocalizationProvider dateAdapter={DateAdapter} locale={enGB}>
+                    <DatePicker
                       label="Posted After"
                       value={filter.posted ?? null}
-                      onChange={(date) => setFilter({...filter, posted: date?.toDate()})}
-                      variant="inline"
-                      inputVariant="filled"
-                      format="DD/MM/YYYY"
+                      renderInput={(params) => (<TextField {...params} variant="filled" fullWidth size="small"/>)}
+                      onChange={(date) => setFilter({...filter, posted: date as Date})}
                       disableFuture
-                      autoOk
-                      fullWidth
-                      size="small"
                     />
-                  </MuiPickersUtilsProvider>
+                  </LocalizationProvider>
                 </Grid>
                 <Grid item xs={12} md={4}>
                 <TextField
@@ -314,7 +306,7 @@ const Jobs: FunctionComponent = (props) => {
               </Grid>
             </form>
           </Box>
-          <Box mx={r({xs: 1, md: 4})}>
+          <Box sx={{mx: {xs: 1, md: 4}}}>
             <ApiDataGrid
               url="/api/jobs/search"
               columns={jobsColumns(small)}
@@ -327,7 +319,7 @@ const Jobs: FunctionComponent = (props) => {
             />
           </Box>
           <Box mt={2}>
-            <Grid container justify="flex-end">
+            <Grid container justifyContent="flex-end">
               <Fab color="secondary" aria-label="add" onClick={() => { fetchCompanies(); setDialogOpen(!dialogOpen); }}>
                 <Add/>
               </Fab>
@@ -338,7 +330,7 @@ const Jobs: FunctionComponent = (props) => {
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} aria-labelledby="add-dialog-title">
         <DialogTitle id="add-dialog-title">Add New Job</DialogTitle>
         <form onSubmit={(e) => { e.preventDefault(); create(); }}>
-          <DialogContent className={classes.dialog}>
+          <DialogContent>
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <TextField label="Title" value={newJob.title} onChange={(e) => setNewJob({...newJob, title: e.target.value})} variant="outlined" fullWidth required />
@@ -376,19 +368,15 @@ const Jobs: FunctionComponent = (props) => {
                 <TextField label="URL" value={newJob.url ?? ""} onChange={(e) => setNewJob({...newJob, url: e.target.value})} variant="outlined" fullWidth/>
               </Grid>
               <Grid item xs={12}>
-                <MuiPickersUtilsProvider utils={DayjsUtils}>
-                    <KeyboardDatePicker
+              <LocalizationProvider dateAdapter={DateAdapter} locale={enGB}>
+                    <DatePicker
                       label="Posted"
                       value={newJob.posted ?? null}
-                      onChange={(date) => setNewJob({...newJob, posted: date?.toDate()})}
-                      variant="inline"
-                      inputVariant="outlined"
-                      format="DD/MM/YYYY"
+                      renderInput={(params) => (<TextField {...params} variant="outlined" fullWidth />)}
+                      onChange={(date) => setNewJob({...newJob, posted: date as Date})}
                       disableFuture
-                      autoOk
-                      fullWidth
                     />
-                  </MuiPickersUtilsProvider>
+                  </LocalizationProvider>
               </Grid>
             </Grid>
           </DialogContent>

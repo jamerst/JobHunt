@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from "react"
-import Autocomplete from "@material-ui/lab/Autocomplete"
+import Autocomplete from '@mui/material/Autocomplete'
 import data from "country-region-data"
-import { TextField } from "@material-ui/core"
+import { TextField } from "@mui/material"
 
 type CountrySelectorProps = {
   value: string,

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react"
 import { useHistory, useParams } from "react-router"
-import { Container, Tab, Tabs, Typography, FormControl, InputLabel, TextField, Select, MenuItem, Slider, InputAdornment, FormControlLabel, Switch, Button, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Chip } from "@material-ui/core";
+import { Container, Tab, Tabs, Typography, FormControl, InputLabel, TextField, Select, MenuItem, Slider, InputAdornment, FormControlLabel, Switch, Button, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Chip } from "@mui/material";
 import Grid from "components/Grid";
 import { Helmet } from "react-helmet";
 import dayjs from "dayjs"
@@ -10,7 +10,7 @@ import CardHeader from "components/CardHeader";
 import CardBody from "components/CardBody";
 import TabPanel from "components/TabPanel";
 import CountrySelector from "components/CountrySelector";
-import { Delete, Save } from "@material-ui/icons";
+import { Delete, Save } from "@mui/icons-material";
 
 
 type SearchRouteParams = {
@@ -198,16 +198,19 @@ const Search = () => {
                   />
                 </Grid>
               </Grid>
-              <Grid item container justify="space-between">
+              <Grid item container justifyContent="space-between">
                 <Grid item xs>
                   <Button variant="contained" color="secondary" startIcon={<Delete/>} onClick={() => remove()}>Delete</Button>
                 </Grid>
-                <Grid item container spacing={1} xs justify="flex-end">
+                <Grid item container spacing={1} xs justifyContent="flex-end">
                   <Grid item>
                     <Button variant="contained" color="primary" startIcon={<Save/>} onClick={() => saveChanges()} disabled={!edited}>Save Changes</Button>
                   </Grid>
                   <Grid item>
-                    <Button variant="contained" color="default" onClick={() => { setEdited(false); setSearch(origSearch); }} disabled={!edited}>Discard</Button>
+                    <Button
+                      variant="contained"
+                      onClick={() => { setEdited(false); setSearch(origSearch); }}
+                      disabled={!edited}>Discard</Button>
                   </Grid>
                 </Grid>
               </Grid>
@@ -242,7 +245,7 @@ const Search = () => {
         </CardBody>
       </Card>
     </Container>
-  )
+  );
 }
 
 export default Search;
