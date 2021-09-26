@@ -81,6 +81,9 @@ namespace JobHunt.Services {
 
             await _context.SaveChangesAsync();
 
+            _context.Categories.RemoveRange(_context.Categories.Where(c => !c.CompanyCategories.Any() && !c.JobCategories.Any()));
+            await _context.SaveChangesAsync();
+
             // return new list of categories
             return await _context.CompanyCategories
                 .Include(jc => jc.Category)

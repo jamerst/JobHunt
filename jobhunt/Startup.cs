@@ -70,6 +70,7 @@ namespace JobHunt {
             services.AddHttpClient<IIndeedAPI>().AddPolicyHandler(retryPolicy);
 
             services.AddTransient<IAlertService, AlertService>();
+            services.AddTransient<ICategoryService, CategoryService>();
             services.AddTransient<ICompanyService, CompanyService>();
             services.AddTransient<IJobService, JobService>();
             services.AddTransient<ISearchService, SearchService>();
