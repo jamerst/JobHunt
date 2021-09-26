@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useEffect, useState, useCallback } from "react"
-import { Box, Button, Chip, Container, Slider, TextField, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Fab, Link } from "@mui/material";
+import { Box, Button, Chip, Container, Slider, TextField, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Fab, Link, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import Grid from "components/Grid";
 import { GridColDef } from "@mui/x-data-grid"
 import { Helmet } from "react-helmet";
@@ -18,7 +18,8 @@ type SearchFilter = {
   distance?: number,
   posted?: Date,
   categories: number[],
-  status?: string
+  status?: string,
+  recruiter?: boolean
 }
 
 const toQuery = (f: SearchFilter) =>  {
@@ -29,6 +30,10 @@ const toQuery = (f: SearchFilter) =>  {
     ["posted", f.posted?.toISOString()],
     ["status", f.status]
   ]
+
+  if (f.recruiter !== undefined) {
+    result.push(["recruiter", String(f.recruiter)]);
+  }
 
   f.categories.forEach(c => result.push(["categories", c.toString()]))
   return result;
@@ -144,7 +149,21 @@ const Companies: FunctionComponent = (props) => {
               <Grid item xs={12}>
                 <TextField variant="filled" label="Search Term" fullWidth size="small" value={filter.term ?? ""} onChange={(e) => setFilter({...filter, term: e.target.value})}/>
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} md={4}>
+                <FormControl fullWidth variant="filled" size="small">
+                  <InputLabel id="label-type">Company Type</InputLabel>
+                  <Select
+                    value={filter.recruiter !== undefined ? (filter.recruiter ? 1 : 0) : ""}
+                    onChange={(e) => setFilter({...filter, recruiter: e.target.value !== undefined ? (e.target.value ? true : false) : undefined})}
+                    labelId="label-type"
+                    >
+                      <MenuItem><em>Any</em></MenuItem>
+                      <MenuItem value={0}>Employer</MenuItem>
+                      <MenuItem value={1}>Recruiter</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={4}>
                 <TextField
                   variant="filled"
                   label="Location"
@@ -162,7 +181,7 @@ const Companies: FunctionComponent = (props) => {
                   }}
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} md={4}>
                 <Typography id="label-distance" gutterBottom>Distance</Typography>
                 <Slider
                   value={filter.distance ?? 15}

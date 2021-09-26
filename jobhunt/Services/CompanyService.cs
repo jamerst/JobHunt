@@ -113,6 +113,7 @@ namespace JobHunt.Services {
             company.Endole = details.Endole;
             company.Latitude = details.Latitude;
             company.Longitude = details.Longitude;
+            company.Recruiter = details.Recruiter;
 
             IEnumerable<WatchedPageBase> sentPages = details.WatchedPages.Select(wp => wp as WatchedPageBase);
             bool newPages = sentPages.Any(wp1 => !company.WatchedPages.Any(wp2 => wp1.Url == wp2.Url));
@@ -178,6 +179,7 @@ namespace JobHunt.Services {
             company.Glassdoor = details.Glassdoor;
             company.LinkedIn = details.LinkedIn;
             company.Endole = details.Endole;
+            company.Recruiter = details.Recruiter;
 
             (double? lat, double? lng) = await _nominatim.Geocode(details.Location);
             company.Latitude = lat;
@@ -215,6 +217,10 @@ namespace JobHunt.Services {
 
             if (filter.Categories != null && filter.Categories.Count > 0) {
                 query = query.Where(c => c.CompanyCategories.Any(cc => filter.Categories.Contains(cc.CategoryId)));
+            }
+
+            if (filter.Recruiter.HasValue) {
+                query = query.Where(c => c.Recruiter == filter.Recruiter.Value);
             }
 
             int? total = null;
@@ -327,6 +333,10 @@ namespace JobHunt.Services {
 
             if (src.Name != dest.Name) {
                 dest.AlternateNames.Add(new CompanyName { Name = src.Name});
+            }
+
+            if (src.Recruiter && !dest.Recruiter) {
+                dest.Recruiter = true;
             }
 
             _context.Companies.Remove(src);

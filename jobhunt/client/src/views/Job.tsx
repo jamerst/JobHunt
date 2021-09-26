@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState, Fragment } from "react"
-import { Box, Button, Container, Divider, FormControl, IconButton, InputLabel, Menu, MenuItem, Select, Tab, Tabs, TextField, Typography, Link } from "@mui/material"
+import { Box, Button, Container, Divider, FormControl, IconButton, InputLabel, Menu, MenuItem, Select, Tab, Tabs, TextField, Typography, Link, Chip } from "@mui/material"
 import Grid from "components/Grid";
 import { useParams } from "react-router"
 import { Helmet } from "react-helmet"
@@ -25,10 +25,12 @@ type JobResponse = {
   title: string,
   description: string,
   salary?: string,
+  avgYearlySalary?: number,
   location: string,
   url?: string,
   companyId?: number,
   companyName?: string,
+  companyRecruiter?: boolean,
   posted: string,
   notes?: string,
   archived: boolean,
@@ -137,7 +139,7 @@ const Job = () => {
               <EditableComponent editing={editing} value={jobData.title} onChange={(e) => setJobData({...jobData, title: e.target.value})} label="Job Title" size="medium" fontSize="h4" colour="#fff">
                 <Typography variant="h4">{jobData.title}</Typography>
               </EditableComponent>
-              <Typography variant="h6"><Link component={RouterLink} to={`/company/${jobData.companyId}`}>{jobData.companyName}</Link>, {jobData.location}</Typography>
+              <Typography variant="h6"><Link sx={{ textDecoration: "underline" }} component={RouterLink} to={`/company/${jobData.companyId}`}>{jobData.companyName}</Link>, {jobData.location}</Typography>
               {jobData.archived ? (<Typography variant="subtitle1"><em>Archived</em></Typography>) : null}
             </Grid>
             <Grid item>
@@ -149,7 +151,6 @@ const Job = () => {
                 keepMounted
                 open={Boolean(menuAnchor)}
                 onClose={() => setMenuAnchor(null)}
-                // getContentAnchorEl={null}
                 anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
                 transformOrigin={{ vertical: "top", horizontal: "right" }}
               >
@@ -167,6 +168,17 @@ const Job = () => {
             {editing ? (
               <Box my={1}>
                 <Grid container spacing={1}>
+                  <Grid item md={3}>
+                    <TextField
+                      value={jobData.avgYearlySalary ?? ""}
+                      onChange={(e) => setJobData({...jobData, avgYearlySalary: isNaN(parseInt(e.target.value, 10)) ? undefined : parseInt(e.target.value, 10)})}
+                      label="Yearly Salary"
+                      variant="outlined"
+                      fullWidth
+                      size="small"
+                      type="number"
+                    />
+                  </Grid>
                   <Grid item xs={3}>
                     <TextField
                       value={jobData.latitude ?? ""}
@@ -210,7 +222,9 @@ const Job = () => {
                 updateUrl={`/api/jobs/categories/${id}`}
                 onCategoryAdd={(cats) => setJobData({ ...jobData, categories: cats})}
                 onCategoryRemove={(id) => setJobData({ ...jobData, categories: jobData.categories.filter(c => c.id !== id)})}
-              />
+              >
+                {jobData.companyRecruiter ? <Grid item><Chip label="Recruiter" color="secondary"/></Grid> : null}
+              </Categories>
             </Box>
             <Box my={2}>
               <Grid container>

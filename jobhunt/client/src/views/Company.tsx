@@ -1,5 +1,5 @@
 import React, { Fragment, useCallback, useEffect, useState } from "react"
-import { Box, Button, Container, Chip, IconButton, Menu, MenuItem, Switch, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, TextField, Tooltip, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Link, useMediaQuery } from "@mui/material"
+import { Box, Button, Container, Chip, IconButton, Menu, MenuItem, Switch, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, TextField, Tooltip, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Link, useMediaQuery, Select, FormControl, InputLabel } from "@mui/material"
 import Grid from "components/Grid";
 import { GridColDef } from "@mui/x-data-grid"
 import { AccountBalance, Block, Delete, LinkedIn, Map, MoreHoriz, OpenInNew, RateReview, Save, Visibility, VisibilityOff, Web } from "@mui/icons-material";
@@ -43,7 +43,8 @@ type CompanyResponse = {
   categories: Category[],
   alternateNames?: string[],
   latitude?: number,
-  longitude?: number
+  longitude?: number,
+  recruiter: boolean
 }
 
 type CompanyName = {
@@ -241,7 +242,8 @@ const Company = () => {
                 <EditableComponent editing={editing} value={companyData.name} onChange={(e) => setCompanyData({...companyData, name: e.target.value})} label="Company Name" size="medium" fontSize="h4" colour="#fff">
                   <Grid item container alignItems="center" spacing={1}>
                     <Grid item><Typography variant="h4">{companyData.name}</Typography></Grid>
-                    {companyData.blacklisted ? <Grid item><Tooltip title={<Typography variant="subtitle2">This company is blacklisted.</Typography>}><Block fontSize="large"/></Tooltip></Grid> : null}
+                    {companyData.recruiter ? <Grid item><Chip label="Recruiter" /></Grid> : null}
+                    {companyData.blacklisted ? <Grid item><Tooltip title={<Typography variant="subtitle2">This company is blacklisted.</Typography>}><Block fontSize="large" /></Tooltip></Grid> : null}
                   </Grid>
                 </EditableComponent>
               </Grid>
@@ -347,7 +349,7 @@ const Company = () => {
 
               {editing ? (
                 <Grid item container spacing={1}>
-                  <Grid item xs={3}>
+                  <Grid item md={3}>
                     <TextField
                       value={companyData.latitude ?? ""}
                       onChange={(e) => {
@@ -363,7 +365,7 @@ const Company = () => {
                       size="small"
                     />
                   </Grid>
-                  <Grid item xs={3}>
+                  <Grid item md={3}>
                     <TextField
                       value={companyData.longitude ?? ""}
                       onChange={(e) => {
@@ -378,6 +380,22 @@ const Company = () => {
                       fullWidth
                       size="small"
                     />
+                  </Grid>
+                  <Grid item md={3}>
+                    <FormControl variant="outlined" fullWidth size="small">
+                      <InputLabel id="recruiter-select-label">Recruiter</InputLabel>
+                      <Select
+                        value={companyData.recruiter ? 1 : 0}
+                        onChange={(e) => {
+                          setCompanyData({ ...companyData, recruiter: e.target.value ? true : false });
+                        }}
+                        labelId="recruiter-select-label"
+                        label="Recruiter"
+                      >
+                        <MenuItem value={1}>Yes</MenuItem>
+                        <MenuItem value={0}>No</MenuItem>
+                      </Select>
+                    </FormControl>
                   </Grid>
                 </Grid>
               ) : (

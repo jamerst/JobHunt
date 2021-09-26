@@ -62,7 +62,8 @@ namespace JobHunt.Controllers {
                     }).OrderBy(c => c.Name),
                     AlternateNames = company.AlternateNames.Select(n => n.Name),
                     Latitude = company.Latitude,
-                    Longitude = company.Longitude
+                    Longitude = company.Longitude,
+                    Recruiter = company.Recruiter
                 });
             }
         }

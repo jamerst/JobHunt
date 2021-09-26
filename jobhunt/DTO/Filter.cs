@@ -10,5 +10,6 @@ namespace JobHunt.DTO {
         public List<int>? Categories { get; set; }
         public string? Status { get; set; }
         public bool? ShowArchived { get; set; }
+        public bool? Recruiter { get; set; }
     }
 }

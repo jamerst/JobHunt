@@ -154,6 +154,7 @@ namespace JobHunt.Services {
 
             job.Title = details.Title;
             job.Salary = details.Salary;
+            job.AvgYearlySalary = details.AvgYearlySalary;
             job.Description = details.Description;
             job.Latitude = details.Latitude;
             job.Longitude = details.Longitude;
@@ -259,6 +260,12 @@ namespace JobHunt.Services {
 
             if (filter.ShowArchived.HasValue) {
                 query = query.Where(j => j.Archived == filter.ShowArchived || j.Archived == false);
+            } else {
+                query = query.Where(j => j.Archived == false);
+            }
+
+            if (filter.Recruiter.HasValue) {
+                query = query.Where(j => (j.Company != null && j.Company.Recruiter == filter.Recruiter.Value));
             }
 
             int? total = null;

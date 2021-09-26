@@ -30,7 +30,8 @@ type SearchFilter = {
   posted?: Date,
   categories: number[],
   status?: string,
-  showArchived: boolean
+  showArchived: boolean,
+  recruiter?: boolean
 }
 
 const toQuery = (f: SearchFilter) => {
@@ -42,6 +43,10 @@ const toQuery = (f: SearchFilter) => {
     ["status", f.status],
     ["showArchived", String(f.showArchived)]
   ]
+
+  if (f.recruiter !== undefined) {
+    result.push(["recruiter", String(f.recruiter)]);
+  }
 
   f.categories.forEach(c => result.push(["categories", c.toString()]))
   return result;
@@ -217,8 +222,22 @@ const Jobs: FunctionComponent = (props) => {
           <Box sx={{mx: { xs: 1, md: 8 }}} mb={4} mt={1}>
             <form onSubmit={(e) => { e.preventDefault(); setQuery(toQuery(filter)); }}>
               <Grid container spacing={2}>
-                <Grid item xs={12} md={8}>
+                <Grid item xs={12} md={6}>
                   <TextField variant="filled" label="Search Term" fullWidth size="small" value={filter.term ?? ""} onChange={(e) => setFilter({...filter, term: e.target.value})} />
+                </Grid>
+                <Grid item xs={12} md={2}>
+                  <FormControl fullWidth variant="filled" size="small">
+                    <InputLabel id="label-type">Posted By</InputLabel>
+                    <Select
+                      value={filter.recruiter !== undefined ? (filter.recruiter ? 1 : 0) : ""}
+                      onChange={(e) => setFilter({...filter, recruiter: e.target.value !== undefined ? (e.target.value ? true : false) : undefined})}
+                      labelId="label-type"
+                      >
+                        <MenuItem><em>Any</em></MenuItem>
+                        <MenuItem value={0}>Employer</MenuItem>
+                        <MenuItem value={1}>Recruiter</MenuItem>
+                    </Select>
+                  </FormControl>
                 </Grid>
                 <Grid item xs={12} md={4}>
                   <LocalizationProvider dateAdapter={DateAdapter} locale={enGB}>
@@ -265,7 +284,7 @@ const Jobs: FunctionComponent = (props) => {
                   />
                 </Grid>
                 <Grid item xs={12} md={4}>
-                  <FormControl fullWidth variant="filled">
+                  <FormControl fullWidth variant="filled" size="small">
                     <InputLabel id="label-status">Status</InputLabel>
                     <Select
                       value={filter.status}

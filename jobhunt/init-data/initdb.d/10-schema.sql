@@ -152,3 +152,12 @@ INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
 VALUES ('20210606154030_InitialCreate', '5.0.5');
 
 COMMIT;
+
+START TRANSACTION;
+
+ALTER TABLE "Companies" ADD "Recruiter" boolean NOT NULL DEFAULT FALSE;
+
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20210926181747_CompanyRecruiter', '5.0.9');
+
+COMMIT;
