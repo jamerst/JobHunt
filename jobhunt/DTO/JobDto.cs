@@ -13,6 +13,7 @@ namespace JobHunt.DTO {
         public int? CompanyId { get; set; }
         public string? CompanyName { get; set; }
         public DateTime? Posted { get; set; }
+        public string? Notes { get; set; }
         public IEnumerable<CategoryDto> Categories { get; set; } = new List<CategoryDto>();
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }

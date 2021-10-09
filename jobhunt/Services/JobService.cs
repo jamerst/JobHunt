@@ -156,6 +156,7 @@ namespace JobHunt.Services {
             job.Salary = details.Salary;
             job.AvgYearlySalary = details.AvgYearlySalary;
             job.Description = details.Description;
+            job.Notes = details.Notes;
             job.Latitude = details.Latitude;
             job.Longitude = details.Longitude;
 

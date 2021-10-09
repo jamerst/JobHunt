@@ -1,19 +1,21 @@
 import { Box } from "@mui/material";
-import React, { FunctionComponent } from "react"
+import React from "react"
 
-type TabPanelProps = {
+export type TabPanelProps = {
   current: number,
   index: number,
-  keepMounted?: boolean
+  keepMounted?: boolean,
+  children?: React.ReactElement,
+  id: string
 }
 
-const TabPanel:FunctionComponent<TabPanelProps> = (props) => {
+const TabPanel = (props:TabPanelProps) => {
   return (
     <div
       role="tabpanel"
       hidden={props.current !== props.index}
-      id={`tabpanel-${props.index}`}
-      aria-labelledby={`tab-${props.index}`}
+      id={props.id}
+      aria-labelledby={`tab-${props.id}`}
     >
       {(props.current === props.index || props.keepMounted) && (
         <Box py={3} sx={{px: { md: 3 }}}>

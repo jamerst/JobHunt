@@ -105,7 +105,7 @@ namespace JobHunt.Searching {
                     Type = AlertType.PageUpdate,
                     Title = $"{page.Company.Name} page updated",
                     Message = $"'{page.Url}' content has changed",
-                    Url = $"/company/{page.Company.Id}"
+                    Url = $"/company/{page.Company.Id}#watched-pages"
                 });
             }
 

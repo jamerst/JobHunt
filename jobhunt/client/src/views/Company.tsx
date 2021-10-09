@@ -1,5 +1,5 @@
 import React, { Fragment, useCallback, useEffect, useState } from "react"
-import { Box, Button, Container, Chip, IconButton, Menu, MenuItem, Switch, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, TextField, Tooltip, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Link, useMediaQuery, Select, FormControl, InputLabel } from "@mui/material"
+import { Box, Button, Container, Chip, IconButton, Menu, MenuItem, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Tooltip, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Link, useMediaQuery, Select, FormControl, InputLabel } from "@mui/material"
 import Grid from "components/Grid";
 import { GridColDef } from "@mui/x-data-grid"
 import { AccountBalance, Block, Delete, LinkedIn, Map, MoreHoriz, OpenInNew, RateReview, Save, Visibility, VisibilityOff, Web } from "@mui/icons-material";
@@ -19,7 +19,8 @@ import EditableComponent from "components/EditableComponent";
 import CardHeader from "components/CardHeader";
 import CardBody from "components/CardBody";
 
-import TabPanel from "components/TabPanel";
+import Tabs from "components/Tabs";
+import Tab from "components/Tab";
 import ApiDataGrid from "components/ApiDataGrid";
 import Markdown from "components/Markdown";
 
@@ -134,7 +135,6 @@ const Company = () => {
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [editing, setEditing] = useState<boolean>(false);
   const [newWatchedPage, setNewWatchedPage] = useState<WatchedPage>({ url: "", enabled: true });
-  const [tab, setTab] = useState<number>(0);
   const [allCompanies, setAllCompanies] = useState<CompanyName[]>([]);
   const [mergeCompany, setMergeCompany] = useState<CompanyName | null>(null);
   const [mergeOpen, setMergeOpen] = useState<boolean>(false);
@@ -409,44 +409,87 @@ const Company = () => {
               )}
             </Grid>
           </Box>
-          <Tabs value={tab} onChange={(_, t) => setTab(t)}>
-            <Tab label="Notes"/>
-            <Tab label="Watched Pages"/>
-            <Tab label="Jobs"/>
-          </Tabs>
+          <Tabs labels={["Notes", "Watched Pages", "Jobs"]}>
+            <Tab>
+              <EditableComponent editing={editing} value={companyData.notes ?? ""} onChange={(e) => setCompanyData({...companyData, notes: e.target.value})} label="Notes" multiline rows={20}>
+                <Markdown value={companyData.notes ?? "_No notes added_"}/>
+              </EditableComponent>
+            </Tab>
 
-          <TabPanel current={tab} index={0}>
-            <EditableComponent editing={editing} value={companyData.notes ?? ""} onChange={(e) => setCompanyData({...companyData, notes: e.target.value})} label="Notes" multiline rows={20}>
-              {companyData.notes ?
-                (<Markdown value={companyData.notes ?? ""}/>)
-                : null
-              }
-            </EditableComponent>
-          </TabPanel>
-
-          <TabPanel current={tab} index={1} keepMounted>
-            <EditableComponent
-              editing={editing}
-              data={companyData.watchedPages}
-              renderEdit={(data) => (
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>URL</TableCell>
-                        <TableCell>CSS Selector</TableCell>
-                        <TableCell>CSS Blacklist</TableCell>
-                        <TableCell>Enabled</TableCell>
-                        <TableCell>Actions</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {data.map((d, i) => (
-                        <TableRow key={`wp-edit-${i}`}>
+            <Tab keepMounted>
+              <EditableComponent
+                editing={editing}
+                data={companyData.watchedPages}
+                renderEdit={(data) => (
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>URL</TableCell>
+                          <TableCell>CSS Selector</TableCell>
+                          <TableCell>CSS Blacklist</TableCell>
+                          <TableCell>Enabled</TableCell>
+                          <TableCell>Actions</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {data.map((d, i) => (
+                          <TableRow key={`wp-edit-${i}`}>
+                            <TableCell>
+                              <TextField
+                                value={d.url}
+                                onChange={(e) => setCompanyData({...companyData, watchedPages: UpdateArray(companyData.watchedPages, i, (p) => { return {...p, url: e.target.value}})})}
+                                variant="outlined"
+                                label="URL"
+                                size="small"
+                                fullWidth
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <TextField
+                                value={d.cssSelector ?? ""}
+                                onChange={(e) => setCompanyData({...companyData, watchedPages: UpdateArray(companyData.watchedPages, i, (p) => { return {...p, cssSelector: e.target.value}})})}
+                                variant="outlined"
+                                label="CSS Selector"
+                                size="small"
+                                fullWidth
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <TextField
+                                value={d.cssBlacklist ?? ""}
+                                onChange={(e) => setCompanyData({...companyData, watchedPages: UpdateArray(companyData.watchedPages, i, (p) => { return {...p, cssBlacklist: e.target.value}})})}
+                                variant="outlined"
+                                label="CSS Blacklist"
+                                size="small"
+                                fullWidth
+                              />
+                            </TableCell>
+                            <TableCell align="center">
+                              <Switch
+                                checked={d.enabled}
+                                onChange={(e) => setCompanyData({...companyData, watchedPages: UpdateArray(companyData.watchedPages, i, (p) => { return {...p, enabled: e.target.checked}})})}
+                                color="primary"
+                              />
+                            </TableCell>
+                            <TableCell align="center">
+                              <IconButton
+                                onClick={() => {
+                                  let newPages = [...companyData.watchedPages];
+                                  newPages.splice(i, 1);
+                                  setCompanyData({...companyData, watchedPages: newPages})
+                                }}
+                                size="large">
+                                <Delete/>
+                              </IconButton>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        <TableRow>
                           <TableCell>
                             <TextField
-                              value={d.url}
-                              onChange={(e) => setCompanyData({...companyData, watchedPages: UpdateArray(companyData.watchedPages, i, (p) => { return {...p, url: e.target.value}})})}
+                              value={newWatchedPage.url}
+                              onChange={(e) => setNewWatchedPage({ ...newWatchedPage, url: e.target.value })}
                               variant="outlined"
                               label="URL"
                               size="small"
@@ -455,8 +498,8 @@ const Company = () => {
                           </TableCell>
                           <TableCell>
                             <TextField
-                              value={d.cssSelector ?? ""}
-                              onChange={(e) => setCompanyData({...companyData, watchedPages: UpdateArray(companyData.watchedPages, i, (p) => { return {...p, cssSelector: e.target.value}})})}
+                              value={newWatchedPage.cssSelector ?? ""}
+                              onChange={(e) => setNewWatchedPage({ ...newWatchedPage, cssSelector: e.target.value })}
                               variant="outlined"
                               label="CSS Selector"
                               size="small"
@@ -465,8 +508,8 @@ const Company = () => {
                           </TableCell>
                           <TableCell>
                             <TextField
-                              value={d.cssBlacklist ?? ""}
-                              onChange={(e) => setCompanyData({...companyData, watchedPages: UpdateArray(companyData.watchedPages, i, (p) => { return {...p, cssBlacklist: e.target.value}})})}
+                              value={newWatchedPage.cssBlacklist ?? ""}
+                              onChange={(e) => setNewWatchedPage({ ...newWatchedPage, cssBlacklist: e.target.value })}
                               variant="outlined"
                               label="CSS Blacklist"
                               size="small"
@@ -474,110 +517,62 @@ const Company = () => {
                             />
                           </TableCell>
                           <TableCell align="center">
-                            <Switch
-                              checked={d.enabled}
-                              onChange={(e) => setCompanyData({...companyData, watchedPages: UpdateArray(companyData.watchedPages, i, (p) => { return {...p, enabled: e.target.checked}})})}
-                              color="primary"
-                            />
+                            <Switch disabled checked={true}/>
                           </TableCell>
                           <TableCell align="center">
-                            <IconButton
-                              onClick={() => {
-                                let newPages = [...companyData.watchedPages];
-                                newPages.splice(i, 1);
-                                setCompanyData({...companyData, watchedPages: newPages})
-                              }}
-                              size="large">
-                              <Delete/>
-                            </IconButton>
+                            <Button
+                              variant="contained"
+                              color="primary"
+                              onClick={() => { setCompanyData({...companyData, watchedPages: [...companyData.watchedPages, newWatchedPage]}); setNewWatchedPage({ url: "", enabled: true }) }}
+                            >
+                              Add
+                            </Button>
                           </TableCell>
                         </TableRow>
-                      ))}
-                      <TableRow>
-                        <TableCell>
-                          <TextField
-                            value={newWatchedPage.url}
-                            onChange={(e) => setNewWatchedPage({ ...newWatchedPage, url: e.target.value })}
-                            variant="outlined"
-                            label="URL"
-                            size="small"
-                            fullWidth
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <TextField
-                            value={newWatchedPage.cssSelector ?? ""}
-                            onChange={(e) => setNewWatchedPage({ ...newWatchedPage, cssSelector: e.target.value })}
-                            variant="outlined"
-                            label="CSS Selector"
-                            size="small"
-                            fullWidth
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <TextField
-                            value={newWatchedPage.cssBlacklist ?? ""}
-                            onChange={(e) => setNewWatchedPage({ ...newWatchedPage, cssBlacklist: e.target.value })}
-                            variant="outlined"
-                            label="CSS Blacklist"
-                            size="small"
-                            fullWidth
-                          />
-                        </TableCell>
-                        <TableCell align="center">
-                          <Switch disabled checked={true}/>
-                        </TableCell>
-                        <TableCell align="center">
-                          <Button
-                            variant="contained"
-                            color="primary"
-                            onClick={() => { setCompanyData({...companyData, watchedPages: [...companyData.watchedPages, newWatchedPage]}); setNewWatchedPage({ url: "", enabled: true }) }}
-                          >
-                            Add
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              )}
-            >
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>URL</TableCell>
-                    <TableCell>Last Scraped</TableCell>
-                    <TableCell>Last Updated</TableCell>
-                    <TableCell>Status</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {companyData.watchedPages.map(p =>
-                    <TableRow key={p.url}>
-                      <TableCell><Link href={p.url} target="_blank" rel="noreferrer">{p.url}</Link></TableCell>
-                      <TableCell>{p.lastScraped ? dayjs(p.lastScraped).fromNow() : "Never"}</TableCell>
-                      <TableCell>{p.lastUpdated ? dayjs(p.lastUpdated).toDate().toLocaleString() : "Never"}</TableCell>
-                      <TableCell>{p.enabled ? p.statusMessage : "Disabled"}</TableCell>
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                )}
+              >
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>URL</TableCell>
+                      <TableCell>Last Scraped</TableCell>
+                      <TableCell>Last Updated</TableCell>
+                      <TableCell>Status</TableCell>
                     </TableRow>
-                  )}
-                  {companyData.watchedPages.length === 0 ? <TableRow><TableCell colSpan={4} align="center"><em>No pages being watched</em></TableCell></TableRow> : null}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            </EditableComponent>
-          </TabPanel>
+                  </TableHead>
+                  <TableBody>
+                    {companyData.watchedPages.map(p =>
+                      <TableRow key={p.url}>
+                        <TableCell><Link href={p.url} target="_blank" rel="noreferrer">{p.url}</Link></TableCell>
+                        <TableCell>{p.lastScraped ? dayjs(p.lastScraped).fromNow() : "Never"}</TableCell>
+                        <TableCell>{p.lastUpdated ? dayjs(p.lastUpdated).toDate().toLocaleString() : "Never"}</TableCell>
+                        <TableCell>{p.enabled ? p.statusMessage : "Disabled"}</TableCell>
+                      </TableRow>
+                    )}
+                    {companyData.watchedPages.length === 0 ? <TableRow><TableCell colSpan={4} align="center"><em>No pages being watched</em></TableCell></TableRow> : null}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              </EditableComponent>
+            </Tab>
 
-          <TabPanel current={tab} index={2} keepMounted>
-            <ApiDataGrid
-              url={`/api/companies/${id}/jobs`}
-              columns={jobsColumns(small)}
-              disableColumnMenu
-              disableColumnSelector
-              getRowClassName={(params) => params.row.seen ? "" : classes.unseen}
-              checkboxSelection={false}
-            />
-          </TabPanel>
+            <Tab keepMounted>
+              <ApiDataGrid
+                url={`/api/companies/${id}/jobs`}
+                columns={jobsColumns(small)}
+                disableColumnMenu
+                disableColumnSelector
+                getRowClassName={(params) => params.row.seen ? "" : classes.unseen}
+                checkboxSelection={false}
+              />
+            </Tab>
+          </Tabs>
+
+
         </CardBody>
       </Card>
       <Dialog open={mergeOpen} onClose={() => setMergeOpen(false)} aria-labelledby="add-dialog-title">

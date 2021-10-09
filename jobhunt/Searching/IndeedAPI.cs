@@ -9,7 +9,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Web;
 
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
@@ -353,7 +352,7 @@ namespace JobHunt.Searching {
                         Type = AlertType.NewJob,
                         Title = $"New job posted by {jobAlert.CompanyName}",
                         Message = $"'{job.Title}'",
-                        Url = $"/job/{job.Id}"
+                        Url = $"/job/{job.Id}#jobs"
                     });
                 }
             }

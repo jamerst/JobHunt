@@ -67,7 +67,7 @@ namespace JobHunt {
                     attempt => TimeSpan.FromSeconds(attempt),
                     (result, _, count, _) => Log.Logger.Warning($"HTTP Request failed, retrying for {count.ToOrdinalString()} time", result.Exception)
                 );
-            services.AddHttpClient<IIndeedAPI>().AddPolicyHandler(retryPolicy);
+            services.AddHttpClient<IIndeedAPI, IndeedAPI>().AddPolicyHandler(retryPolicy);
 
             services.AddTransient<IAlertService, AlertService>();
             services.AddTransient<ICategoryService, CategoryService>();

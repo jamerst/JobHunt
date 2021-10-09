@@ -1,16 +1,18 @@
 import React, { useCallback, useEffect, useState } from "react"
 import { useHistory, useParams } from "react-router"
-import { Container, Tab, Tabs, Typography, FormControl, InputLabel, TextField, Select, MenuItem, Slider, InputAdornment, FormControlLabel, Switch, Button, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Chip } from "@mui/material";
-import Grid from "components/Grid";
+import { Container, Typography, FormControl, InputLabel, TextField, Select, MenuItem, Slider, InputAdornment, FormControlLabel, Switch, Button, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Chip } from "@mui/material";
+import { Delete, Save } from "@mui/icons-material";
+
 import { Helmet } from "react-helmet";
 import dayjs from "dayjs"
 
 import Card from "components/Card";
 import CardHeader from "components/CardHeader";
 import CardBody from "components/CardBody";
-import TabPanel from "components/TabPanel";
 import CountrySelector from "components/CountrySelector";
-import { Delete, Save } from "@mui/icons-material";
+import Grid from "components/Grid";
+import Tabs from "components/Tabs";
+import Tab from "components/Tab";
 
 
 type SearchRouteParams = {
@@ -48,7 +50,6 @@ const Search = () => {
 
   const [search, setSearch] = useState<SearchResponse>();
   const [origSearch, setOrigSearch] = useState<SearchResponse>();
-  const [tab, setTab] = useState<number>(0);
   const [edited, setEdited] = useState<boolean>(false);
 
   const fetchData = useCallback(async () => {
@@ -103,145 +104,140 @@ const Search = () => {
           <Typography variant="h5">{search.description}</Typography>
         </CardHeader>
         <CardBody>
-          <Tabs value={tab} onChange={(_,t) => setTab(t)}>
-            <Tab label="Details"/>
-            <Tab label="Runs"/>
-          </Tabs>
-          <TabPanel current={tab} index={0}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} alignItems="center">
-
-              </Grid>
-              <Grid item xs={12}>
-                <FormControl fullWidth variant="outlined" required>
-                  <InputLabel id="add-provider-select-label">Source</InputLabel>
-                  <Select
-                    labelId="add-provider-select-label"
-                    value={search.provider}
-                    onChange={(e) => setSearch({...search, provider: e.target.value as string})}
-                    label="Source"
-                  >
-                    <MenuItem value="Indeed">Indeed</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12}>
-                <TextField label="Search Term" value={search.query} onChange={(e) => { setEdited(true); setSearch({...search, query: e.target.value}); }} variant="outlined" fullWidth required/>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField label="Location" value={search.location ?? ""} onChange={(e) => { setEdited(true); setSearch({...search, location: e.target.value}); }} variant="outlined" fullWidth/>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <Typography id="label-distance" gutterBottom>Distance (mi/km)</Typography>
-                  <Slider
-                    value={search.distance ?? 15}
-                    onChange={(_, val) => { setEdited(true); setSearch({...search, distance: val as number}); }}
-                    step={5}
-                    marks
-                    min={0}
-                    max={50}
-                    valueLabelDisplay="auto"
-                    aria-labelledby="label-distance"
-                    disabled={!search.location}
-                  />
-              </Grid>
-              <Grid item xs={12}>
-                <CountrySelector
-                  value={search.country}
-                  onChange={(code: string) => { setEdited(true); setSearch({...search, country: code}); }}
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth variant="outlined">
-                  <InputLabel id="add-type-select-label">Job Type</InputLabel>
-                  <Select
-                    labelId="add-type-select-label"
-                    value={search.jobType}
-                    onChange={(e) => { setEdited(true); setSearch({...search, jobType: e.target.value as string}); }}
-                    label="Job Type"
-                  >
-                    <MenuItem><em>Any</em></MenuItem>
-                    <MenuItem value="permanent">Permanent</MenuItem>
-                    <MenuItem value="fulltime">Full-time</MenuItem>
-                    <MenuItem value="contract">Contract</MenuItem>
-                    <MenuItem value="apprenticeship">Apprenticeship</MenuItem>
-                    <MenuItem value="temporary">Temporary</MenuItem>
-                    <MenuItem value="parttime">Part-time</MenuItem>
-                    <MenuItem value="internship">Internship</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="Maximum Age"
-                  value={search.maxAge ?? ""}
-                  onChange={(e) => { setEdited(true); setSearch({...search, maxAge: isNaN(parseInt(e.target.value, 10)) ? undefined : parseInt(e.target.value, 10)}); }}
-                  variant="outlined"
-                  fullWidth
-                  InputProps={{endAdornment: <InputAdornment position="end">days</InputAdornment>}}
-                />
-              </Grid>
-              <Grid item container direction="column">
-                <Grid item>
-                  <FormControlLabel
-                    style={{height: "100%"}}
-                    control={<Switch checked={!search.employerOnly} onChange={(e) => { setEdited(true); setSearch({...search, employerOnly: !e.target.checked}); }} color="primary" />}
-                    label="Include jobs from recruiters"
+          <Tabs labels={["Details", "Runs"]}>
+            <Tab>
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <FormControl fullWidth variant="outlined" required>
+                    <InputLabel id="add-provider-select-label">Source</InputLabel>
+                    <Select
+                      labelId="add-provider-select-label"
+                      value={search.provider}
+                      onChange={(e) => setSearch({...search, provider: e.target.value as string})}
+                      label="Source"
+                    >
+                      <MenuItem value="Indeed">Indeed</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField label="Search Term" value={search.query} onChange={(e) => { setEdited(true); setSearch({...search, query: e.target.value}); }} variant="outlined" fullWidth required/>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField label="Location" value={search.location ?? ""} onChange={(e) => { setEdited(true); setSearch({...search, location: e.target.value}); }} variant="outlined" fullWidth/>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Typography id="label-distance" gutterBottom>Distance (mi/km)</Typography>
+                    <Slider
+                      value={search.distance ?? 15}
+                      onChange={(_, val) => { setEdited(true); setSearch({...search, distance: val as number}); }}
+                      step={5}
+                      marks
+                      min={0}
+                      max={50}
+                      valueLabelDisplay="auto"
+                      aria-labelledby="label-distance"
+                      disabled={!search.location}
+                    />
+                </Grid>
+                <Grid item xs={12}>
+                  <CountrySelector
+                    value={search.country}
+                    onChange={(code: string) => { setEdited(true); setSearch({...search, country: code}); }}
+                    required
                   />
                 </Grid>
-                <Grid item>
-                  <FormControlLabel
-                    style={{height: "100%"}}
-                    control={<Switch checked={search.enabled} onChange={(e) => { setEdited(true); setSearch({...search, enabled: e.target.checked}); }} color="primary" />}
-                    label="Enabled"
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel id="add-type-select-label">Job Type</InputLabel>
+                    <Select
+                      labelId="add-type-select-label"
+                      value={search.jobType}
+                      onChange={(e) => { setEdited(true); setSearch({...search, jobType: e.target.value as string}); }}
+                      label="Job Type"
+                    >
+                      <MenuItem><em>Any</em></MenuItem>
+                      <MenuItem value="permanent">Permanent</MenuItem>
+                      <MenuItem value="fulltime">Full-time</MenuItem>
+                      <MenuItem value="contract">Contract</MenuItem>
+                      <MenuItem value="apprenticeship">Apprenticeship</MenuItem>
+                      <MenuItem value="temporary">Temporary</MenuItem>
+                      <MenuItem value="parttime">Part-time</MenuItem>
+                      <MenuItem value="internship">Internship</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    label="Maximum Age"
+                    value={search.maxAge ?? ""}
+                    onChange={(e) => { setEdited(true); setSearch({...search, maxAge: isNaN(parseInt(e.target.value, 10)) ? undefined : parseInt(e.target.value, 10)}); }}
+                    variant="outlined"
+                    fullWidth
+                    InputProps={{endAdornment: <InputAdornment position="end">days</InputAdornment>}}
                   />
                 </Grid>
-              </Grid>
-              <Grid item container justifyContent="space-between">
-                <Grid item xs>
-                  <Button variant="contained" color="secondary" startIcon={<Delete/>} onClick={() => remove()}>Delete</Button>
-                </Grid>
-                <Grid item container spacing={1} xs justifyContent="flex-end">
+                <Grid item container direction="column">
                   <Grid item>
-                    <Button variant="contained" color="primary" startIcon={<Save/>} onClick={() => saveChanges()} disabled={!edited}>Save Changes</Button>
+                    <FormControlLabel
+                      style={{height: "100%"}}
+                      control={<Switch checked={!search.employerOnly} onChange={(e) => { setEdited(true); setSearch({...search, employerOnly: !e.target.checked}); }} color="primary" />}
+                      label="Include jobs from recruiters"
+                    />
                   </Grid>
                   <Grid item>
-                    <Button
-                      variant="contained"
-                      onClick={() => { setEdited(false); setSearch(origSearch); }}
-                      disabled={!edited}>Discard</Button>
+                    <FormControlLabel
+                      style={{height: "100%"}}
+                      control={<Switch checked={search.enabled} onChange={(e) => { setEdited(true); setSearch({...search, enabled: e.target.checked}); }} color="primary" />}
+                      label="Enabled"
+                    />
+                  </Grid>
+                </Grid>
+                <Grid item container justifyContent="space-between">
+                  <Grid item xs>
+                    <Button variant="contained" color="secondary" startIcon={<Delete/>} onClick={() => remove()}>Delete</Button>
+                  </Grid>
+                  <Grid item container spacing={1} xs justifyContent="flex-end">
+                    <Grid item>
+                      <Button variant="contained" color="primary" startIcon={<Save/>} onClick={() => saveChanges()} disabled={!edited}>Save Changes</Button>
+                    </Grid>
+                    <Grid item>
+                      <Button
+                        variant="contained"
+                        onClick={() => { setEdited(false); setSearch(origSearch); }}
+                        disabled={!edited}>Discard</Button>
+                    </Grid>
                   </Grid>
                 </Grid>
               </Grid>
-            </Grid>
-          </TabPanel>
-          <TabPanel current={tab} index={1}>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Time</TableCell>
-                    <TableCell>Jobs Found</TableCell>
-                    <TableCell>Companies Found</TableCell>
-                    <TableCell>Time Taken</TableCell>
-                    <TableCell>Status</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {search.runs.map(r => (
-                    <TableRow key={`sr-${r.id}`}>
-                      <TableCell>{dayjs(r.time).format("DD/MM/YYYY HH:mm")}</TableCell>
-                      <TableCell>{r.newJobs}</TableCell>
-                      <TableCell>{r.newCompanies}</TableCell>
-                      <TableCell>{r.timeTaken >= 60 ? `${Math.floor(r.timeTaken / 60)}m ${r.timeTaken % 60}s` : `${r.timeTaken}s` }</TableCell>
-                      <TableCell>{!r.success ? <Chip color="default" label="Failed"/> : null}{r.message}</TableCell>
+            </Tab>
+            <Tab>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Time</TableCell>
+                      <TableCell>Jobs Found</TableCell>
+                      <TableCell>Companies Found</TableCell>
+                      <TableCell>Time Taken</TableCell>
+                      <TableCell>Status</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </TabPanel>
+                  </TableHead>
+                  <TableBody>
+                    {search.runs.map(r => (
+                      <TableRow key={`sr-${r.id}`}>
+                        <TableCell>{dayjs(r.time).format("DD/MM/YYYY HH:mm")}</TableCell>
+                        <TableCell>{r.newJobs}</TableCell>
+                        <TableCell>{r.newCompanies}</TableCell>
+                        <TableCell>{r.timeTaken >= 60 ? `${Math.floor(r.timeTaken / 60)}m ${r.timeTaken % 60}s` : `${r.timeTaken}s` }</TableCell>
+                        <TableCell>{!r.success ? <Chip color="default" label="Failed"/> : null}{r.message}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Tab>
+          </Tabs>
         </CardBody>
       </Card>
     </Container>

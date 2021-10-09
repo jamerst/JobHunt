@@ -1,6 +1,7 @@
 import { useTheme } from "@mui/material/styles"
 import useMediaQuery from "@mui/material/useMediaQuery"
 import { findLast } from "ramda"
+import React, { useEffect } from "react"
 
 type Breakpoint = "xs" | "sm" | "md" | "lg" | "xl" | "xxl"
 
@@ -30,3 +31,6 @@ export const useResponsive = () => {
     return match && responsiveValues[match]
   }
 }
+
+// eslint-disable-next-line react-hooks/exhaustive-deps
+export const useMountEffect = (func: React.EffectCallback) => useEffect(func, []);
