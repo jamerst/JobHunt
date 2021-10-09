@@ -22,7 +22,11 @@ const Tabs = (props: TabsProps) => {
   });
 
   useEffect(() => {
-    window.location.hash = ToKebabCase(props.labels[current]);
+    if (!window.location.hash && current === 0) {
+      return;
+    }
+
+    window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}#${ToKebabCase(props.labels[current])}`);
   }, [current, props.labels]);
 
   return (
