@@ -34,7 +34,6 @@ namespace JobHunt.Geocoding {
                 client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("JobHunt", "1.0"));
                 using (var httpResponse = await client.GetAsync(QueryHelpers.AddQueryString(_searchUrl, query), HttpCompletionOption.ResponseHeadersRead)) {
                     if (httpResponse.IsSuccessStatusCode) {
-                        string test = await httpResponse.Content.ReadAsStringAsync();
                         using (var stream = await httpResponse.Content.ReadAsStreamAsync()) {
                             response = await JsonSerializer.DeserializeAsync<NominatimResponse[]>(stream);
                         }

@@ -13,6 +13,7 @@ using JobHunt.Services;
 namespace JobHunt.Controllers {
     [ApiController]
     [Route("api/[controller]/[action]")]
+    [ODataRouteComponent("api/odata")]
     public class JobsController : ControllerBase {
         private readonly IJobService _jobService;
         public JobsController(IJobService jobService) {

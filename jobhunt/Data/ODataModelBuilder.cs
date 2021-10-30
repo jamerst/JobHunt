@@ -7,6 +7,10 @@ namespace JobHunt.Data {
     public static class ODataModelBuilder {
         public static IEdmModel Build() {
             var builder = new ODataConventionModelBuilder();
+
+            builder.Namespace = "JobHunt";
+            builder.ContainerName = "JobHuntContainer";
+
             builder.EntitySet<Job>("Jobs");
             builder.EntitySet<Company>("Companies");
 

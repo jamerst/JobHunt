@@ -3,7 +3,7 @@ import { Switch, BrowserRouter, Route } from "react-router-dom"
 import { CssBaseline, gridClasses } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { CacheProvider } from "@emotion/react";
-import createCache from "tss-react/@emotion/cache";
+import createCache from "@emotion/cache"
 
 import Dashboard from "views/Dashboard"
 import MainLayout from "layouts/MainLayout"
@@ -14,6 +14,7 @@ import Company from 'views/Company';
 import Companies from 'views/Companies';
 import Searches from 'views/Searches';
 import Search from 'views/Search';
+import { ODataTest } from 'views/ODataTest';
 
 export const muiCache = createCache({
   key: "mui",
@@ -137,6 +138,11 @@ function App() {
             <Route exact path="/search/:id">
               <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
                 <Search/>
+              </MainLayout>
+            </Route>
+            <Route exact path="/odata-test">
+              <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+                <ODataTest/>
               </MainLayout>
             </Route>
           </Switch>
