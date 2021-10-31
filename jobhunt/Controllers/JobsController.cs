@@ -13,7 +13,6 @@ using JobHunt.Services;
 namespace JobHunt.Controllers {
     [ApiController]
     [Route("api/[controller]/[action]")]
-    [ODataRouteComponent("api/odata")]
     public class JobsController : ControllerBase {
         private readonly IJobService _jobService;
         public JobsController(IJobService jobService) {
@@ -22,7 +21,8 @@ namespace JobHunt.Controllers {
 
         [EnableQuery]
         [ODataAttributeRouting]
-        public IActionResult Query() {
+        [HttpGet("~/api/odata/job")]
+        public IActionResult OData() {
             return Ok(_jobService.GetSet());
         }
 

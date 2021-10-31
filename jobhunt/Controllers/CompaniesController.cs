@@ -23,7 +23,8 @@ namespace JobHunt.Controllers {
 
         [EnableQuery]
         [ODataAttributeRouting]
-        public IActionResult Query() {
+        [HttpGet("~/api/odata/company")]
+        public IActionResult OData() {
             return Ok(_companyService.GetSet());
         }
 

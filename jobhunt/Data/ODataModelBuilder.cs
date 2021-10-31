@@ -8,11 +8,8 @@ namespace JobHunt.Data {
         public static IEdmModel Build() {
             var builder = new ODataConventionModelBuilder();
 
-            builder.Namespace = "JobHunt";
-            builder.ContainerName = "JobHuntContainer";
-
-            builder.EntitySet<Job>("Jobs");
-            builder.EntitySet<Company>("Companies");
+            builder.EntitySet<Job>("Job").EntityType.HasKey(j => j.Id);
+            builder.EntitySet<Company>("Company");
 
             return builder.GetEdmModel();
         }
