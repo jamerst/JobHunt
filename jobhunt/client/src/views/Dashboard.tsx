@@ -1,8 +1,7 @@
-import React, { Fragment, useEffect, useMemo, useRef, useState } from "react"
-import { Typography, Tooltip, Chip, Link, useMediaQuery } from "@mui/material"
+import React, { Fragment, useEffect, useState } from "react"
+import { Typography, Tooltip, Chip, Link } from "@mui/material"
 import Grid from "components/Grid";
-import { GridCellParams, GridColDef, GridSortModel } from "@mui/x-data-grid"
-import { useTheme } from "@mui/system";
+import { GridCellParams, GridSortModel } from "@mui/x-data-grid"
 
 import SwipeableView from "react-swipeable-views"
 import { autoPlay } from "react-swipeable-views-utils"
@@ -13,14 +12,12 @@ import makeStyles from "makeStyles";
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
 
-// import ApiDataGrid, { ToolbarAction } from "components/ApiDataGrid"
 import Card from "components/Card"
 import { Archive, Work } from "@mui/icons-material"
 import { Link as RouterLink } from "react-router-dom"
 import CardHeader from "components/CardHeader"
 import CardBody from "components/CardBody"
 import ODataGrid, { ODataGridColDef, ToolbarAction } from "components/ODataGrid";
-
 
 type JobCount = {
   daily: number,
@@ -37,61 +34,7 @@ const useStyles = makeStyles()((theme) => ({
 const AutoPlaySwipeableView = autoPlay(SwipeableView);
 
 dayjs.extend(relativeTime);
-const jobsColumns = (small: boolean): ODataGridColDef[] => {
-  return [
-    {
-      field: "Title",
-      headerName: "Job Title",
-      flex: 2,
-      sortable: false,
-      renderCell: (params: GridCellParams) => {
-        return (<Link component={RouterLink} to={`/job/${params.id}`}>{params.value}</Link>)
-      }
-    },
-    { field: "Location", headerName: "Location", flex: 1, sortable: false, },
-    {
-      field: "Company/Name",
-      headerName: "Company",
-      flex: 2,
-      sortable: false,
-      renderCell: (params: GridCellParams) => {
-        return (<Link component={RouterLink} to={`/company/${params.row.companyId}`}>{params.value}</Link>)
-      },
-      hide: small,
-      expand: { navigationField: "Company", select: "Id,Name" }
-    },
-    {
-      field: "Posted",
-      select: "Posted,Seen",
-      headerName: "Posted",
-      type: "datetime",
-      flex: 1.25,
-      sortable: false,
-      hide: small,
-      renderCell: (params: GridCellParams) => {
-        let date = dayjs(params.value as string);
-        if (date.isBefore(dayjs().subtract(14, "day"), "day")) {
-          return (<Fragment>{date.format("DD/MM/YYYY HH:mm")}</Fragment>);
-        } else {
-          let newTag = params.row.seen ? null : (<Chip label="New" color="secondary"/>);
-          return (
-            <Grid container justifyContent="space-between" alignItems="center">
-              <Tooltip
-                title={<Typography variant="body2">{date.format("DD/MM/YYYY HH:mm")}</Typography>}
-                placement="right"
-              >
-                <span>{date.fromNow()}</span>
-              </Tooltip>
-              {newTag}
-            </Grid>
-          );
-        }
-      }
-    }
-  ];
-}
-
-const responsiveColumns: ODataGridColDef[] = [
+const columns: ODataGridColDef[] = [
   {
     field: "Title",
     headerName: "Job Title",
@@ -105,18 +48,19 @@ const responsiveColumns: ODataGridColDef[] = [
   {
     field: "Company/Name",
     headerName: "Company",
+    hide: { xs: true, md: false },
     flex: 2,
     sortable: false,
     renderCell: (params: GridCellParams) => {
       return (<Link component={RouterLink} to={`/company/${params.row.companyId}`}>{params.value}</Link>)
     },
-    expand: { navigationField: "Company", select: "Id,Name" },
-    xxl: true
+    expand: { navigationField: "Company", select: "Id,Name" }
   },
   {
     field: "Posted",
     select: "Posted,Seen",
     headerName: "Posted",
+    hide: { xs: true, sm: false },
     type: "datetime",
     flex: 1.25,
     sortable: false,
@@ -163,11 +107,7 @@ export const Dashboard = () => {
   const [jobCounts, setJobCounts] = useState<JobCount>({ daily: -1, weekly: -1, monthly: -1 });
   const [index, setIndex] = useState<number>(0);
 
-
   const { classes } = useStyles();
-  const theme = useTheme();
-  const small = useMediaQuery(theme.breakpoints.down("md"));
-  const columns = useMemo(() => jobsColumns(small), [small]);
 
   useEffect(() => {
     const fetchJobCounts = async () => {
@@ -221,7 +161,7 @@ export const Dashboard = () => {
           <CardBody>
             <ODataGrid
               url="/api/odata/job"
-              columns={responsiveColumns}
+              columns={columns}
               getRowClassName={(params) => params.row.seen ? "" : classes.unseen}
               toolbarActions={jobActions}
               checkboxSelection

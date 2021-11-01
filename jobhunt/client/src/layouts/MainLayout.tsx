@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from "react"
+import React, { Fragment, useState, useMemo } from "react"
 import { Badge, Divider, Drawer, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Tooltip, Typography } from "@mui/material"
 import Grid from "components/Grid";
 import { BrightnessHigh, Brightness2, Work, Business, Search, Dashboard, Menu  } from "@mui/icons-material";
@@ -76,13 +76,16 @@ const MainLayout = (props: React.PropsWithChildren<MainLayoutProps>) => {
     fetchUnreadCount();
   }, [])
 
+  const open = useMemo(() => r({ xs: drawerOpen, md: true }), [r, drawerOpen]);
+  const variant: "temporary" | "permanent" | undefined = useMemo(() => r({ xs: "temporary", md: "permanent" }), [r]);
+
   return (
     <Fragment>
       <Drawer
-        variant={r({xs: "temporary", md: "permanent"})}
+        variant={variant}
         anchor="left"
         className={classes.drawer}
-        open={r({xs: drawerOpen, md: true})}
+        open={open}
         onClose={() => setDrawerOpen(false)}
       >
         <List>
@@ -120,7 +123,7 @@ const MainLayout = (props: React.PropsWithChildren<MainLayoutProps>) => {
                 </Tooltip>
               </Grid>
               <Grid item>
-                <Alerts onAlertClick={ () => setDrawerOpen(false) } setAlertCount={ (count) => setAlertCount(count) }/>
+                <Alerts onAlertClick={() => setDrawerOpen(false)} setAlertCount={(count) => setAlertCount(count)} />
               </Grid>
             </Grid>
           </ListItem>

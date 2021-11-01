@@ -4,17 +4,16 @@ import { CssBaseline, gridClasses } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { CacheProvider } from "@emotion/react";
 import createCache from "@emotion/cache"
+import { blue, purple } from '@mui/material/colors';
 
-import Dashboard from "views/Dashboard"
 import MainLayout from "layouts/MainLayout"
+import Companies from 'views/Companies';
+import Company from 'views/Company';
+import Dashboard from "views/Dashboard"
 import Job from 'views/Job';
 import Jobs from 'views/Jobs';
-import { blue, purple } from '@mui/material/colors';
-import Company from 'views/Company';
-import Companies from 'views/Companies';
-import Searches from 'views/Searches';
 import Search from 'views/Search';
-import { ODataTest } from 'views/ODataTest';
+import Searches from 'views/Searches';
 
 export const muiCache = createCache({
   key: "mui",
@@ -138,11 +137,6 @@ function App() {
             <Route exact path="/search/:id">
               <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
                 <Search/>
-              </MainLayout>
-            </Route>
-            <Route exact path="/odata-test">
-              <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
-                <ODataTest/>
               </MainLayout>
             </Route>
           </Switch>

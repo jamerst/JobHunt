@@ -1,15 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Breakpoint, ResponsiveStyleValue } from "@mui/system";
 import { DataGrid, DataGridProps, GridColDef, GridFeatureModeConstant, GridRowModel, GridRowId, GridColumnVisibilityChangeParams, GridSortModel } from "@mui/x-data-grid"
 import makeStyles from "makeStyles";
-import { Button, Box, useMediaQuery, useTheme } from "@mui/material";
+import { Button, Box } from "@mui/material";
 
 import Grid from "components/Grid";
 
 import { o, OdataQuery } from "odata"
 import { Expand, ExpandToQuery, Flatten, GroupArrayBy } from "utils/odata";
 import { useLocation } from "react-router";
-import { useBreakpoints } from "utils/hooks";
+import { ResponsiveValues, useResponsive } from "utils/hooks";
 
 // have to remove the "rows" property since that shouldn't be passed to the DataGrid
 type ODataGridProps = Omit<
@@ -40,15 +39,11 @@ type ODataGridPropsRows = Omit<DataGridProps, "columns"> & {
   defaultSortModel?: GridSortModel
 }
 
-export type ODataGridColDef = GridColDef & {
+export type ODataGridColDef = Omit<GridColDef, "hide"> & {
   select?: string,
   expand?: Expand,
-  // hide?: ResponsiveStyleValue<boolean>
-  // breakpoints?: Partial<Record<Breakpoint, boolean>>
-  // { [key in Breakpoint]: boolean }
-} & Partial<Record<Breakpoint, boolean>>
-
-const breakpoints: Breakpoint[] = ["xs", "sm", "md", "lg", "xl", "xxl"];
+  hide?: ResponsiveValues<boolean> | boolean
+}
 
 type PageSettings = {
   page: number,
@@ -115,109 +110,108 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
   const [rowCount, setRowCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [selected, setSelected] = useState<GridRowId[]>([]);
-  const [visibleColumns, setVisibleColumns] = useState<ODataGridColDef[] | undefined>();
   const [sortModel, setSortModel] = useState<GridSortModel | undefined>();
+
+  // const rColumns = useResponsiveColumns(props.columns);
+  const [visibleColumns, setVisibleColumns] = useState<ODataGridColDef[]>(props.columns.filter(c => c.hide !== true));
+  const [columnHideOverrides, setColumnHideOverrides] = useState<{ [key: string]: boolean }>({});
 
   const firstLoad = useRef<boolean>(true);
   const searchUpdated = useRef<boolean>(false);
+
+  const r = useResponsive();
 
   const { classes, cx } = useStyles();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
 
-    if (!visibleColumns) {
-      setVisibleColumns(props.columns.filter(c => !c.hide));
-      return;
-    } else {
-      // select all fields for visible columns
-      const fields = new Set(
-        visibleColumns
-          .filter(c => c.expand === undefined)
-          .map(c => c.select ?? c.field)
-      );
+    // select all fields for visible columns
+    const fields = new Set(
+      visibleColumns
+        .filter(c => c.expand === undefined)
+        .map(c => c.select ?? c.field)
+    );
 
-      // add id field if specified
-      if (props.idField) {
-        fields.add(props.idField);
-      }
-
-      // group all expands by the navigation field
-      const groupedExpands = GroupArrayBy(
-        visibleColumns
-          .filter(c => !!c.expand)
-          .map(c => c.expand!),
-        (e) => e.navigationField
-      );
-
-      // construct a single expand for each navigation field, combining nested query options
-      const expands: Expand[] = [];
-      groupedExpands.forEach((e, k) => {
-        expands.push({
-          navigationField: k,
-          select: Array.from(new Set(e.map(e2 => e2.select))).join(",")
-        });
-      });
-
-      const $select = Array.from(fields).join(",");
-      const $expand = expands.map(e => ExpandToQuery(e)).join(",");
-      const $top = pageSettings.size;
-      const $skip = pageSettings.page * pageSettings.size;
-
-      let query: OdataQuery = {
-        $select,
-        $expand,
-        $top,
-        $skip,
-        $count: Boolean(firstLoad.current || props.alwaysUpdateCount)
-      }
-
-      if (props.$filter) {
-        query.$filter = props.$filter;
-      }
-
-      // set the default sort model if one is provided
-      if (props.defaultSortModel && !sortModel) {
-        setSortModel(props.defaultSortModel);
-        return;
-      }
-
-      if (sortModel && sortModel.length > 0) {
-        query.$orderby = sortModel.map(s => `${s.field}${s.sort === "desc" ? " desc" : ""}`).join(",");
-      }
-
-      const rawResponse = await o(props.url)
-        .get()
-        .fetch(query);
-
-      const response = rawResponse as Response;
-
-      if (response?.ok ?? false) {
-        let data = await response.json() as ODataResponse;
-
-        // flatten object so that the DataGrid can access all the properties
-        // i.e. { Person: { name: "John" } } becomes { "Person/name": "John" }
-        let rows = data.value.map(v => Flatten(v, "", "/"));
-
-        // extract id if data does not contain the "id" field already
-        // DataGrid requires each row to have a unique "id" property
-        if (props.idField) {
-          rows = rows.map(r => { return { ...r, id: r[props.idField!] } });
-        }
-
-        if (data["@odata.count"]) {
-          setRowCount(data["@odata.count"]);
-        }
-
-        setRows(rows);
-        setLoading(false);
-        firstLoad.current = false;
-      } else {
-        console.error(`API request failed: ${response.url}, HTTP ${response.status}`);
-      }
+    // add id field if specified
+    if (props.idField) {
+      fields.add(props.idField);
     }
 
-  }, [pageSettings, visibleColumns, sortModel, props.alwaysUpdateCount, props.columns, props.url, props.idField, props.$filter, props.defaultSortModel]);
+    // group all expands by the navigation field
+    const groupedExpands = GroupArrayBy(
+      visibleColumns
+        .filter(c => !!c.expand)
+        .map(c => c.expand!),
+      (e) => e.navigationField
+    );
+
+    // construct a single expand for each navigation field, combining nested query options
+    const expands: Expand[] = [];
+    groupedExpands.forEach((e, k) => {
+      expands.push({
+        navigationField: k,
+        select: Array.from(new Set(e.map(e2 => e2.select))).join(",")
+      });
+    });
+
+    const $select = Array.from(fields).join(",");
+    const $expand = expands.map(e => ExpandToQuery(e)).join(",");
+    const $top = pageSettings.size;
+    const $skip = pageSettings.page * pageSettings.size;
+
+    let query: OdataQuery = {
+      $select,
+      $expand,
+      $top,
+      $skip,
+      $count: Boolean(firstLoad.current || props.alwaysUpdateCount)
+    }
+
+    if (props.$filter) {
+      query.$filter = props.$filter;
+    }
+
+    // set the default sort model if one is provided
+    if (props.defaultSortModel && !sortModel) {
+      setSortModel(props.defaultSortModel);
+      return;
+    }
+
+    if (sortModel && sortModel.length > 0) {
+      query.$orderby = sortModel.map(s => `${s.field}${s.sort === "desc" ? " desc" : ""}`).join(",");
+    }
+
+    const rawResponse = await o(props.url)
+      .get()
+      .fetch(query);
+
+    const response = rawResponse as Response;
+
+    if (response?.ok ?? false) {
+      let data = await response.json() as ODataResponse;
+
+      // flatten object so that the DataGrid can access all the properties
+      // i.e. { Person: { name: "John" } } becomes { "Person/name": "John" }
+      let rows = data.value.map(v => Flatten(v, "", "/"));
+
+      // extract id if data does not contain the "id" field already
+      // DataGrid requires each row to have a unique "id" property
+      if (props.idField) {
+        rows = rows.map(r => { return { ...r, id: r[props.idField!] } });
+      }
+
+      if (data["@odata.count"]) {
+        setRowCount(data["@odata.count"]);
+      }
+
+      setRows(rows);
+      setLoading(false);
+      firstLoad.current = false;
+    } else {
+      console.error(`API request failed: ${response.url}, HTTP ${response.status}`);
+    }
+  }, [pageSettings, visibleColumns, sortModel, props.alwaysUpdateCount, props.url, props.idField, props.$filter, props.defaultSortModel]);
 
   const handleToolbarResponse = useCallback(async (r: ToolbarActionResponse) => {
     if (r.refresh) {
@@ -242,9 +236,11 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
     }
   }, [fetchData, rows]);
 
+  const { onColumnVisibilityChange, onSortModelChange } = props;
+
   const handleColumnVisibility = useCallback((params: GridColumnVisibilityChangeParams, event, details) => {
-    if (props.onColumnVisibilityChange) {
-      props.onColumnVisibilityChange(params, event, details);
+    if (onColumnVisibilityChange) {
+      onColumnVisibilityChange(params, event, details);
     }
 
     if (visibleColumns) {
@@ -252,6 +248,8 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
         // add to visibleColumns if column is now visible
         const index = props.columns.findIndex(c => c.field === params.field);
         if (index !== -1) {
+          setColumnHideOverrides({ ...columnHideOverrides, [params.field]: false });
+
           setVisibleColumns([...visibleColumns, props.columns[index]]);
         } else {
           console.error(`Column ${params.field} not found`);
@@ -261,6 +259,8 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
         const index = visibleColumns.findIndex(c => c.field === params.field);
 
         if (index !== -1) {
+          setColumnHideOverrides({ ...columnHideOverrides, [params.field]: true });
+
           const newColumns = [...visibleColumns];
           newColumns.splice(index, 1);
           setVisibleColumns(newColumns);
@@ -269,15 +269,15 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
         }
       }
     }
-  }, [visibleColumns, props.columns, props.onColumnVisibilityChange]);
+  }, [visibleColumns, props.columns, onColumnVisibilityChange, columnHideOverrides]);
 
   const handleSortModelChange = useCallback((model: GridSortModel, details) => {
-    if (props.onSortModelChange) {
-      props.onSortModelChange(model, details);
+    if (onSortModelChange) {
+      onSortModelChange(model, details);
     }
 
     setSortModel(model);
-  }, []);
+  }, [onSortModelChange]);
 
   useEffect(() => { fetchData() }, [pageSettings, fetchData]);
 
@@ -381,43 +381,20 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
     }
   }, [location, pageSettings]);
 
-  const theme = useTheme();
-  const breakpoints = useBreakpoints();
-  console.log(breakpoints);
-  // const xsMatch = useMediaQuery(theme.breakpoints.up("xs"));
-  // const smMatch = useMediaQuery(theme.breakpoints.up("sm"));
-  // const mdMatch = useMediaQuery(theme.breakpoints.up("md"));
-  // const lgMatch = useMediaQuery(theme.breakpoints.up("lg"));
-  // const xlMatch = useMediaQuery(theme.breakpoints.up("xl"));
-  // const xxlMatch = useMediaQuery(theme.breakpoints.up("xxl"));
-  // console.log(theme.breakpoints.keys);
-  // console.log(theme.breakpoints.keys.map(b => theme.breakpoints.up(b)));
+  const columns = useMemo(() => props.columns.map((c) => {
+    let hide;
+    const override = columnHideOverrides[c.field];
+    const responsive = c.hide as ResponsiveValues<boolean>
+    if (override !== undefined) {
+      hide = override;
+    } else if (responsive) {
+      hide = r(responsive);
+    } else {
+      hide = c.hide;
+    }
 
-  // const columns = useMemo(() => props.columns.map(c => { return {
-  //   ...c,
-  //   hide: c.hide
-  //   // hide: c.xs && !xsMatch || c.sm && !smMatch || c.md && !mdMatch || c.lg && !lgMatch || c.xl && !xlMatch || c.xxl && !xxlMatch || c.hide
-  // }}), [xsMatch, smMatch, mdMatch, lgMatch, xlMatch, xxlMatch]);
-
-  // const theme = useTheme();
-  // const columns = useMemo(() => {
-  //   let newColumns = [...props.columns];
-  //   newColumns.forEach(c => {
-  //     if (c.breakpoints) {
-  //       Object.keys(c.breakpoints).forEach(b => {
-  //         if (c.breakpoints![b as Breakpoint] === false && !window.matchMedia(theme.breakpoints.down(b as Breakpoint)).matches) {
-  //           c.hide = true;
-  //           console.log("hidden");
-  //         }
-  //         else {
-  //           console.log("visible");
-  //         }
-  //       })
-  //     }
-  //   })
-
-  //   return newColumns;
-  // }, [props.columns, theme])
+    return { ...c, hide: hide } as GridColDef;
+  }), [props.columns, r, columnHideOverrides]);
 
   return (
     <DataGrid
@@ -426,7 +403,7 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
 
       {...props}
 
-      // columns={columns}
+      columns={columns}
 
       rows={rows}
       rowCount={rowCount}
