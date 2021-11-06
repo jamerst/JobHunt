@@ -14,6 +14,7 @@ import Job from 'views/Job';
 import Jobs from 'views/Jobs';
 import Search from 'views/Search';
 import Searches from 'views/Searches';
+import ODataTest from 'views/ODataTest';
 
 export const muiCache = createCache({
   key: "mui",
@@ -137,6 +138,11 @@ function App() {
             <Route exact path="/search/:id">
               <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
                 <Search/>
+              </MainLayout>
+            </Route>
+            <Route exact path="/odata-test">
+              <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+                <ODataTest/>
               </MainLayout>
             </Route>
           </Switch>

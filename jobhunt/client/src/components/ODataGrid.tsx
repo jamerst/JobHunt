@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { DataGrid, DataGridProps, GridColDef, GridFeatureModeConstant, GridRowModel, GridRowId, GridColumnVisibilityChangeParams, GridSortModel } from "@mui/x-data-grid"
 import makeStyles from "makeStyles";
 import { Button, Box } from "@mui/material";
@@ -9,6 +9,7 @@ import { o, OdataQuery } from "odata"
 import { Expand, ExpandToQuery, Flatten, GroupArrayBy } from "utils/odata";
 import { useLocation } from "react-router";
 import { ResponsiveValues, useResponsive } from "utils/hooks";
+import FilterBuilder, { ODataFilterGroup, ODataOperation } from "./FilterBuilder";
 
 // have to remove the "rows" property since that shouldn't be passed to the DataGrid
 type ODataGridProps = Omit<
@@ -36,13 +37,18 @@ type ODataGridPropsRows = Omit<DataGridProps, "columns"> & {
   columns: ODataGridColDef[],
   idField?: string,
   $filter?: string,
-  defaultSortModel?: GridSortModel
+  defaultSortModel?: GridSortModel,
+  disableFilterBuilder?: boolean
 }
 
-export type ODataGridColDef = Omit<GridColDef, "hide"> & {
+export type ODataGridColDef = Omit<GridColDef, "hide" | "filterOperators"> & {
   select?: string,
   expand?: Expand,
-  hide?: ResponsiveValues<boolean> | boolean
+  hide?: ResponsiveValues<boolean> | boolean,
+  filterable?: boolean,
+  filterOperators?: ODataOperation[],
+  collection?: boolean,
+  collectionFields?: ({ field: string, label: string })[]
 }
 
 type PageSettings = {
@@ -111,8 +117,8 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [selected, setSelected] = useState<GridRowId[]>([]);
   const [sortModel, setSortModel] = useState<GridSortModel | undefined>();
+  const [filter, setFilter] = useState<ODataFilterGroup>();
 
-  // const rColumns = useResponsiveColumns(props.columns);
   const [visibleColumns, setVisibleColumns] = useState<ODataGridColDef[]>(props.columns.filter(c => c.hide !== true));
   const [columnHideOverrides, setColumnHideOverrides] = useState<{ [key: string]: boolean }>({});
 
@@ -193,7 +199,7 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
 
       // flatten object so that the DataGrid can access all the properties
       // i.e. { Person: { name: "John" } } becomes { "Person/name": "John" }
-      let rows = data.value.map(v => Flatten(v, "", "/"));
+      let rows = data.value.map(v => Flatten(v, "/"));
 
       // extract id if data does not contain the "id" field already
       // DataGrid requires each row to have a unique "id" property
@@ -397,47 +403,50 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
   }), [props.columns, r, columnHideOverrides]);
 
   return (
-    <DataGrid
-      autoHeight
-      ref={React.createRef()}
+    <Fragment>
+      {props.$filter === undefined && props.disableFilterBuilder !== false && <FilterBuilder columns={props.columns} setFilter={setFilter} />}
+      <DataGrid
+        autoHeight
+        ref={React.createRef()}
 
-      {...props}
+        {...props}
 
-      columns={columns}
+        columns={columns}
 
-      rows={rows}
-      rowCount={rowCount}
+        rows={rows}
+        rowCount={rowCount}
 
-      pagination
-      paginationMode={GridFeatureModeConstant.server}
-      page={pageSettings.page}
-      pageSize={pageSettings.size}
-      rowsPerPageOptions={props.rowsPerPageOptions ?? [10, 15, 20, 50]}
-      onPageChange={(page) => { setPageSettings({ ...pageSettings, page: page }); setSelected([]); }}
-      onPageSizeChange={(page) => { setPageSettings({ ...pageSettings, size: page }); setSelected([]); }}
+        pagination
+        paginationMode={GridFeatureModeConstant.server}
+        page={pageSettings.page}
+        pageSize={pageSettings.size}
+        rowsPerPageOptions={props.rowsPerPageOptions ?? [10, 15, 20, 50]}
+        onPageChange={(page) => { setPageSettings({ ...pageSettings, page: page }); setSelected([]); }}
+        onPageSizeChange={(page) => { setPageSettings({ ...pageSettings, size: page }); setSelected([]); }}
 
-      loading={loading}
-      className={cx(classes.root, props.className)}
+        loading={loading}
+        className={cx(classes.root, props.className)}
 
-      selectionModel={selected}
-      onSelectionModelChange={(s) => setSelected(s)}
+        selectionModel={selected}
+        onSelectionModelChange={(s) => setSelected(s)}
 
-      onColumnVisibilityChange={handleColumnVisibility}
+        onColumnVisibilityChange={handleColumnVisibility}
 
-      sortingMode={GridFeatureModeConstant.server}
-      sortModel={sortModel}
-      onSortModelChange={handleSortModelChange}
+        sortingMode={GridFeatureModeConstant.server}
+        sortModel={sortModel}
+        onSortModelChange={handleSortModelChange}
 
-      components={{ ...props.components, Toolbar: props.toolbarActions ? ODataGridToolbar : undefined }}
-      componentsProps={{
-        ...props.componentsProps,
-        toolbar: {
-          actions: props.toolbarActions,
-          selected: selected,
-          handleResponse: handleToolbarResponse
-        }
-      }}
-    />
+        components={{ ...props.components, Toolbar: props.toolbarActions ? ODataGridToolbar : undefined }}
+        componentsProps={{
+          ...props.componentsProps,
+          toolbar: {
+            actions: props.toolbarActions,
+            selected: selected,
+            handleResponse: handleToolbarResponse
+          }
+        }}
+      />
+    </Fragment>
   )
 });
 
