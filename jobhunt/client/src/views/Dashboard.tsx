@@ -17,7 +17,8 @@ import { Archive, Work } from "@mui/icons-material"
 import { Link as RouterLink } from "react-router-dom"
 import CardHeader from "components/CardHeader"
 import CardBody from "components/CardBody"
-import ODataGrid, { ODataGridColDef, ToolbarAction } from "components/ODataGrid";
+
+import { ODataGrid, ODataGridColDef, ToolbarAction } from "o-data-grid";
 
 type JobCount = {
   daily: number,

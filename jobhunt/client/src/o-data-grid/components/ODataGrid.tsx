@@ -1,76 +1,23 @@
 import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { atom, useRecoilState } from "recoil";
 import { DataGrid, DataGridProps, GridColDef, GridFeatureModeConstant, GridRowModel, GridRowId, GridColumnVisibilityChangeParams, GridSortModel } from "@mui/x-data-grid"
-import makeStyles from "makeStyles";
 import { Button, Box } from "@mui/material";
+import { o, OdataQuery } from "odata"
+import { useLocation } from "react-router";
 
 import Grid from "components/Grid";
+import makeStyles from "makeStyles";
 
-import { o, OdataQuery } from "odata"
-import { Expand, ExpandToQuery, Flatten, GroupArrayBy } from "utils/odata";
-import { useLocation } from "react-router";
 import { ResponsiveValues, useResponsive } from "utils/hooks";
-import FilterBuilder, { ODataFilterGroup, ODataOperation } from "./FilterBuilder";
 
-// have to remove the "rows" property since that shouldn't be passed to the DataGrid
-type ODataGridProps = Omit<
-  ODataGridPropsRows,
-  "rows"
-  | "rowCount"
-  | "pagination"
-  | "paginationMode"
-  | "page"
-  | "pageSize"
-  | "onPageChange"
-  | "onPageSizeChange"
-  | "loading"
-  | "selectionModel"
-  | "onSelectionModelChange"
-  | "sortingMode"
-  | "sortModel"
->;
+import FilterBuilder from "../FilterBuilder/components/FilterBuilder";
 
-type ODataGridPropsRows = Omit<DataGridProps, "columns"> & {
-  url: string,
-  queryParams?: [string, string | undefined][],
-  toolbarActions?: ToolbarAction[],
-  alwaysUpdateCount?: boolean,
-  columns: ODataGridColDef[],
-  idField?: string,
-  $filter?: string,
-  defaultSortModel?: GridSortModel,
-  disableFilterBuilder?: boolean
-}
+import { ODataGridProps, ODataGridColDef, PageSettings, ToolbarAction, ToolbarActionResponse, ODataResponse } from "o-data-grid/types";
+import { Group } from "../FilterBuilder/types"
 
-export type ODataGridColDef = Omit<GridColDef, "hide" | "filterOperators"> & {
-  select?: string,
-  expand?: Expand,
-  hide?: ResponsiveValues<boolean> | boolean,
-  filterable?: boolean,
-  filterOperators?: ODataOperation[],
-  collection?: boolean,
-  collectionFields?: ({ field: string, label: string })[]
-}
+import { Expand, ExpandToQuery, Flatten, GroupArrayBy, GetPageSettingsOrDefault } from "../utils";
 
-type PageSettings = {
-  page: number,
-  size: number
-}
-
-export type ToolbarAction = {
-  text: string,
-  icon?: React.ReactNode,
-  onClick: (ids: number[]) => Promise<ToolbarActionResponse>
-}
-
-type ToolbarActionResponse = {
-  data?: GridRowModel[],
-  refresh: boolean
-}
-
-type ODataResponse = {
-  "@odata.count"?: number,
-  value: GridRowModel[]
-}
+import { defaultPageSize } from "o-data-grid/constants";
 
 const useStyles = makeStyles()((theme) => ({
   root: {
@@ -89,35 +36,14 @@ const useStyles = makeStyles()((theme) => ({
   }
 }));
 
-const getPageSettingsOrDefault = (): PageSettings => {
-  let settings = { page: 0, size: _defaultPageSize };
-
-  const params = new URLSearchParams(window.location.search);
-  if (params.has("page") || params.has("page-size")) {
-    const pageVal = params.get("page");
-    if (pageVal) {
-      settings.page = parseInt(pageVal, 10);
-    }
-
-    const sizeVal = params.get("page-size");
-    if (sizeVal) {
-      settings.size = parseInt(sizeVal, 10);
-    }
-  }
-
-  return settings;
-}
-
-const _defaultPageSize = 10;
-
 const ODataGrid = React.memo((props: ODataGridProps) => {
-  const [pageSettings, setPageSettings] = useState<PageSettings>(getPageSettingsOrDefault());
+  const [pageSettings, setPageSettings] = useState<PageSettings>(GetPageSettingsOrDefault());
   const [rows, setRows] = useState<GridRowModel[]>([])
   const [rowCount, setRowCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [selected, setSelected] = useState<GridRowId[]>([]);
   const [sortModel, setSortModel] = useState<GridSortModel | undefined>();
-  const [filter, setFilter] = useState<ODataFilterGroup>();
+  const [filter, setFilter] = useState<Group>();
 
   const [visibleColumns, setVisibleColumns] = useState<ODataGridColDef[]>(props.columns.filter(c => c.hide !== true));
   const [columnHideOverrides, setColumnHideOverrides] = useState<{ [key: string]: boolean }>({});
@@ -318,7 +244,7 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
     if (sizeStr) {
       const size = parseInt(sizeStr, 10);
       if (size !== pageSettings.size) {
-        if (size !== _defaultPageSize) {
+        if (size !== defaultPageSize) {
           params.set("page-size", pageSettings.size.toString());
         } else {
           params.delete("page-size");
@@ -326,7 +252,7 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
 
         changed = true;
       }
-    } else if (pageSettings.size !== _defaultPageSize) {
+    } else if (pageSettings.size !== defaultPageSize) {
       params.set("page-size", pageSettings.size.toString());
       changed = true;
     }
@@ -373,8 +299,8 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
         settings.size = size;
         changed = true;
       }
-    } else if (settings.size !== _defaultPageSize) {
-      settings.size = _defaultPageSize;
+    } else if (settings.size !== defaultPageSize) {
+      settings.size = defaultPageSize;
       changed = true;
     }
 

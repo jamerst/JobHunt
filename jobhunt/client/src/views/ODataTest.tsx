@@ -1,7 +1,7 @@
 import React, { Fragment } from "react";
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
-import ODataGrid, { ODataGridColDef } from "components/ODataGrid";
+import { ODataGrid, ODataGridColDef } from "o-data-grid";
 import { GridCellParams, GridSortModel } from "@mui/x-data-grid"
 import { Link as RouterLink } from "react-router-dom"
 import { Typography, Tooltip, Chip, Link } from "@mui/material"

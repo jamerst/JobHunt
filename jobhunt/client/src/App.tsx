@@ -15,6 +15,7 @@ import Jobs from 'views/Jobs';
 import Search from 'views/Search';
 import Searches from 'views/Searches';
 import ODataTest from 'views/ODataTest';
+import { RecoilRoot } from 'recoil';
 
 export const muiCache = createCache({
   key: "mui",
@@ -100,55 +101,57 @@ function App() {
   }, [darkMode]);
 
   return (
-    <CacheProvider value={muiCache}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <BrowserRouter>
-          <Switch>
-            <Route exact path="/">
-              <MainLayout pageTitle="Dashboard" darkMode={darkMode} setDarkMode={setDarkMode}>
-                <Dashboard/>
-              </MainLayout>
-            </Route>
-            <Route exact path="/jobs">
-              <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
-                <Jobs/>
-              </MainLayout>
-            </Route>
-            <Route exact path="/job/:id">
-              <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
-                <Job/>
-              </MainLayout>
-            </Route>
-            <Route exact path="/companies">
-              <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
-                <Companies/>
-              </MainLayout>
-            </Route>
-            <Route exact path="/company/:id">
-              <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
-                <Company/>
-              </MainLayout>
-            </Route>
-            <Route exact path="/searches">
-              <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
-                <Searches/>
-              </MainLayout>
-            </Route>
-            <Route exact path="/search/:id">
-              <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
-                <Search/>
-              </MainLayout>
-            </Route>
-            <Route exact path="/odata-test">
-              <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
-                <ODataTest/>
-              </MainLayout>
-            </Route>
-          </Switch>
-        </BrowserRouter>
-      </ThemeProvider>
-    </CacheProvider>
+    <RecoilRoot>
+      <CacheProvider value={muiCache}>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <BrowserRouter>
+            <Switch>
+              <Route exact path="/">
+                <MainLayout pageTitle="Dashboard" darkMode={darkMode} setDarkMode={setDarkMode}>
+                  <Dashboard/>
+                </MainLayout>
+              </Route>
+              <Route exact path="/jobs">
+                <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+                  <Jobs/>
+                </MainLayout>
+              </Route>
+              <Route exact path="/job/:id">
+                <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+                  <Job/>
+                </MainLayout>
+              </Route>
+              <Route exact path="/companies">
+                <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+                  <Companies/>
+                </MainLayout>
+              </Route>
+              <Route exact path="/company/:id">
+                <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+                  <Company/>
+                </MainLayout>
+              </Route>
+              <Route exact path="/searches">
+                <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+                  <Searches/>
+                </MainLayout>
+              </Route>
+              <Route exact path="/search/:id">
+                <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+                  <Search/>
+                </MainLayout>
+              </Route>
+              <Route exact path="/odata-test">
+                <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+                  <ODataTest/>
+                </MainLayout>
+              </Route>
+            </Switch>
+          </BrowserRouter>
+        </ThemeProvider>
+      </CacheProvider>
+    </RecoilRoot>
   );
 }
 

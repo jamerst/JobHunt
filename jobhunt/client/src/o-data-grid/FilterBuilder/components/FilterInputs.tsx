@@ -1,26 +1,37 @@
 import React, { useMemo } from "react"
-import { ODataFilterCondition, ODataOperation } from "./FilterBuilder"
-import { ODataGridColDef } from "./ODataGrid"
-import Grid from "components/Grid";
+import { useRecoilValue } from "recoil";
 import { Autocomplete, FormControl, IconButton, InputLabel, MenuItem, Select, TextField } from "@mui/material";
 import { Remove } from "@mui/icons-material";
 
-type FilterConditionProps = {
-  columns: ODataGridColDef[],
-  condition: ODataFilterCondition,
-  onChange: (c: ODataFilterCondition) => void,
+import Grid from "components/Grid";
+
+import { Operation } from "../types";
+
+import { columnsState } from "../../state"
+
+
+const _defaultOps: Operation[] = ["eq", "ne", "gt", "lt", "ge", "le", "contains"];
+
+
+type FilterInputsProps = {
+  field: string,
+  onFieldChange: (f: string) => void,
+  op: Operation,
+  onOpChange: (o: Operation) => void,
+  value?: string,
+  onValueChange: (v?: string) => void,
   onRemove: () => void
 }
 
-const _defaultOps: ODataOperation[] = ["eq", "ne", "gt", "lt", "ge", "le", "contains"];
+const FilterInputs = React.memo(({ field, onFieldChange, op, onOpChange, value, onValueChange, onRemove }: FilterInputsProps) => {
+  const columns = useRecoilValue(columnsState);
 
-const FilterCondition = React.memo((props: FilterConditionProps) => {
   const currentCol = useMemo(() => {
-    if (!props.condition.field) {
+    if (!field) {
       return { option: undefined, ops: _defaultOps };
     }
 
-    const col = props.columns.find(c => c.field === props.condition.field);
+    const col = columns.find(c => c.field === field);
     if (!col) {
       return { option: undefined, ops: _defaultOps };
     }
@@ -30,16 +41,20 @@ const FilterCondition = React.memo((props: FilterConditionProps) => {
       ops: col.filterOperators ?? _defaultOps,
       type: col.type
     };
-  }, [props.condition, props.columns]);
+  }, [field, columns]);
+
+  if (columns.length < 1 || !currentCol) {
+    return null;
+  }
 
   return (
     <Grid container spacing={1}>
       <Grid item xs>
         <Autocomplete
-          options={props.columns.filter(c => c.filterable !== false).map(c => ({ label: c.headerName ?? c.field, field: c.field }))}
+          options={columns.filter(c => c.filterable !== false).map(c => ({ label: c.headerName ?? c.field, field: c.field }))}
           renderInput={(params) => <TextField {...params} label="Field" />}
-          value={currentCol?.option ?? { label: props.columns[0].headerName ?? props.columns[0].field, field: props.columns[0].field }}
-          onChange={(_, val) => props.onChange({...props.condition, field: val.field})}
+          value={currentCol?.option ?? { label: columns[0].headerName ?? columns[0].field, field: columns[0].field }}
+          onChange={(_, val) => onFieldChange(val.field)}
           size="small"
           disableClearable
           isOptionEqualToValue={(option, value) => option.field === value.field}
@@ -49,8 +64,8 @@ const FilterCondition = React.memo((props: FilterConditionProps) => {
         <FormControl fullWidth size="small">
           <InputLabel id="label-op">Operation</InputLabel>
           <Select
-            value={props.condition.op}
-            onChange={(e) => props.onChange({...props.condition, op: e.target.value as ODataOperation})}
+            value={op}
+            onChange={(e) => onOpChange(e.target.value as Operation)}
             labelId="label-op"
             label="Operation">
             <MenuItem value="eq" disabled={!currentCol.ops.includes("eq")}>=</MenuItem>
@@ -65,8 +80,8 @@ const FilterCondition = React.memo((props: FilterConditionProps) => {
       </Grid>
       <Grid item xs>
         <TextField
-          value={props.condition.value ?? ""}
-          onChange={(e) => props.onChange({...props.condition, value: e.target.value})}
+          value={value ?? ""}
+          onChange={(e) => onValueChange(e.target.value)}
           size="small"
           fullWidth
           label="Value"
@@ -74,20 +89,12 @@ const FilterCondition = React.memo((props: FilterConditionProps) => {
         />
       </Grid>
       <Grid item xs="auto">
-        <IconButton onClick={() => props.onRemove()}>
+        <IconButton onClick={() => onRemove()}>
           <Remove/>
         </IconButton>
       </Grid>
     </Grid>
-  );
-}, (n, p) => n.columns === p.columns
-  && n.onChange === p.onChange
-  && n.condition.field === p.condition.field
-  && n.condition.op === p.condition.op
-  && n.condition.value === p.condition.value
-  && n.condition.collectionField === p.condition.collectionField
-  && n.condition.collectionOp === p.condition.collectionOp
-  && n.condition.complement === p.condition.complement
-);
+  )
+}, (n, p) => n.field === p.field && n.op === p.op && n.value === p.value);
 
-export default FilterCondition;
+export default FilterInputs;
