@@ -16,9 +16,10 @@ const columns: ODataGridColDef[] = [
     flex: 2,
     renderCell: (params: GridCellParams) => {
       return (<Link component={RouterLink} to={`/job/${params.id}`}>{params.value}</Link>)
-    }
+    },
+    filterOperators: ["eq"]
   },
-  { field: "Location", headerName: "Location", flex: 1, sortable: false, },
+  { field: "Location", headerName: "Location", flex: 1, sortable: false, type: "singleSelect", valueOptions: [{ value: "a", label: "Option A" }, { value: "b", label: "Option B" }] },
   {
     field: "Company/Name",
     headerName: "Company",
@@ -34,7 +35,7 @@ const columns: ODataGridColDef[] = [
     select: "Posted,Seen",
     headerName: "Posted",
     hide: { xs: true, sm: false },
-    type: "datetime",
+    type: "date",
     flex: 1.25,
     renderCell: (params: GridCellParams) => {
       let date = dayjs(params.value as string);

@@ -74,6 +74,8 @@ const FilterGroup = ({ clauseId, path, root }: FilterGroupProps) => {
   const group = useMemo(() => clauses.get(clauseId) as Group, [clauses, clauseId]);
   const treeGroup = useMemo(() => tree.getIn([...path, clauseId]) as TreeGroup, [tree, path, clauseId]);
 
+  const childrenPath = useMemo(() => [...path, clauseId, "children"], [path, clauseId]);
+
   const multiple = useMemo(() => treeGroup.children.count() > 1, [treeGroup]);
 
   const setConnective = useCallback((con: Connective) => {
@@ -91,11 +93,11 @@ const FilterGroup = ({ clauseId, path, root }: FilterGroupProps) => {
 
     setTree(tree
       .updateIn(
-        [...path, clauseId, "children"],
+        childrenPath,
         (list) => (list as TreeChildren).set(group.id, { id: group.id, children: Immutable.Map({ [condition.id]: condition.id }) })
       )
     );
-  }, [clauses, setClauses, tree, setTree, path, clauseId]);
+  }, [clauses, setClauses, tree, setTree, childrenPath]);
 
   const addCondition = useCallback(() => {
     const condition = getDefaultCondition();
@@ -104,11 +106,11 @@ const FilterGroup = ({ clauseId, path, root }: FilterGroupProps) => {
 
     setTree(tree
       .updateIn(
-        [...path, clauseId, "children"],
+        childrenPath,
         (list) => (list as TreeChildren).set(condition.id, condition.id)
       )
     );
-  }, [clauses, setClauses, tree, setTree, path, clauseId]);
+  }, [clauses, setClauses, tree, setTree, childrenPath]);
 
   return (
     <Grid container marginY={2} paddingLeft={root ? 0 : 3} className={root ? "" : classes.group}>
@@ -123,8 +125,8 @@ const FilterGroup = ({ clauseId, path, root }: FilterGroupProps) => {
         )}
         <Grid item>
           <ButtonGroup variant="contained" size="small">
-            <Button startIcon={<Add/>} onClick={() => addCondition()}>Add Condition</Button>
-            <Button startIcon={<Add/>} onClick={() => addGroup()} >Add Group</Button>
+            <Button startIcon={<Add/>} onClick={addCondition}>Add Condition</Button>
+            <Button startIcon={<Add/>} onClick={addGroup} >Add Group</Button>
           </ButtonGroup>
         </Grid>
       </Grid>
@@ -135,7 +137,7 @@ const FilterGroup = ({ clauseId, path, root }: FilterGroupProps) => {
               <Grid item xs className={multiple ? classes.child : ""} key={c[0]} data-test="1">
                 <FilterCondition
                   clauseId={c[0]}
-                  path={[...path, clauseId, "children"]}
+                  path={childrenPath}
                 />
               </Grid>
             );
@@ -144,7 +146,7 @@ const FilterGroup = ({ clauseId, path, root }: FilterGroupProps) => {
               <Grid item xs className={multiple ? classes.child : ""} key={c[0]} data-test="2">
                 <FilterGroup
                   clauseId={c[0]}
-                  path={[...path, clauseId, "children"]}
+                  path={childrenPath}
                 />
               </Grid>
             );

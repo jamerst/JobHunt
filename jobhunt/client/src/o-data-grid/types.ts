@@ -1,4 +1,6 @@
-import { DataGridProps, GridSortModel, GridColDef, GridRowModel } from "@mui/x-data-grid"
+import { DatePickerProps, DateTimePickerProps } from "@mui/lab";
+import { TextFieldProps } from "@mui/material";
+import { DataGridProps, GridSortModel, GridColDef, GridRowModel, GridValueOptionsParams } from "@mui/x-data-grid"
 import { ResponsiveValues } from "utils/hooks"
 import { Operation } from "./FilterBuilder/types"
 
@@ -31,14 +33,19 @@ type ODataGridPropsFull = Omit<DataGridProps, "columns"> & {
   disableFilterBuilder?: boolean
 }
 
-export type ODataGridColDef = Omit<GridColDef, "hide" | "filterOperators"> & {
+export type ODataGridColDef = Omit<GridColDef, "hide" | "filterOperators" | "valueOptions"> & {
   select?: string,
   expand?: Expand,
   hide?: ResponsiveValues<boolean> | boolean,
   filterable?: boolean,
   filterOperators?: Operation[],
   collection?: boolean,
-  collectionFields?: ({ field: string, label: string })[]
+  collectionFields?: ({ field: string, label: string })[],
+  textFieldProps?: TextFieldProps,
+  datePickerProps?: DatePickerProps,
+  dateTimePickerProps?: DateTimePickerProps,
+  nullable?: boolean,
+  valueOptions?: ValueOption[] | ((params: GridValueOptionsParams) => ValueOption[])
 }
 
 export type ODataResponse = {
@@ -66,4 +73,11 @@ export type ToolbarAction = {
 export type ToolbarActionResponse = {
   data?: GridRowModel[],
   refresh: boolean
+}
+
+export type ValueOption = string | number | SelectOption;
+
+export type SelectOption = {
+  value: string,
+  label: string
 }

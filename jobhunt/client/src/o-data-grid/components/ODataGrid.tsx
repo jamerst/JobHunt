@@ -1,6 +1,5 @@
 import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { atom, useRecoilState } from "recoil";
-import { DataGrid, DataGridProps, GridColDef, GridFeatureModeConstant, GridRowModel, GridRowId, GridColumnVisibilityChangeParams, GridSortModel } from "@mui/x-data-grid"
+import { DataGrid, GridColDef, GridFeatureModeConstant, GridRowModel, GridRowId, GridColumnVisibilityChangeParams, GridSortModel } from "@mui/x-data-grid"
 import { Button, Box } from "@mui/material";
 import { o, OdataQuery } from "odata"
 import { useLocation } from "react-router";
@@ -13,7 +12,6 @@ import { ResponsiveValues, useResponsive } from "utils/hooks";
 import FilterBuilder from "../FilterBuilder/components/FilterBuilder";
 
 import { ODataGridProps, ODataGridColDef, PageSettings, ToolbarAction, ToolbarActionResponse, ODataResponse } from "o-data-grid/types";
-import { Group } from "../FilterBuilder/types"
 
 import { Expand, ExpandToQuery, Flatten, GroupArrayBy, GetPageSettingsOrDefault } from "../utils";
 
@@ -43,7 +41,6 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [selected, setSelected] = useState<GridRowId[]>([]);
   const [sortModel, setSortModel] = useState<GridSortModel | undefined>();
-  const [filter, setFilter] = useState<Group>();
 
   const [visibleColumns, setVisibleColumns] = useState<ODataGridColDef[]>(props.columns.filter(c => c.hide !== true));
   const [columnHideOverrides, setColumnHideOverrides] = useState<{ [key: string]: boolean }>({});
@@ -330,7 +327,7 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
 
   return (
     <Fragment>
-      {props.$filter === undefined && props.disableFilterBuilder !== false && <FilterBuilder columns={props.columns} setFilter={setFilter} />}
+      {props.$filter === undefined && props.disableFilterBuilder !== false && <FilterBuilder columns={props.columns} />}
       <DataGrid
         autoHeight
         ref={React.createRef()}
