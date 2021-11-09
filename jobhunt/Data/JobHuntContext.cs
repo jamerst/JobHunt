@@ -77,10 +77,12 @@ namespace JobHunt.Data {
                 .WithOne(sr => sr.Search)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasDbFunction(typeof(JobHuntContext).GetMethod(
-                nameof(GeoDistance),
-                new[] { typeof(double), typeof(double), typeof(double), typeof(double) }
-            )).HasName("geodistance");
+            builder.HasDbFunction(
+                typeof(JobHuntContext)
+                .GetMethod(nameof(GeoDistance),
+                    new[] { typeof(double), typeof(double), typeof(double), typeof(double) }
+                )!
+            ).HasName("geodistance");
         }
 
         public DbSet<Alert> Alerts => Set<Alert>();

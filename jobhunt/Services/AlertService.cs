@@ -16,7 +16,7 @@ namespace JobHunt.Services {
             _context = context;
         }
         public async Task CreateAsync(Alert alert) {
-            alert.Created = DateTime.Now;
+            alert.Created = DateTime.UtcNow;
             _context.Alerts.Add(alert);
             await _context.SaveChangesAsync();
         }
@@ -35,7 +35,7 @@ namespace JobHunt.Services {
         }
 
         public async Task<bool> MarkAsReadAsync(int id) {
-            Alert alert = await _context.Alerts.SingleOrDefaultAsync(a => a.Id == id);
+            Alert? alert = await _context.Alerts.SingleOrDefaultAsync(a => a.Id == id);
 
             if (alert == default(Alert)) {
                 return false;

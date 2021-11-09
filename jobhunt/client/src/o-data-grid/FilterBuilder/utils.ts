@@ -6,6 +6,7 @@ import { Group, Condition } from "./types"
 export const getDefaultCondition = (): Condition => ({
   field: "",
   op: "eq",
+  value: null,
   id: uuid()
 })
 

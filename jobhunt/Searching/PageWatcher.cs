@@ -96,7 +96,7 @@ namespace JobHunt.Searching {
             }
 
             string hash = "";
-            using (var sha1 = new SHA1Managed()) {
+            using (var sha1 = SHA1.Create()) {
                 hash = Convert.ToBase64String(sha1.ComputeHash(Encoding.UTF8.GetBytes(content)));
             }
 

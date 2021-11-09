@@ -1,3 +1,15 @@
+import { DatePickerProps, DateTimePickerProps } from "@mui/lab";
+import { TextFieldProps } from "@mui/material";
+
+export type Schema = {
+  filterable?: boolean,
+  filterOperators?: Operation[],
+  textFieldProps?: TextFieldProps,
+  datePickerProps?: DatePickerProps,
+  dateTimePickerProps?: DateTimePickerProps,
+  nullable?: boolean,
+}
+
 export type Connective = "and" | "or"
 
 export type Operation = "eq" | "ne" | "gt" | "lt" | "ge" | "le" | "contains"
@@ -17,7 +29,7 @@ export type Condition = Clause & {
   op: Operation;
   collectionOp?: CollectionOperation,
   collectionField?: string,
-  value?: string,
+  value: any,
   complement?: boolean
 }
 

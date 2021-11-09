@@ -16,19 +16,19 @@ namespace JobHunt.Services {
         }
 
         public async Task UpdateStatusAsync(int id, string? hash = null, string? statusMessage = null) {
-            WatchedPage page = await _context.WatchedPages.FirstOrDefaultAsync(p => p.Id == id);
+            WatchedPage? page = await _context.WatchedPages.FirstOrDefaultAsync(p => p.Id == id);
 
             if (page == null) {
                 return;
             }
 
-            page.LastScraped = DateTime.Now;
+            page.LastScraped = DateTime.UtcNow;
 
             if (!string.IsNullOrEmpty(statusMessage)) {
                 page.StatusMessage = statusMessage;
             } else if (!string.IsNullOrEmpty(hash)) {
                 if (hash != page.Hash) {
-                    page.LastUpdated = DateTime.Now;
+                    page.LastUpdated = DateTime.UtcNow;
                     page.Hash = hash;
                 }
                 page.StatusMessage = null;

@@ -24,7 +24,7 @@ type FilterInputsProps = {
   op: Operation,
   onOpChange: (op: Operation) => void,
   value?: string,
-  onValueChange: (v?: string) => void,
+  onValueChange: (v: any) => void,
 }
 
 const FilterInputs = React.memo(({ clauseId, field, onFieldChange, op, onOpChange, value, onValueChange }: FilterInputsProps) => {
@@ -67,8 +67,6 @@ const FilterInputs = React.memo(({ clauseId, field, onFieldChange, op, onOpChang
     return null;
   }
 
-  console.debug(`rendering ${currentCol.option.field}: value='${value}'`);
-
   return (
     <Fragment>
       <Grid item xs>
@@ -110,7 +108,7 @@ const FilterInputs = React.memo(({ clauseId, field, onFieldChange, op, onOpChang
                 {...currentCol.col.datePickerProps}
                 value={value ?? ""}
                 renderInput={(params) => <TextField {...params} fullWidth size="small" {...currentCol.col.textFieldProps} />}
-                onChange={(date) => onValueChange(date as string)}
+                onChange={(date) => onValueChange(date as Date)}
               />
           </LocalizationProvider>
         }
@@ -122,7 +120,7 @@ const FilterInputs = React.memo(({ clauseId, field, onFieldChange, op, onOpChang
               {...currentCol.col.dateTimePickerProps}
               value={value ?? ""}
               renderInput={(params) => <TextField {...params} fullWidth size="small" {...currentCol.col.textFieldProps} />}
-              onChange={(date) => onValueChange(date as string)}
+              onChange={(date) => onValueChange(date as Date)}
             />
           </LocalizationProvider>
         }

@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from "react"
-import { useRecoilState, useRecoilValue } from "recoil";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { IconButton } from "@mui/material";
 import { Remove } from "@mui/icons-material";
 
@@ -11,7 +11,6 @@ import { Condition, Operation, TreeGroup } from "../types"
 
 import { clauseState, treeState } from "../state"
 import { columnsState } from "o-data-grid/state";
-import { domainToUnicode } from "url";
 
 
 type FilterConditionProps = {
@@ -21,7 +20,7 @@ type FilterConditionProps = {
 
 const FilterCondition = ({ clauseId, path }: FilterConditionProps) => {
   const [clauses, setClauses] = useRecoilState(clauseState);
-  const [tree, setTree] = useRecoilState(treeState);
+  const setTree = useSetRecoilState(treeState);
 
   const columns = useRecoilValue(columnsState);
 
@@ -55,7 +54,7 @@ const FilterCondition = ({ clauseId, path }: FilterConditionProps) => {
     setClauses(old => old.update(clauseId, c => ({ ...c as Condition, op: o })));
   }, [setClauses, clauseId]);
 
-  const changeValue = useCallback((v?: string) => {
+  const changeValue = useCallback((v: any) => {
     setClauses(old => old.update(clauseId, c => ({ ...c as Condition, value: v })));
   }, [setClauses, clauseId]);
 
@@ -84,7 +83,7 @@ const FilterCondition = ({ clauseId, path }: FilterConditionProps) => {
     }
 
     setClauses(old => old.remove(clauseId));
-  }, [setClauses, tree, setTree, clauseId, path])
+  }, [setClauses, setTree, clauseId, path])
 
   if (!condition) {
     return null;

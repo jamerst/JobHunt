@@ -20,7 +20,7 @@ namespace JobHunt.Services {
             _nominatim = nominatim;
         }
 
-        public async Task<Job> GetByIdAsync(int id) {
+        public async Task<Job?> GetByIdAsync(int id) {
             return await _context.Jobs
                 .AsNoTracking()
                 .Include(j => j.Company)
@@ -80,20 +80,20 @@ namespace JobHunt.Services {
         public async Task<JobCount> GetJobCountsAsync(DateTime date) {
             JobCount counts = new JobCount();
 
-            DateTime dailyDate = date.Date.AddDays(-1);
+            DateTime dailyDate = date.Date.ToUniversalTime().AddDays(-1);
             counts.Daily = await _context.Jobs.Where(j => j.Posted.HasValue && j.Posted.Value.Date >= dailyDate).CountAsync();
 
-            DateTime weeklyDate = date.Date.AddDays(-7);
+            DateTime weeklyDate = date.Date.ToUniversalTime().AddDays(-7);
             counts.Weekly = await _context.Jobs.Where(j => j.Posted.HasValue && j.Posted.Value.Date >= weeklyDate).CountAsync();
 
-            DateTime monthlyDate = date.Date.AddMonths(-1);
+            DateTime monthlyDate = date.Date.ToUniversalTime().AddMonths(-1);
             counts.Monthly = await _context.Jobs.Where(j => j.Posted.HasValue && j.Posted.Value.Date >= monthlyDate).CountAsync();
 
             return counts;
         }
 
         public async Task MarkAsSeenAsync(int id) {
-            Job job = await _context.Jobs.FirstOrDefaultAsync(j => j.Id == id);
+            Job? job = await _context.Jobs.FirstOrDefaultAsync(j => j.Id == id);
 
             if (job != default(Job)) {
                 job.Seen = true;
@@ -102,7 +102,7 @@ namespace JobHunt.Services {
         }
 
         public async Task<IEnumerable<Category>?> UpdateCategoriesAsync(int id, CategoryDto[] categories) {
-            Job job = await _context.Jobs
+            Job? job = await _context.Jobs
                 .Include(j => j.JobCategories)
                 .FirstOrDefaultAsync(j => j.Id == id);
 
@@ -145,7 +145,7 @@ namespace JobHunt.Services {
         }
 
         public async Task<bool> UpdateAsync(int id, JobDto details) {
-            Job job = await _context.Jobs
+            Job? job = await _context.Jobs
                 .SingleOrDefaultAsync(j => j.Id == id);
 
             if (job == default(Job)) {
@@ -168,7 +168,7 @@ namespace JobHunt.Services {
         public async Task<int?> CreateAsync(NewJobDto details) {
             Job job = new Job();
 
-            Company company = await _context.Companies.SingleOrDefaultAsync(c => c.Id == details.CompanyId);
+            Company? company = await _context.Companies.SingleOrDefaultAsync(c => c.Id == details.CompanyId);
 
             job.Location = "";
 
@@ -200,7 +200,7 @@ namespace JobHunt.Services {
             if (details.Posted.HasValue) {
                 job.Posted = details.Posted;
             } else {
-                job.Posted = DateTime.Now;
+                job.Posted = DateTime.UtcNow;
             }
 
             if (!string.IsNullOrEmpty(details.Description)) {
@@ -219,7 +219,7 @@ namespace JobHunt.Services {
         }
 
         public async Task MarkAsArchivedAsync(int id, bool toggle) {
-            Job job = await _context.Jobs.FirstOrDefaultAsync(j => j.Id == id);
+            Job? job = await _context.Jobs.FirstOrDefaultAsync(j => j.Id == id);
 
             if (job != default(Job)) {
                 job.Archived = !(toggle && job.Archived);
@@ -304,7 +304,7 @@ namespace JobHunt.Services {
         }
 
         public async Task<bool> UpdateStatusAsync(int id, string status) {
-            Job job = await _context.Jobs
+            Job? job = await _context.Jobs
                 .SingleOrDefaultAsync(j => j.Id == id);
 
             if (job == default(Job)) {
@@ -324,7 +324,7 @@ namespace JobHunt.Services {
     }
 
     public interface IJobService {
-        Task<Job> GetByIdAsync(int id);
+        Task<Job?> GetByIdAsync(int id);
         Task<bool> AnyWithSourceIdAsync(string provider, string id);
         Task CreateAllAsync(IEnumerable<Job> jobs);
         Task<(IEnumerable<Job>, int?)> GetLatestPagedAsync(int pageNum, int pageSize, bool count);

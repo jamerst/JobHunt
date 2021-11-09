@@ -26,7 +26,7 @@ namespace JobHunt.Services {
             _pageWatcher = pageWatcher;
         }
 
-        public async Task<Company> GetByIdAsync(int id) {
+        public async Task<Company?> GetByIdAsync(int id) {
             return await _context.Companies
                 .AsNoTracking()
                 .Include(c => c.CompanyCategories)
@@ -37,7 +37,7 @@ namespace JobHunt.Services {
                 .FirstOrDefaultAsync(c => c.Id == id);
         }
 
-        public async Task<Company> FindByNameAsync(string name) {
+        public async Task<Company?> FindByNameAsync(string name) {
             return await _context.Companies
                 .Include(c => c.AlternateNames)
                 .FirstOrDefaultAsync(c => c.Name == name || c.AlternateNames.Any(an => an.Name == name));
@@ -50,7 +50,7 @@ namespace JobHunt.Services {
         }
 
         public async Task<IEnumerable<Category>?> UpdateCategoriesAsync(int id, CategoryDto[] categories) {
-            Company company = await _context.Companies
+            Company? company = await _context.Companies
                 .Include(c => c.CompanyCategories)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
@@ -94,7 +94,7 @@ namespace JobHunt.Services {
         }
 
         public async Task<Company?> UpdateAsync(int id, CompanyDto details) {
-            Company company = await _context.Companies
+            Company? company = await _context.Companies
                 .Include(c => c.WatchedPages)
                 .Include(c => c.AlternateNames)
                 .AsSingleQuery()
@@ -257,7 +257,7 @@ namespace JobHunt.Services {
         }
 
         public async Task<bool> ToggleBlacklistAsync(int id) {
-            Company company = await _context.Companies.FirstOrDefaultAsync(c => c.Id == id);
+            Company? company = await _context.Companies.FirstOrDefaultAsync(c => c.Id == id);
 
             if (company == default(Company)) {
                 return false;
@@ -270,7 +270,7 @@ namespace JobHunt.Services {
         }
 
         public async Task<bool> ToggleWatchAsync(int id) {
-            Company company = await _context.Companies.FirstOrDefaultAsync(c => c.Id == id);
+            Company? company = await _context.Companies.FirstOrDefaultAsync(c => c.Id == id);
 
             if (company == default(Company)) {
                 return false;
@@ -290,14 +290,14 @@ namespace JobHunt.Services {
         }
 
         public async Task<bool> MergeAsync(int srcId, int destId) {
-            Company src = await _context.Companies
+            Company? src = await _context.Companies
                 .Include(c => c.AlternateNames)
                 .Include(c => c.CompanyCategories)
                 .Include(c => c.Jobs)
                 .Include(c => c.WatchedPages)
                 .AsSplitQuery()
                 .SingleOrDefaultAsync(c => c.Id == srcId);
-            Company dest = await _context.Companies
+            Company? dest = await _context.Companies
                 .Include(c => c.AlternateNames)
                 .Include(c => c.CompanyCategories)
                 .Include(c => c.Jobs)
@@ -352,8 +352,8 @@ namespace JobHunt.Services {
     }
 
     public interface ICompanyService {
-        Task<Company> GetByIdAsync(int id);
-        Task<Company> FindByNameAsync(string name);
+        Task<Company?> GetByIdAsync(int id);
+        Task<Company?> FindByNameAsync(string name);
         Task CreateAllAsync(IEnumerable<Company> companies);
         Task<IEnumerable<Category>?> UpdateCategoriesAsync(int id, CategoryDto[] categories);
         Task<Company?> UpdateAsync(int id, CompanyDto details);

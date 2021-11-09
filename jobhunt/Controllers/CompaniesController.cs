@@ -31,7 +31,7 @@ namespace JobHunt.Controllers {
         [HttpGet]
         [Route("~/api/companies/{id}")]
         public async Task<IActionResult> Get([FromRoute] int id) {
-            Company company = await _companyService.GetByIdAsync(id);
+            Company? company = await _companyService.GetByIdAsync(id);
 
             if (company == default(Company)) {
                 return NotFound();

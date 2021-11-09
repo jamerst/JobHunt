@@ -16,6 +16,7 @@ import { Helmet } from "react-helmet";
 
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
+import utc from "dayjs/plugin/utc"
 import enGB from "dayjs/locale/en-gb"
 
 import Card from "components/Card";
@@ -84,6 +85,7 @@ const useStyles = makeStyles()((theme) => ({
 }));
 
 dayjs.extend(relativeTime);
+dayjs.extend(utc);
 const jobsColumns = (small: boolean | undefined): GridColDef[] => [
   { field: "id", hide: true },
   {
@@ -387,15 +389,15 @@ const Jobs: FunctionComponent = (props) => {
                 <TextField label="URL" value={newJob.url ?? ""} onChange={(e) => setNewJob({...newJob, url: e.target.value})} variant="outlined" fullWidth/>
               </Grid>
               <Grid item xs={12}>
-              <LocalizationProvider dateAdapter={DateAdapter} locale={enGB}>
-                    <DatePicker
-                      label="Posted"
-                      value={newJob.posted ?? null}
-                      renderInput={(params) => (<TextField {...params} variant="outlined" fullWidth />)}
-                      onChange={(date) => setNewJob({...newJob, posted: date as Date})}
-                      disableFuture
-                    />
-                  </LocalizationProvider>
+                <LocalizationProvider dateAdapter={DateAdapter} locale={enGB}>
+                  <DatePicker
+                    label="Posted"
+                    value={newJob.posted ?? null}
+                    renderInput={(params) => (<TextField {...params} variant="outlined" fullWidth />)}
+                    onChange={(date) => setNewJob({ ...newJob, posted: date as Date }) }
+                    disableFuture
+                  />
+                </LocalizationProvider>
               </Grid>
             </Grid>
           </DialogContent>

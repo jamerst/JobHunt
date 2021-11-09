@@ -97,7 +97,7 @@ namespace JobHunt.Searching {
             DateTime maxAge = DateTime.MinValue;
             if (search.MaxAge.HasValue) {
                 query.Add("fromage", search.MaxAge.Value.ToString());
-                maxAge = DateTime.Now.Date.AddDays(-1 * search.MaxAge.Value);
+                maxAge = DateTime.UtcNow.Date.AddDays(-1 * search.MaxAge.Value);
             }
 
             if (search.EmployerOnly) {
@@ -198,7 +198,7 @@ namespace JobHunt.Searching {
                             }
                         }
 
-                        Company company = await _companyService.FindByNameAsync(job.Company);
+                        Company? company = await _companyService.FindByNameAsync(job.Company);
                         if (company != null) { // company already exists
                             if (company.Watched) {
                                 jobAlerts.Add(new JobAlertData {
@@ -425,7 +425,8 @@ namespace JobHunt.Searching {
         private class IndeedDateTimeConverter : JsonConverter<DateTime> {
             public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
                 Debug.Assert(typeToConvert == typeof(DateTime));
-                return DateTime.ParseExact(reader.GetString()!, "r", CultureInfo.InvariantCulture);
+                // Indeed returns dates as RFC1123 format, which is always as UTC/GMT
+                return DateTime.ParseExact(reader.GetString()!, "r", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
             }
 
             public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options) {

@@ -17,7 +17,7 @@ namespace JobHunt.Services {
             _context = context;
         }
 
-        public async Task<Search> GetByIdAsync(int id) {
+        public async Task<Search?> GetByIdAsync(int id) {
             return await _context.Searches
                 .AsNoTracking()
                 .Include(s => s.Runs.OrderByDescending(sr => sr.Time).Take(10))
@@ -32,11 +32,11 @@ namespace JobHunt.Services {
             Search search = await _context.Searches.SingleAsync(s => s.Id == searchId);
             search.LastResultCount = newJobs;
             search.LastFetchSuccess = success;
-            search.LastRun = DateTime.Now;
+            search.LastRun = DateTime.UtcNow;
 
             _context.SearchRuns.Add(new SearchRun {
                 SearchId = searchId,
-                Time = DateTime.Now,
+                Time = DateTime.UtcNow,
                 Success = success,
                 Message = message,
                 NewJobs = newJobs,
@@ -107,7 +107,7 @@ namespace JobHunt.Services {
         }
 
         public async Task<(bool, string)> UpdateAsync(SearchDto details) {
-            Search search = await _context.Searches.SingleOrDefaultAsync(s => s.Id == details.Id);
+            Search? search = await _context.Searches.SingleOrDefaultAsync(s => s.Id == details.Id);
 
             if (search == default(Search)) {
                 return (false, "Search not found");
@@ -148,7 +148,7 @@ namespace JobHunt.Services {
         }
 
         public async Task<bool> RemoveAsync(int id) {
-            Search search = await _context.Searches.SingleOrDefaultAsync(s => s.Id == id);
+            Search? search = await _context.Searches.SingleOrDefaultAsync(s => s.Id == id);
 
             if (search == default(Search)) {
                 return false;
@@ -166,7 +166,7 @@ namespace JobHunt.Services {
         Task<(IEnumerable<Search>, int?)> GetPagedAsync(int pageNum, int pageSize, bool count);
         Task ToggleEnabledAsync(int searchId);
         Task<(int?, string)> CreateAsync(SearchDto details);
-        Task<Search> GetByIdAsync(int id);
+        Task<Search?> GetByIdAsync(int id);
         Task<(bool, string)> UpdateAsync(SearchDto details);
         Task<bool> RemoveAsync(int id);
     }

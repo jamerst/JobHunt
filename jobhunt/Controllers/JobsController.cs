@@ -29,7 +29,7 @@ namespace JobHunt.Controllers {
         [HttpGet]
         [Route("~/api/jobs/{id}")]
         public async Task<IActionResult> Get([FromRoute] int id) {
-            Job job = await _jobService.GetByIdAsync(id);
+            Job? job = await _jobService.GetByIdAsync(id);
 
             if (job == default(Job)) {
                 return NotFound();
@@ -131,7 +131,7 @@ namespace JobHunt.Controllers {
 
         [HttpGet]
         public async Task<IActionResult> Counts() {
-            return new JsonResult(await _jobService.GetJobCountsAsync(DateTime.Now));
+            return new JsonResult(await _jobService.GetJobCountsAsync(DateTime.UtcNow));
         }
 
         [HttpGet]

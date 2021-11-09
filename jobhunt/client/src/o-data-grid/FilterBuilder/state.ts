@@ -14,7 +14,8 @@ export const clauseState = atom({
     [rootConditionUuid]: {
       id: rootConditionUuid,
       field: "",
-      op: "eq"
+      op: "eq",
+      value: null
     }
   })
 });
