@@ -7,14 +7,12 @@ import enGB from "dayjs/locale/en-gb"
 
 import Grid from "components/Grid";
 
-import { Operation } from "../types";
+import { CollectionFieldDef, CollectionOperation, FieldDef, Operation } from "../types";
 
-import { columnsState } from "../../state"
+import { schemaState } from "../state"
 import { SelectOption, ValueOption } from "o-data-grid/types";
 import { getSelectOption } from "../utils";
-
-
-const _defaultOps: Operation[] = ["eq", "ne", "gt", "lt", "ge", "le", "contains"];
+import { allOperators, numericOperators } from "../constants";
 
 
 type FilterInputsProps = {
@@ -25,45 +23,86 @@ type FilterInputsProps = {
   onOpChange: (op: Operation) => void,
   value?: string,
   onValueChange: (v: any) => void,
+  collectionOp?: CollectionOperation,
+  onCollectionOpChange: (op: CollectionOperation) => void,
+  collectionField?: string,
+  onCollectionFieldChange: (field: string, oldField: string | undefined, currentOp: Operation, newField: string | undefined) => void,
 }
 
-const FilterInputs = React.memo(({ clauseId, field, onFieldChange, op, onOpChange, value, onValueChange }: FilterInputsProps) => {
-  const columns = useRecoilValue(columnsState);
+const FilterInputs = React.memo(({
+  clauseId,
+  field,
+  onFieldChange,
+  op,
+  onOpChange,
+  value,
+  onValueChange,
+  collectionOp,
+  onCollectionOpChange,
+  collectionField,
+  onCollectionFieldChange
+}: FilterInputsProps) => {
 
-  const currentCol = useMemo(() => {
-    if (!field && columns.length < 1) {
+  const schema = useRecoilValue(schemaState);
+
+  const fieldDef = useMemo(() => {
+    if (!field && schema.length < 1) {
       return null;
     }
 
-    let col;
+    let f: FieldDef;
     if (field) {
-      col = columns.find(c => c.field === field);
+      f = schema.find(c => c.field === field) ?? schema[0];
     } else {
-      col = columns[0]
+      f = schema[0]
     }
 
-    if (!col) {
+    if (!f) {
       return null;
+    }
+
+    let filterField = field;
+    let colField: CollectionFieldDef | undefined;
+    let type = f.type;
+    let options = f.valueOptions;
+    let ops = f.filterOperators ?? allOperators;
+    if (f.collection === true && f.collectionFields) {
+      if (collectionField) {
+        colField = f.collectionFields.find(c => c.field === collectionField) ?? f.collectionFields[0];
+      } else {
+        colField = f.collectionFields[0];
+      }
+
+      filterField = colField.field;
+      type = colField.type;
+      options = colField.valueOptions;
+
+      if (collectionOp !== "count") {
+        ops = colField.filterOperators ?? allOperators;
+      } else {
+        ops = numericOperators;
+      }
     }
 
     // get value options into a single type
     let valueOptions: SelectOption[] | undefined;
-    if (col.type === "singleSelect" && typeof col.valueOptions === "function") {
-      valueOptions = col.valueOptions({ field: field }).map((v) => getSelectOption(v));
-    } else if (col.type === "singleSelect" && col.valueOptions) {
-      valueOptions = (col.valueOptions as ValueOption[]).map((v) => getSelectOption(v));
+    if (type === "singleSelect" && typeof options === "function") {
+      valueOptions = options({ field: filterField }).map((v) => getSelectOption(v));
+    } else if (type === "singleSelect" && options) {
+      valueOptions = (options as ValueOption[]).map((v) => getSelectOption(v));
     }
 
     return {
-      option: { label: col.headerName ?? col.field, field: col.field },
-      ops: col.filterOperators ?? _defaultOps,
-      type: col.type,
+      ...f,
+      fieldLabel: f.headerName ?? f.field,
+      type: type,
+      ops: ops,
       valueOptions: valueOptions,
-      col: col
+      colField: colField
     };
-  }, [field, columns]);
+  }, [field, collectionField, collectionOp, schema]);
 
-  if (columns.length < 1 || !currentCol) {
+  if (schema.length < 1 || !fieldDef) {
     return null;
   }
 
@@ -71,61 +110,95 @@ const FilterInputs = React.memo(({ clauseId, field, onFieldChange, op, onOpChang
     <Fragment>
       <Grid item xs>
         <Autocomplete
-          options={columns.filter(c => c.filterable !== false).map(c => ({ label: c.headerName ?? c.field, field: c.field }))}
+          options={schema.filter(c => c.filterable !== false).map(c => ({ label: c.headerName ?? c.field, field: c.field }))}
           renderInput={(params) => <TextField {...params} label="Field" />}
-          value={currentCol.option}
-          onChange={(_, val) => onFieldChange(field, op, val.field)}
+          value={{ label: fieldDef.fieldLabel, field: fieldDef.field }}
+          onChange={(_, val) => onFieldChange(fieldDef.field, op, val.field)}
           size="small"
           disableClearable
           isOptionEqualToValue={(option, value) => option.field === value.field}
         />
       </Grid>
+      {
+        fieldDef.collection === true &&
+        <Grid item xs>
+          <FormControl fullWidth size="small">
+            <InputLabel id={`${clauseId}_label-collection-op`}>Operation</InputLabel>
+            <Select
+              value={collectionOp}
+              onChange={(e) => onCollectionOpChange(e.target.value as CollectionOperation)}
+              labelId={`${clauseId}_label-collection-op`}
+              label="Operation"
+            >
+              <MenuItem value="any">Has at least one</MenuItem>
+              <MenuItem value="all">All have</MenuItem>
+              <MenuItem value="count">Count</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+      }
+      {
+        fieldDef.collection === true && collectionOp !== "count" &&
+        <Grid item xs>
+          <Autocomplete
+            options={fieldDef.collectionFields?.map(c => ({ label: c.label, field: c.field })) ?? []}
+            renderInput={(params) => <TextField {...params} label="Field" />}
+            value={{ label: fieldDef.colField?.label, field: collectionField }}
+            onChange={(_, val) => onCollectionFieldChange(field, collectionField, op, val.field)}
+            size="small"
+            disableClearable
+            isOptionEqualToValue={(option, value) => option.field === value.field}
+          />
+        </Grid>
+      }
       <Grid item xs>
         <FormControl fullWidth size="small">
-          <InputLabel id="label-op">Operation</InputLabel>
+          <InputLabel id={`${clauseId}_label-op`}>Operation</InputLabel>
           <Select
             value={op}
             onChange={(e) => onOpChange(e.target.value as Operation)}
-            labelId="label-op"
+            labelId={`${clauseId}_label-op`}
             label="Operation"
           >
-            <MenuItem value="eq" disabled={!currentCol.ops.includes("eq")}>=</MenuItem>
-            <MenuItem value="ne" disabled={!currentCol.ops.includes("ne")}>≠</MenuItem>
-            <MenuItem value="gt" disabled={!currentCol.ops.includes("gt")}>&gt;</MenuItem>
-            <MenuItem value="lt" disabled={!currentCol.ops.includes("lt")}>&lt;</MenuItem>
-            <MenuItem value="ge" disabled={!currentCol.ops.includes("ge")}>&ge;</MenuItem>
-            <MenuItem value="le" disabled={!currentCol.ops.includes("le")}>&le;</MenuItem>
-            <MenuItem value="contains" disabled={!currentCol.ops.includes("contains")}>Contains</MenuItem>
+            <MenuItem value="eq" disabled={!fieldDef.ops.includes("eq")}>=</MenuItem>
+            <MenuItem value="ne" disabled={!fieldDef.ops.includes("ne")}>≠</MenuItem>
+            <MenuItem value="gt" disabled={!fieldDef.ops.includes("gt")}>&gt;</MenuItem>
+            <MenuItem value="lt" disabled={!fieldDef.ops.includes("lt")}>&lt;</MenuItem>
+            <MenuItem value="ge" disabled={!fieldDef.ops.includes("ge")}>&ge;</MenuItem>
+            <MenuItem value="le" disabled={!fieldDef.ops.includes("le")}>&le;</MenuItem>
+            <MenuItem value="contains" disabled={!fieldDef.ops.includes("contains")}>Contains</MenuItem>
+            <MenuItem value="null" disabled={!fieldDef.ops.includes("null")}>Is Blank</MenuItem>
+            <MenuItem value="notnull" disabled={!fieldDef.ops.includes("notnull")}>Is Not Blank</MenuItem>
           </Select>
         </FormControl>
       </Grid>
       <Grid item xs>
         {
-          currentCol.type === "date" &&
+          fieldDef.type === "date" &&
           <LocalizationProvider dateAdapter={DateAdapter} locale={enGB}>
-              <DatePicker
-                label="Value"
-                {...currentCol.col.datePickerProps}
-                value={value ?? ""}
-                renderInput={(params) => <TextField {...params} fullWidth size="small" {...currentCol.col.textFieldProps} />}
-                onChange={(date) => onValueChange(date as Date)}
-              />
-          </LocalizationProvider>
-        }
-        {
-          currentCol.type === "datetime" &&
-          <LocalizationProvider dateAdapter={DateAdapter} locale={enGB}>
-            <DateTimePicker
+            <DatePicker
               label="Value"
-              {...currentCol.col.dateTimePickerProps}
+              {...fieldDef.datePickerProps}
               value={value ?? ""}
-              renderInput={(params) => <TextField {...params} fullWidth size="small" {...currentCol.col.textFieldProps} />}
+              renderInput={(params) => <TextField {...params} fullWidth size="small" {...fieldDef.textFieldProps} />}
               onChange={(date) => onValueChange(date as Date)}
             />
           </LocalizationProvider>
         }
         {
-          currentCol.type === "boolean" &&
+          fieldDef.type === "datetime" &&
+          <LocalizationProvider dateAdapter={DateAdapter} locale={enGB}>
+            <DateTimePicker
+              label="Value"
+              {...fieldDef.dateTimePickerProps}
+              value={value ?? ""}
+              renderInput={(params) => <TextField {...params} fullWidth size="small" {...fieldDef.textFieldProps} />}
+              onChange={(date) => onValueChange(date as Date)}
+            />
+          </LocalizationProvider>
+        }
+        {
+          fieldDef.type === "boolean" &&
           <FormControl fullWidth size="small">
             <InputLabel id={`${clauseId}_label-bool-value`}>Value</InputLabel>
             <Select
@@ -136,12 +209,12 @@ const FilterInputs = React.memo(({ clauseId, field, onFieldChange, op, onOpChang
             >
               <MenuItem value="true">Yes</MenuItem>
               <MenuItem value="false">No</MenuItem>
-              {currentCol.col.nullable && <MenuItem value="null">Unknown</MenuItem>}
+              {fieldDef.nullable && <MenuItem value="null">Unknown</MenuItem>}
             </Select>
           </FormControl>
         }
         {
-          currentCol.type === "singleSelect" && currentCol.col.valueOptions &&
+          fieldDef.type === "singleSelect" && fieldDef.valueOptions &&
           <FormControl fullWidth size="small">
             <InputLabel id={`${clauseId}_label-select-value`}>Value</InputLabel>
             <Select
@@ -150,22 +223,22 @@ const FilterInputs = React.memo(({ clauseId, field, onFieldChange, op, onOpChang
               labelId={`${clauseId}_label-select-value`}
               label="Value"
             >
-              {currentCol.valueOptions!.map((o, i) =>
+              {fieldDef.valueOptions!.map((o, i) =>
                 (<MenuItem value={o.value} key={`${clauseId}_${field}_select_${i}`}>{o.label}</MenuItem>)
               )}
             </Select>
           </FormControl>
         }
         {
-          (!currentCol.type || currentCol.type === "string" || currentCol.type === "number") &&
+          (!fieldDef.type || fieldDef.type === "string" || fieldDef.type === "number") &&
           <TextField
             size="small"
             fullWidth
             label="Value"
-            {...currentCol.col!.textFieldProps}
+            {...fieldDef!.textFieldProps}
             value={value ?? ""}
             onChange={(e) => onValueChange(e.target.value)}
-            type={currentCol.type === "number" ? "number" : "text"}
+            type={fieldDef.type === "number" ? "number" : "text"}
           />
         }
       </Grid>

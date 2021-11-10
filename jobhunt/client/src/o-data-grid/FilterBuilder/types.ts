@@ -1,20 +1,40 @@
 import { DatePickerProps, DateTimePickerProps } from "@mui/lab";
 import { TextFieldProps } from "@mui/material";
+import { GridValueOptionsParams } from "@mui/x-data-grid";
+import { ValueOption } from "o-data-grid/types";
 
-export type Schema = {
+export type FieldDef = {
+  field: string,
+  headerName?: string,
+  type?: string,
   filterable?: boolean,
   filterOperators?: Operation[],
   textFieldProps?: TextFieldProps,
   datePickerProps?: DatePickerProps,
   dateTimePickerProps?: DateTimePickerProps,
   nullable?: boolean,
+  collection?: boolean,
+  collectionFields?: CollectionFieldDef[],
+  valueOptions?: ValueOption[] | ((params: GridValueOptionsParams) => ValueOption[])
+}
+
+export type CollectionFieldDef = {
+  field: string,
+  label: string,
+  type?: string,
+  filterOperators?: Operation[],
+  textFieldProps?: TextFieldProps,
+  datePickerProps?: DatePickerProps,
+  dateTimePickerProps?: DateTimePickerProps,
+  nullable?: boolean,
+  valueOptions?: ValueOption[] | ((params: GridValueOptionsParams) => ValueOption[])
 }
 
 export type Connective = "and" | "or"
 
-export type Operation = "eq" | "ne" | "gt" | "lt" | "ge" | "le" | "contains"
+export type Operation = "eq" | "ne" | "gt" | "lt" | "ge" | "le" | "contains" | "null" | "notnull"
 
-export type CollectionOperation = "any" | "all"
+export type CollectionOperation = "any" | "all" | "count"
 
 type Clause = {
   id: string

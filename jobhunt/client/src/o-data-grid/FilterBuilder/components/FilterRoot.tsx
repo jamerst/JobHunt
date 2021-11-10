@@ -3,7 +3,7 @@ import { useSetRecoilState } from "recoil";
 
 import FilterGroup from "./FilterGroup";
 
-import { columnsState } from "../../state"
+import { schemaState } from "../state"
 
 import { rootGroupUuid } from "../constants"
 import { FilterBuilderProps } from "./FilterBuilder";
@@ -13,11 +13,11 @@ type FilterRootProps = {
 }
 
 const FilterRoot = ({ props }: FilterRootProps) => {
-  const setColumns = useSetRecoilState(columnsState);
+  const setSchema = useSetRecoilState(schemaState);
 
   useEffect(() => {
-    setColumns(props.columns);
-  }, [props.columns, setColumns]);
+    setSchema(props.schema);
+  }, [props.schema, setSchema]);
 
   return (
     <Fragment>

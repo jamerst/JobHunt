@@ -1,7 +1,7 @@
 
 import { DataGridProps, GridSortModel, GridColDef, GridRowModel, GridValueOptionsParams } from "@mui/x-data-grid"
 import { ResponsiveValues } from "utils/hooks"
-import { Schema } from "./FilterBuilder/types"
+import { FieldDef } from "./FilterBuilder/types"
 
 export type ODataGridProps = Omit<
   ODataGridPropsFull,
@@ -32,12 +32,10 @@ type ODataGridPropsFull = Omit<DataGridProps, "columns"> & {
   disableFilterBuilder?: boolean
 }
 
-export type ODataGridColDef = Omit<GridColDef, "hide" | "filterOperators"> & Schema & {
+export type ODataGridColDef = Omit<GridColDef, "hide" | "filterOperators"> & FieldDef & {
   select?: string,
   expand?: Expand,
-  hide?: ResponsiveValues<boolean> | boolean,
-  collection?: boolean,
-  collectionFields?: ({ field: string, label: string })[],
+  hide?: ResponsiveValues<boolean> | boolean
 }
 
 export type ODataResponse = {

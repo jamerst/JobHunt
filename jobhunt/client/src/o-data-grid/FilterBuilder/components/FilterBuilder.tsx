@@ -4,10 +4,10 @@ import { RecoilRoot } from "recoil";
 import FilterRoot from "./FilterRoot";
 
 import { ODataGridColDef } from "../../types";
-import { Group } from "../types"
+import { FieldDef, Group } from "../types"
 
 export type FilterBuilderProps = {
-  columns: ODataGridColDef[],
+  schema: FieldDef[],
   initialFilter?: Group
 }
 

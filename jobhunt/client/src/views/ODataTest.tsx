@@ -64,6 +64,13 @@ const columns: ODataGridColDef[] = [
       navigationField: "JobCategories/Category",
       select: "Name"
     },
+    collection: true,
+    collectionFields: [
+      {
+        field: "Category/Name",
+        label: "Name"
+      }
+    ],
     renderCell: (params) => {
       return params.row.JobCategories.map((c: any) => c["Category/Name"]).join(", ");
     }
