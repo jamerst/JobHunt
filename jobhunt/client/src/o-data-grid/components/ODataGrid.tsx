@@ -327,7 +327,7 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
 
   return (
     <Fragment>
-      {props.$filter === undefined && props.disableFilterBuilder !== false && <FilterBuilder schema={props.columns} />}
+      {props.$filter === undefined && props.disableFilterBuilder !== false && <FilterBuilder schema={props.columns} {...props.filterBuilderProps} />}
       <DataGrid
         autoHeight
         ref={React.createRef()}

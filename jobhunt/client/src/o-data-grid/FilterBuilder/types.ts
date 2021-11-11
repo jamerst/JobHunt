@@ -3,6 +3,11 @@ import { TextFieldProps } from "@mui/material";
 import { GridValueOptionsParams } from "@mui/x-data-grid";
 import { ValueOption } from "o-data-grid/types";
 
+export type ExternalBuilderProps = {
+  initialFilter?: Group,
+  searchMenuItems?: ({ label: string, onClick: () => void })[]
+}
+
 export type FieldDef = {
   field: string,
   headerName?: string,

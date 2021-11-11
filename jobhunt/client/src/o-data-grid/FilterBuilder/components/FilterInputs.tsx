@@ -108,7 +108,7 @@ const FilterInputs = React.memo(({
 
   return (
     <Fragment>
-      <Grid item xs>
+      <Grid item xs={12} md>
         <Autocomplete
           options={schema.filter(c => c.filterable !== false).map(c => ({ label: c.headerName ?? c.field, field: c.field }))}
           renderInput={(params) => <TextField {...params} label="Field" />}
@@ -121,7 +121,7 @@ const FilterInputs = React.memo(({
       </Grid>
       {
         fieldDef.collection === true &&
-        <Grid item xs>
+        <Grid item xs={12} md>
           <FormControl fullWidth size="small">
             <InputLabel id={`${clauseId}_label-collection-op`}>Operation</InputLabel>
             <Select
@@ -139,7 +139,7 @@ const FilterInputs = React.memo(({
       }
       {
         fieldDef.collection === true && collectionOp !== "count" &&
-        <Grid item xs>
+        <Grid item xs={12} md>
           <Autocomplete
             options={fieldDef.collectionFields?.map(c => ({ label: c.label, field: c.field })) ?? []}
             renderInput={(params) => <TextField {...params} label="Field" />}
@@ -151,7 +151,7 @@ const FilterInputs = React.memo(({
           />
         </Grid>
       }
-      <Grid item xs>
+      <Grid item xs={12} md>
         <FormControl fullWidth size="small">
           <InputLabel id={`${clauseId}_label-op`}>Operation</InputLabel>
           <Select
@@ -172,7 +172,7 @@ const FilterInputs = React.memo(({
           </Select>
         </FormControl>
       </Grid>
-      <Grid item xs>
+      <Grid item xs={12} md>
         {
           fieldDef.type === "date" &&
           <LocalizationProvider dateAdapter={DateAdapter} locale={enGB}>

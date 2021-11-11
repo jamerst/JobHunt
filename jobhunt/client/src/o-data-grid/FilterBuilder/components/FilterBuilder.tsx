@@ -4,11 +4,10 @@ import { RecoilRoot } from "recoil";
 import FilterRoot from "./FilterRoot";
 
 import { ODataGridColDef } from "../../types";
-import { FieldDef, Group } from "../types"
+import { ExternalBuilderProps, FieldDef } from "../types"
 
-export type FilterBuilderProps = {
-  schema: FieldDef[],
-  initialFilter?: Group
+export type FilterBuilderProps = ExternalBuilderProps & {
+  schema: FieldDef[]
 }
 
 const FilterBuilder = (props: FilterBuilderProps) => {

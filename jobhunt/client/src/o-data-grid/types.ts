@@ -1,7 +1,7 @@
 
-import { DataGridProps, GridSortModel, GridColDef, GridRowModel, GridValueOptionsParams } from "@mui/x-data-grid"
+import { DataGridProps, GridSortModel, GridColDef, GridRowModel } from "@mui/x-data-grid"
 import { ResponsiveValues } from "utils/hooks"
-import { FieldDef } from "./FilterBuilder/types"
+import { ExternalBuilderProps, FieldDef } from "./FilterBuilder/types"
 
 export type ODataGridProps = Omit<
   ODataGridPropsFull,
@@ -29,7 +29,8 @@ type ODataGridPropsFull = Omit<DataGridProps, "columns"> & {
   idField?: string,
   $filter?: string,
   defaultSortModel?: GridSortModel,
-  disableFilterBuilder?: boolean
+  disableFilterBuilder?: boolean,
+  filterBuilderProps?: ExternalBuilderProps
 }
 
 export type ODataGridColDef = Omit<GridColDef, "hide" | "filterOperators"> & FieldDef & {
