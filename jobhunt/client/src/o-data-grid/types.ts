@@ -23,8 +23,6 @@ export type ODataGridProps = Omit<
 type ODataGridPropsFull = Omit<DataGridProps, "columns"> & {
   url: string,
   queryParams?: [string, string | undefined][],
-  toolbarActions?: ToolbarAction[],
-  alwaysUpdateCount?: boolean,
   columns: ODataGridColDef[],
   idField?: string,
   $filter?: string,
@@ -36,7 +34,8 @@ type ODataGridPropsFull = Omit<DataGridProps, "columns"> & {
 export type ODataGridColDef = Omit<GridColDef, "hide" | "filterOperators"> & FieldDef & {
   select?: string,
   expand?: Expand,
-  hide?: ResponsiveValues<boolean> | boolean
+  hide?: ResponsiveValues<boolean> | boolean,
+  filterOnly?: boolean
 }
 
 export type ODataResponse = {
@@ -53,17 +52,6 @@ export type Expand = {
 export type PageSettings = {
   page: number,
   size: number
-}
-
-export type ToolbarAction = {
-  text: string,
-  icon?: React.ReactNode,
-  onClick: (ids: number[]) => Promise<ToolbarActionResponse>
-}
-
-export type ToolbarActionResponse = {
-  data?: GridRowModel[],
-  refresh: boolean
 }
 
 export type ValueOption = string | number | SelectOption;

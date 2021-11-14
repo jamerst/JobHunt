@@ -13,12 +13,12 @@ import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
 
 import Card from "components/Card"
-import { Archive, Work } from "@mui/icons-material"
+import { Work } from "@mui/icons-material"
 import { Link as RouterLink } from "react-router-dom"
 import CardHeader from "components/CardHeader"
 import CardBody from "components/CardBody"
 
-import { ODataGrid, ODataGridColDef, ToolbarAction } from "o-data-grid";
+import { ODataGrid, ODataGridColDef } from "o-data-grid";
 
 type JobCount = {
   daily: number,
@@ -87,23 +87,6 @@ const columns: ODataGridColDef[] = [
   }
 ];
 
-const jobActions: ToolbarAction[] = [
-  {
-    text: "Archive",
-    icon: (<Archive/>),
-    onClick: async (ids) => {
-      for (let i = 0; i < ids.length; i++) {
-        const response = await fetch(`/api/jobs/archive/${ids[i]}`, { method: "PATCH" });
-        if (!response.ok) {
-          console.error(`API request failed: /api/jobs/archive/${ids[i]}, HTTP ${response.status}`)
-        }
-      }
-
-      return { refresh: true };
-    }
-  }
-]
-
 export const Dashboard = () => {
   const [jobCounts, setJobCounts] = useState<JobCount>({ daily: -1, weekly: -1, monthly: -1 });
   const [index, setIndex] = useState<number>(0);
@@ -164,8 +147,6 @@ export const Dashboard = () => {
               url="/api/odata/job"
               columns={columns}
               getRowClassName={(params) => params.row.seen ? "" : classes.unseen}
-              toolbarActions={jobActions}
-              checkboxSelection
               idField="Id"
               defaultSortModel={defaultSort}
               $filter="Archived eq false"

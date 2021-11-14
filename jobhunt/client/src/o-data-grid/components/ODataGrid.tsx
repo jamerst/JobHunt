@@ -1,17 +1,16 @@
 import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { DataGrid, GridColDef, GridFeatureModeConstant, GridRowModel, GridRowId, GridColumnVisibilityChangeParams, GridSortModel } from "@mui/x-data-grid"
-import { Button, Box } from "@mui/material";
+import { DataGrid, GridColDef, GridFeatureModeConstant, GridRowModel, GridRowId, GridColumnVisibilityChangeParams, GridSortModel, GridOverlay } from "@mui/x-data-grid"
+import { LinearProgress } from "@mui/material";
 import { o, OdataQuery } from "odata"
 import { useLocation } from "react-router";
 
-import Grid from "components/Grid";
 import makeStyles from "makeStyles";
 
 import { ResponsiveValues, useResponsive } from "utils/hooks";
 
 import FilterBuilder from "../FilterBuilder/components/FilterBuilder";
 
-import { ODataGridProps, ODataGridColDef, PageSettings, ToolbarAction, ToolbarActionResponse, ODataResponse } from "o-data-grid/types";
+import { ODataGridProps, ODataGridColDef, PageSettings, ODataResponse } from "o-data-grid/types";
 
 import { Expand, ExpandToQuery, Flatten, GroupArrayBy, GetPageSettingsOrDefault } from "../utils";
 
@@ -38,9 +37,11 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
   const [pageSettings, setPageSettings] = useState<PageSettings>(GetPageSettingsOrDefault());
   const [rows, setRows] = useState<GridRowModel[]>([])
   const [rowCount, setRowCount] = useState<number>(0);
+  const [fetchCount, setFetchCount] = useState(true);
   const [loading, setLoading] = useState<boolean>(true);
   const [selected, setSelected] = useState<GridRowId[]>([]);
   const [sortModel, setSortModel] = useState<GridSortModel | undefined>();
+  const [filter, setFilter] = useState<string>(props.$filter ?? "");
 
   const [visibleColumns, setVisibleColumns] = useState<ODataGridColDef[]>(props.columns.filter(c => c.hide !== true));
   const [columnHideOverrides, setColumnHideOverrides] = useState<{ [key: string]: boolean }>({});
@@ -94,11 +95,11 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
       $expand,
       $top,
       $skip,
-      $count: Boolean(firstLoad.current || props.alwaysUpdateCount)
+      $count: fetchCount
     }
 
-    if (props.$filter) {
-      query.$filter = props.$filter;
+    if (filter) {
+      query.$filter = filter;
     }
 
     // set the default sort model if one is provided
@@ -132,6 +133,7 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
 
       if (data["@odata.count"]) {
         setRowCount(data["@odata.count"]);
+        setFetchCount(false);
       }
 
       setRows(rows);
@@ -140,30 +142,18 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
     } else {
       console.error(`API request failed: ${response.url}, HTTP ${response.status}`);
     }
-  }, [pageSettings, visibleColumns, sortModel, props.alwaysUpdateCount, props.url, props.idField, props.$filter, props.defaultSortModel]);
+  }, [pageSettings, visibleColumns, sortModel, filter, fetchCount, props.url, props.idField, props.defaultSortModel]);
 
-  const handleToolbarResponse = useCallback(async (r: ToolbarActionResponse) => {
-    if (r.refresh) {
-      fetchData();
-      setSelected([]);
-    } else if (r.data) {
-      let modified = false;
-      let newRows = [...rows];
+  const handleBuilderSearch = useCallback((f: string) => {
+    setFilter(f);
+    setFetchCount(true);
 
-      r.data.forEach(data => {
-        const rowIndex = newRows.indexOf((row: GridRowModel) => row["id"] === data.id);
-        if (rowIndex > -1) {
-          newRows[rowIndex] = data;
-          modified = true;
-        }
-      });
-
-      if (modified) {
-        setRows(newRows);
-        setSelected([]);
-      }
+    if (props.filterBuilderProps?.onSearch) {
+      props.filterBuilderProps.onSearch(f);
     }
-  }, [fetchData, rows]);
+
+    fetchData();
+  }, [setFilter, props.filterBuilderProps, fetchData]);
 
   const { onColumnVisibilityChange, onSortModelChange } = props;
 
@@ -310,7 +300,7 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
     }
   }, [location, pageSettings]);
 
-  const columns = useMemo(() => props.columns.map((c) => {
+  const columns = useMemo(() => props.columns.filter(c => c.filterOnly !== true).map((c) => {
     let hide;
     const override = columnHideOverrides[c.field];
     const responsive = c.hide as ResponsiveValues<boolean>
@@ -327,10 +317,20 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
 
   return (
     <Fragment>
-      {props.$filter === undefined && props.disableFilterBuilder !== false && <FilterBuilder schema={props.columns} {...props.filterBuilderProps} />}
+      {
+        props.$filter === undefined && props.disableFilterBuilder !== false &&
+        <FilterBuilder
+          {...props.filterBuilderProps}
+          schema={props.columns}
+          onSearch={handleBuilderSearch}
+        />
+      }
       <DataGrid
         autoHeight
         ref={React.createRef()}
+        components={{
+          LoadingOverlay: LoadingOverlay
+        }}
 
         {...props}
 
@@ -358,58 +358,17 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
         sortingMode={GridFeatureModeConstant.server}
         sortModel={sortModel}
         onSortModelChange={handleSortModelChange}
-
-        components={{ ...props.components, Toolbar: props.toolbarActions ? ODataGridToolbar : undefined }}
-        componentsProps={{
-          ...props.componentsProps,
-          toolbar: {
-            actions: props.toolbarActions,
-            selected: selected,
-            handleResponse: handleToolbarResponse
-          }
-        }}
       />
     </Fragment>
   )
 });
 
-type ODataGridToolbarProps = {
-  actions?: ToolbarAction[],
-  selected: GridRowId[],
-  handleResponse: (r: ToolbarActionResponse) => void
-}
-
-const ODataGridToolbar = (props: ODataGridToolbarProps) => {
-  const handleClick = useCallback(async (a: (ids: number[]) => Promise<ToolbarActionResponse>) => {
-    if (props.selected.length > 0) {
-      const response = await a(props.selected.map(r => r.valueOf() as number));
-      props.handleResponse(response);
-    }
-  }, [props]);
-
-  if (!props.actions) {
-    return null;
-  } else {
-    return (
-      <Box m={1}>
-        <Grid container spacing={1}>
-          {props.actions.map(a => (
-            <Grid item key={a.text}>
-              <Button
-                variant="text"
-                size="small"
-                startIcon={a.icon ?? undefined}
-                onClick={() => handleClick(a.onClick)}
-                disabled={props.selected.length === 0}
-              >
-                {a.text}
-              </Button>
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
-    );
-  }
-}
+const LoadingOverlay = () => (
+  <GridOverlay>
+    <div style={{ position: "absolute", top: 0, width: "100%" }}>
+      <LinearProgress/>
+    </div>
+  </GridOverlay>
+)
 
 export default ODataGrid;

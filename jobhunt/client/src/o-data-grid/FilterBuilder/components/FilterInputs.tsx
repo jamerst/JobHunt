@@ -13,6 +13,7 @@ import { schemaState } from "../state"
 import { SelectOption, ValueOption } from "o-data-grid/types";
 import { getSelectOption } from "../utils";
 import { allOperators, numericOperators } from "../constants";
+import { Dayjs } from "dayjs";
 
 
 type FilterInputsProps = {
@@ -81,6 +82,7 @@ const FilterInputs = React.memo(({
         ops = colField.filterOperators ?? allOperators;
       } else {
         ops = numericOperators;
+        type = "number"
       }
     }
 
@@ -174,72 +176,77 @@ const FilterInputs = React.memo(({
       </Grid>
       <Grid item xs={12} md>
         {
-          fieldDef.type === "date" &&
-          <LocalizationProvider dateAdapter={DateAdapter} locale={enGB}>
-            <DatePicker
-              label="Value"
-              {...fieldDef.datePickerProps}
-              value={value ?? ""}
-              renderInput={(params) => <TextField {...params} fullWidth size="small" {...fieldDef.textFieldProps} />}
-              onChange={(date) => onValueChange(date as Date)}
-            />
-          </LocalizationProvider>
-        }
-        {
-          fieldDef.type === "datetime" &&
-          <LocalizationProvider dateAdapter={DateAdapter} locale={enGB}>
-            <DateTimePicker
-              label="Value"
-              {...fieldDef.dateTimePickerProps}
-              value={value ?? ""}
-              renderInput={(params) => <TextField {...params} fullWidth size="small" {...fieldDef.textFieldProps} />}
-              onChange={(date) => onValueChange(date as Date)}
-            />
-          </LocalizationProvider>
-        }
-        {
-          fieldDef.type === "boolean" &&
-          <FormControl fullWidth size="small">
-            <InputLabel id={`${clauseId}_label-bool-value`}>Value</InputLabel>
-            <Select
-              value={op}
-              onChange={(e) => onValueChange(e.target.value)}
-              labelId={`${clauseId}_label-bool-value`}
-              label="Value"
-            >
-              <MenuItem value="true">Yes</MenuItem>
-              <MenuItem value="false">No</MenuItem>
-              {fieldDef.nullable && <MenuItem value="null">Unknown</MenuItem>}
-            </Select>
-          </FormControl>
-        }
-        {
-          fieldDef.type === "singleSelect" && fieldDef.valueOptions &&
-          <FormControl fullWidth size="small">
-            <InputLabel id={`${clauseId}_label-select-value`}>Value</InputLabel>
-            <Select
-              value={value ?? ""}
-              onChange={(e) => onValueChange(e.target.value)}
-              labelId={`${clauseId}_label-select-value`}
-              label="Value"
-            >
-              {fieldDef.valueOptions!.map((o, i) =>
-                (<MenuItem value={o.value} key={`${clauseId}_${field}_select_${i}`}>{o.label}</MenuItem>)
-              )}
-            </Select>
-          </FormControl>
-        }
-        {
-          (!fieldDef.type || fieldDef.type === "string" || fieldDef.type === "number") &&
-          <TextField
-            size="small"
-            fullWidth
-            label="Value"
-            {...fieldDef!.textFieldProps}
-            value={value ?? ""}
-            onChange={(e) => onValueChange(e.target.value)}
-            type={fieldDef.type === "number" ? "number" : "text"}
-          />
+          op !== "null" && op !== "notnull" &&
+          <Fragment>
+            {
+              fieldDef.type === "date" &&
+              <LocalizationProvider dateAdapter={DateAdapter} locale={enGB}>
+                <DatePicker
+                  label="Value"
+                  {...fieldDef.datePickerProps}
+                  value={value ?? ""}
+                  renderInput={(params) => <TextField {...params} fullWidth size="small" {...fieldDef.textFieldProps} />}
+                  onChange={(date) => onValueChange(date as Dayjs)}
+                />
+              </LocalizationProvider>
+            }
+            {
+              fieldDef.type === "datetime" &&
+              <LocalizationProvider dateAdapter={DateAdapter} locale={enGB}>
+                <DateTimePicker
+                  label="Value"
+                  {...fieldDef.dateTimePickerProps}
+                  value={value ?? ""}
+                  renderInput={(params) => <TextField {...params} fullWidth size="small" {...fieldDef.textFieldProps} />}
+                  onChange={(date) => onValueChange(date as Dayjs)}
+                />
+              </LocalizationProvider>
+            }
+            {
+              fieldDef.type === "boolean" &&
+              <FormControl fullWidth size="small">
+                <InputLabel id={`${clauseId}_label-bool-value`}>Value</InputLabel>
+                <Select
+                  value={op}
+                  onChange={(e) => onValueChange(e.target.value)}
+                  labelId={`${clauseId}_label-bool-value`}
+                  label="Value"
+                >
+                  <MenuItem value="true">Yes</MenuItem>
+                  <MenuItem value="false">No</MenuItem>
+                  {fieldDef.nullable && <MenuItem value="null">Unknown</MenuItem>}
+                </Select>
+              </FormControl>
+            }
+            {
+              fieldDef.type === "singleSelect" && fieldDef.valueOptions &&
+              <FormControl fullWidth size="small">
+                <InputLabel id={`${clauseId}_label-select-value`}>Value</InputLabel>
+                <Select
+                  value={value ?? ""}
+                  onChange={(e) => onValueChange(e.target.value)}
+                  labelId={`${clauseId}_label-select-value`}
+                  label="Value"
+                >
+                  {fieldDef.valueOptions!.map((o, i) =>
+                    (<MenuItem value={o.value} key={`${clauseId}_${field}_select_${i}`}>{o.label}</MenuItem>)
+                  )}
+                </Select>
+              </FormControl>
+            }
+            {
+              (!fieldDef.type || fieldDef.type === "string" || fieldDef.type === "number") &&
+              <TextField
+                size="small"
+                fullWidth
+                label="Value"
+                {...fieldDef!.textFieldProps}
+                value={value ?? ""}
+                onChange={(e) => onValueChange(fieldDef.type === "number" ? parseFloat(e.target.value) : e.target.value)}
+                type={fieldDef.type === "number" ? "number" : "text"}
+              />
+            }
+          </Fragment>
         }
       </Grid>
     </Fragment>

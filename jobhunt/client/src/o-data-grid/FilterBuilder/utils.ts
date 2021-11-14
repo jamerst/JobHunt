@@ -1,16 +1,16 @@
 import { SelectOption, ValueOption } from "o-data-grid/types";
 import { v4 as uuid } from "uuid";
 
-import { Group, Condition } from "./types"
+import { GroupClause, ConditionClause } from "./types"
 
-export const getDefaultCondition = (): Condition => ({
-  field: "",
+export const getDefaultCondition = (field: string): ConditionClause => ({
+  field: field,
   op: "eq",
   value: null,
   id: uuid()
 })
 
-export const getDefaultGroup = (): Group => ({
+export const getDefaultGroup = (): GroupClause => ({
   connective: "and",
   id: uuid()
 });

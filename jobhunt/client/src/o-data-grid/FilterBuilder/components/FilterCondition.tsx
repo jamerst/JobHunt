@@ -7,7 +7,7 @@ import Grid from "components/Grid";
 
 import FilterInputs from "./FilterInputs";
 
-import { CollectionOperation, Condition, Operation, TreeGroup } from "../types"
+import { CollectionOperation, ConditionClause, Operation, TreeGroup } from "../types"
 
 import { clauseState, schemaState, treeState } from "../state"
 
@@ -25,15 +25,16 @@ const FilterCondition = ({ clauseId, path }: FilterConditionProps) => {
 
   const schema = useRecoilValue(schemaState);
 
-  const condition = useMemo(() => clauses.get(clauseId) as Condition, [clauses, clauseId]);
+  const condition = useMemo(() => clauses.get(clauseId) as ConditionClause, [clauses, clauseId]);
 
   const changeField = useCallback((oldField: string, currentOp: Operation, newField: string) => {
     const oldFieldDef = schema.find(c => c.field === oldField);
     const newFieldDef = schema.find(c => c.field === newField);
 
     setClauses(old => old.update(clauseId, c => {
-      let condition = { ...c as Condition };
+      let condition = { ...c as ConditionClause };
       condition.field = newField;
+      condition.default = false;
 
       if (oldFieldDef && newFieldDef) {
         // reset value if fields have different types
@@ -68,16 +69,16 @@ const FilterCondition = ({ clauseId, path }: FilterConditionProps) => {
   }, [schema, setClauses, clauseId]);
 
   const changeOp = useCallback((o: Operation) => {
-    setClauses(old => old.update(clauseId, c => ({ ...c as Condition, op: o })));
+    setClauses(old => old.update(clauseId, c => ({ ...c as ConditionClause, op: o, default: false })));
   }, [setClauses, clauseId]);
 
   const changeValue = useCallback((v: any) => {
-    setClauses(old => old.update(clauseId, c => ({ ...c as Condition, value: v })));
+    setClauses(old => old.update(clauseId, c => ({ ...c as ConditionClause, value: v, default: false })));
   }, [setClauses, clauseId]);
 
   const changeCollectionOp = useCallback((o: CollectionOperation) => {
     setClauses(old => old.update(clauseId, c => {
-      let condition = { ...c as Condition, collectionOp: o };
+      let condition = { ...c as ConditionClause, collectionOp: o, default: false };
 
       // reset field operator if switching to count operator and current op is not valid
       if (o === "count" && !numericOperators.includes(condition.op)) {
@@ -92,8 +93,9 @@ const FilterCondition = ({ clauseId, path }: FilterConditionProps) => {
     const fieldDef = schema.find(c => c.field === field);
 
     setClauses(old => old.update(clauseId, c => {
-      let condition = { ...c as Condition };
+      let condition = { ...c as ConditionClause };
       condition.collectionField = newColField;
+      condition.default = false;
 
       if (fieldDef && fieldDef.collectionFields && oldColField && newColField) {
         const oldColFieldDef = fieldDef.collectionFields.find(c => c.field === oldColField);

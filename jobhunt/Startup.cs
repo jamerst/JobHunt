@@ -41,7 +41,8 @@ namespace JobHunt {
             services.AddControllers(options => {
                     options.Filters.Add(typeof(ExceptionLogger));
                 })
-                .AddOData(options =>
+                .AddOData(options => {
+                    options.TimeZone = TimeZoneInfo.Utc;
                     options.AddRouteComponents("api/odata", ODataModelBuilder.Build())
                         .Filter()
                         .Select()
@@ -49,8 +50,8 @@ namespace JobHunt {
                         .Count()
                         .OrderBy()
                         .SkipToken()
-                        .SetMaxTop(500)
-                );
+                        .SetMaxTop(500);
+                });
 
             // In production, the React files will be served from this directory
             services.AddSpaStaticFiles(configuration => {

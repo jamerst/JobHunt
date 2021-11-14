@@ -1,6 +1,6 @@
 import ODataGrid from "./components/ODataGrid"
 
-export type { ODataGridColDef, ToolbarAction } from "./types"
+export type { ODataGridColDef } from "./types"
 
 export {
   ODataGrid

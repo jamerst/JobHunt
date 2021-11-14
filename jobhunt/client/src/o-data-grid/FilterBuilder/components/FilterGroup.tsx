@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from "react"
-import { useRecoilState } from "recoil";
+import { useRecoilState, useRecoilValue } from "recoil";
 import Immutable from "immutable";
 import { Button, ButtonGroup, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { Add } from "@mui/icons-material";
@@ -8,9 +8,9 @@ import Grid from "components/Grid";
 
 import FilterCondition from "./FilterCondition";
 
-import { Connective, Group, TreeChildren, TreeGroup } from "../types"
+import { Connective, GroupClause, TreeChildren, TreeGroup } from "../types"
 
-import { clauseState, treeState } from "../state"
+import { clauseState, schemaState, treeState } from "../state"
 
 import { getDefaultCondition, getDefaultGroup } from "../utils";
 
@@ -72,8 +72,9 @@ const FilterGroup = ({ clauseId, path, root }: FilterGroupProps) => {
 
   const [tree, setTree] = useRecoilState(treeState);
   const [clauses, setClauses] = useRecoilState(clauseState);
+  const schema = useRecoilValue(schemaState);
 
-  const group = useMemo(() => clauses.get(clauseId) as Group, [clauses, clauseId]);
+  const group = useMemo(() => clauses.get(clauseId) as GroupClause, [clauses, clauseId]);
   const treeGroup = useMemo(() => tree.getIn([...path, clauseId]) as TreeGroup, [tree, path, clauseId]);
 
   const childrenPath = useMemo(() => [...path, clauseId, "children"], [path, clauseId]);
@@ -81,12 +82,12 @@ const FilterGroup = ({ clauseId, path, root }: FilterGroupProps) => {
   const multiple = useMemo(() => treeGroup.children.count() > 1, [treeGroup]);
 
   const setConnective = useCallback((con: Connective) => {
-    setClauses(clauses.update(clauseId, c => ({...c as Group, connective: con})))
+    setClauses(clauses.update(clauseId, c => ({...c as GroupClause, connective: con})))
   }, [clauses, setClauses, clauseId]);
 
   const addGroup = useCallback(() => {
     const group = getDefaultGroup();
-    const condition = getDefaultCondition();
+    const condition = getDefaultCondition(schema[0].field);
 
     setClauses(clauses
       .set(group.id, group)
@@ -99,10 +100,10 @@ const FilterGroup = ({ clauseId, path, root }: FilterGroupProps) => {
         (list) => (list as TreeChildren).set(group.id, { id: group.id, children: Immutable.Map({ [condition.id]: condition.id }) })
       )
     );
-  }, [clauses, setClauses, tree, setTree, childrenPath]);
+  }, [clauses, setClauses, tree, setTree, childrenPath, schema]);
 
   const addCondition = useCallback(() => {
-    const condition = getDefaultCondition();
+    const condition = getDefaultCondition(schema[0].field);
 
     setClauses(clauses.set(condition.id, condition));
 
@@ -112,7 +113,7 @@ const FilterGroup = ({ clauseId, path, root }: FilterGroupProps) => {
         (list) => (list as TreeChildren).set(condition.id, condition.id)
       )
     );
-  }, [clauses, setClauses, tree, setTree, childrenPath]);
+  }, [clauses, setClauses, tree, setTree, childrenPath, schema]);
 
   const handleConnective = useCallback((event, val: Connective | null) => {
     if (val) {

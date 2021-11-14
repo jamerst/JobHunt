@@ -3,7 +3,6 @@ import { RecoilRoot } from "recoil";
 
 import FilterRoot from "./FilterRoot";
 
-import { ODataGridColDef } from "../../types";
 import { ExternalBuilderProps, FieldDef } from "../types"
 
 export type FilterBuilderProps = ExternalBuilderProps & {

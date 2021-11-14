@@ -1,8 +1,7 @@
 import { atom } from "recoil"
-import Immutable from "immutable"
 
-import { Group, Condition, TreeGroup, FieldDef } from "./types"
-import { rootGroupUuid, rootConditionUuid, initialTree, initialClauses } from "./constants";
+import { FieldDef } from "./types"
+import { initialTree, initialClauses } from "./constants";
 
 export const schemaState = atom<FieldDef[]>({
   key: "schema",

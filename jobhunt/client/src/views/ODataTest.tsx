@@ -16,10 +16,9 @@ const columns: ODataGridColDef[] = [
     flex: 2,
     renderCell: (params: GridCellParams) => {
       return (<Link component={RouterLink} to={`/job/${params.id}`}>{params.value}</Link>)
-    },
-    filterOperators: ["eq"]
+    }
   },
-  { field: "Location", headerName: "Location", flex: 1, sortable: false, type: "singleSelect", valueOptions: [{ value: "a", label: "Option A" }, { value: "b", label: "Option B" }] },
+  { field: "Location", headerName: "Location", flex: 1, sortable: false },
   {
     field: "Company/Name",
     headerName: "Company",
@@ -58,7 +57,7 @@ const columns: ODataGridColDef[] = [
     }
   },
   {
-    field: "Categories",
+    field: "JobCategories",
     headerName: "Categories",
     expand: {
       navigationField: "JobCategories/Category",

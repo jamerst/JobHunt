@@ -4,13 +4,14 @@ import { GridValueOptionsParams } from "@mui/x-data-grid";
 import { ValueOption } from "o-data-grid/types";
 
 export type ExternalBuilderProps = {
-  initialFilter?: Group,
-  searchMenuItems?: ({ label: string, onClick: () => void })[]
+  initialFilter?: GroupClause,
+  searchMenuItems?: ({ label: string, onClick: () => void })[],
+  onSearch?: (filter: string) => void;
 }
 
-export type FieldDef = {
+export type BaseFieldDef = {
   field: string,
-  headerName?: string,
+  label?: string,
   type?: string,
   filterable?: boolean,
   filterOperators?: Operation[],
@@ -18,21 +19,18 @@ export type FieldDef = {
   datePickerProps?: DatePickerProps,
   dateTimePickerProps?: DateTimePickerProps,
   nullable?: boolean,
-  collection?: boolean,
-  collectionFields?: CollectionFieldDef[],
-  valueOptions?: ValueOption[] | ((params: GridValueOptionsParams) => ValueOption[])
+  valueOptions?: ValueOption[] | ((params: GridValueOptionsParams) => ValueOption[]),
+  caseSensitive?: boolean
 }
 
-export type CollectionFieldDef = {
-  field: string,
-  label: string,
-  type?: string,
-  filterOperators?: Operation[],
-  textFieldProps?: TextFieldProps,
-  datePickerProps?: DatePickerProps,
-  dateTimePickerProps?: DateTimePickerProps,
-  nullable?: boolean,
-  valueOptions?: ValueOption[] | ((params: GridValueOptionsParams) => ValueOption[])
+export type FieldDef = BaseFieldDef & {
+  headerName?: string,
+  collection?: boolean,
+  collectionFields?: CollectionFieldDef[],
+}
+
+export type CollectionFieldDef = BaseFieldDef & {
+
 }
 
 export type Connective = "and" | "or"
@@ -45,17 +43,17 @@ type Clause = {
   id: string
 }
 
-export type Group = Clause & {
+export type GroupClause = Clause & {
   connective: Connective
 }
 
-export type Condition = Clause & {
+export type ConditionClause = Clause & {
   field: string,
   op: Operation;
   collectionOp?: CollectionOperation,
   collectionField?: string,
   value: any,
-  complement?: boolean
+  default?: boolean
 }
 
 export type TreeGroup = Clause & {
@@ -63,3 +61,19 @@ export type TreeGroup = Clause & {
 }
 
 export type TreeChildren = Immutable.Map<string, TreeGroup | string>;
+
+export type Group = {
+  connective: Connective,
+  children: (Group | Connective)[]
+}
+
+export type Condition = {
+  field: string,
+  op: Operation;
+  collectionOp?: CollectionOperation,
+  collectionField?: string,
+  value: any
+}
+
+export type StateClause = Immutable.Map<string, GroupClause | ConditionClause>;
+export type StateTree = Immutable.Map<string, string | TreeGroup>;
