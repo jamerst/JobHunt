@@ -1,12 +1,19 @@
-import { DatePickerProps, DateTimePickerProps } from "@mui/lab";
-import { TextFieldProps } from "@mui/material";
+import React from "react";
+import { DatePickerProps, DateTimePickerProps, LocalizationProviderProps } from "@mui/lab";
+import { AutocompleteProps, FormControlProps, SelectProps, TextFieldProps } from "@mui/material";
 import { GridValueOptionsParams } from "@mui/x-data-grid";
 import { ValueOption } from "o-data-grid/types";
 
 export type ExternalBuilderProps = {
   initialFilter?: GroupClause,
   searchMenuItems?: ({ label: string, onClick: () => void })[],
-  onSearch?: (filter: string) => void;
+  onSearch?: (filter: string) => void,
+  autocompleteProps?: AutocompleteProps<any, any, any, any>,
+  datePickerProps?: DatePickerProps,
+  dateTimePickerProps?: DateTimePickerProps,
+  localizationProviderProps?: LocalizationProviderProps,
+  selectProps?: SelectProps,
+  textFieldProps?: TextFieldProps,
 }
 
 export type BaseFieldDef = {
@@ -15,12 +22,15 @@ export type BaseFieldDef = {
   type?: string,
   filterable?: boolean,
   filterOperators?: Operation[],
-  textFieldProps?: TextFieldProps,
   datePickerProps?: DatePickerProps,
   dateTimePickerProps?: DateTimePickerProps,
+  selectProps?: { selectProps?: SelectProps, formControlProps?: FormControlProps, label?: string },
+  textFieldProps?: TextFieldProps,
   nullable?: boolean,
   valueOptions?: ValueOption[] | ((params: GridValueOptionsParams) => ValueOption[]),
-  caseSensitive?: boolean
+  caseSensitive?: boolean,
+  renderCustomInput?: (value: any, setValue: (v: any) => void) => React.ReactNode,
+  getCustomFilterString?: (value: any) => string
 }
 
 export type FieldDef = BaseFieldDef & {

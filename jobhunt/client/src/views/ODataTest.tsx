@@ -8,6 +8,10 @@ import { Typography, Tooltip, Chip, Link } from "@mui/material"
 import Grid from "components/Grid";
 import makeStyles from "makeStyles";
 
+import DateAdapter from "@mui/lab/AdapterDayjs";
+import enGB from "dayjs/locale/en-gb"
+import Categories, { Category } from "components/Categories";
+
 dayjs.extend(relativeTime);
 const columns: ODataGridColDef[] = [
   {
@@ -58,18 +62,26 @@ const columns: ODataGridColDef[] = [
   },
   {
     field: "JobCategories",
-    headerName: "Categories",
+    headerName: "Category",
     expand: {
       navigationField: "JobCategories/Category",
       select: "Name"
     },
-    collection: true,
-    collectionFields: [
-      {
-        field: "Category/Name",
-        label: "Name"
-      }
-    ],
+    renderCustomInput: (value, setValue) => (
+      <Grid item container alignSelf="center" xs={12} md>
+        <Categories
+          categories={value ? value as Category[] : []}
+          onCategoryAdd={(cats) => setValue(cats)}
+          onCategoryRemove={(cats) => setValue(cats)}
+          openByDefault
+        >
+          <Grid item>
+            <Typography variant="body1">Is one of:</Typography>
+          </Grid>
+        </Categories>
+      </Grid>
+    ),
+    getCustomFilterString: (value) => value && (value as Category[]).length > 0 ? `JobCategories/any(x:x/CategoryId in (${(value as Category[]).map(c => c.id).join(", ")}))` : "",
     renderCell: (params) => {
       return params.row.JobCategories.map((c: any) => c["Category/Name"]).join(", ");
     }
@@ -92,6 +104,7 @@ const ODataTest = () => {
       getRowClassName={(params) => params.row.seen ? "" : classes.unseen}
       idField="Id"
       defaultSortModel={defaultSort}
+      filterBuilderProps={{ localizationProviderProps: { dateAdapter: DateAdapter, locale: enGB } }}
     />
   )
 }

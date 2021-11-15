@@ -301,7 +301,7 @@ const Company = () => {
               categories={companyData.categories}
               updateUrl={`/api/companies/categories/${id}`}
               onCategoryAdd={(cats) => setCompanyData({ ...companyData, categories: cats})}
-              onCategoryRemove={(id) => setCompanyData({ ...companyData, categories: companyData.categories.filter(c => c.id !== id)})}
+              onCategoryRemove={(cats) => setCompanyData({ ...companyData, categories: cats})}
             />
           </Box>
           <Box my={2}>

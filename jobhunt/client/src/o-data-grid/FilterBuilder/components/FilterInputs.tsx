@@ -2,18 +2,15 @@ import React, { Fragment, useMemo } from "react"
 import { useRecoilValue } from "recoil";
 import { Autocomplete, FormControl, InputLabel, MenuItem, Select, TextField } from "@mui/material";
 import { DatePicker, DateTimePicker, LocalizationProvider } from "@mui/lab";
-import DateAdapter from "@mui/lab/AdapterDayjs";
-import enGB from "dayjs/locale/en-gb"
 
 import Grid from "components/Grid";
 
 import { CollectionFieldDef, CollectionOperation, FieldDef, Operation } from "../types";
 
-import { schemaState } from "../state"
+import { propsState, schemaState } from "../state"
 import { SelectOption, ValueOption } from "o-data-grid/types";
 import { getSelectOption } from "../utils";
 import { allOperators, numericOperators } from "../constants";
-import { Dayjs } from "dayjs";
 
 
 type FilterInputsProps = {
@@ -45,6 +42,9 @@ const FilterInputs = React.memo(({
 }: FilterInputsProps) => {
 
   const schema = useRecoilValue(schemaState);
+  const builderProps = useRecoilValue(propsState);
+
+  const dateAdapter = useMemo(() => builderProps.localizationProviderProps?.dateAdapter, [builderProps]);
 
   const fieldDef = useMemo(() => {
     if (!field && schema.length < 1) {
@@ -96,7 +96,7 @@ const FilterInputs = React.memo(({
 
     return {
       ...f,
-      fieldLabel: f.headerName ?? f.field,
+      fieldLabel: f.label ?? f.headerName ?? f.field,
       type: type,
       ops: ops,
       valueOptions: valueOptions,
@@ -112,11 +112,12 @@ const FilterInputs = React.memo(({
     <Fragment>
       <Grid item xs={12} md>
         <Autocomplete
+          size="small"
+          {...builderProps.autocompleteProps}
           options={schema.filter(c => c.filterable !== false).map(c => ({ label: c.headerName ?? c.field, field: c.field }))}
-          renderInput={(params) => <TextField {...params} label="Field" />}
+          renderInput={(params) => <TextField label="Field" {...builderProps.textFieldProps} {...params} />}
           value={{ label: fieldDef.fieldLabel, field: fieldDef.field }}
           onChange={(_, val) => onFieldChange(fieldDef.field, op, val.field)}
-          size="small"
           disableClearable
           isOptionEqualToValue={(option, value) => option.field === value.field}
         />
@@ -127,10 +128,11 @@ const FilterInputs = React.memo(({
           <FormControl fullWidth size="small">
             <InputLabel id={`${clauseId}_label-collection-op`}>Operation</InputLabel>
             <Select
+              label="Operation"
+              {...builderProps.selectProps}
               value={collectionOp}
               onChange={(e) => onCollectionOpChange(e.target.value as CollectionOperation)}
               labelId={`${clauseId}_label-collection-op`}
-              label="Operation"
             >
               <MenuItem value="any">Has at least one</MenuItem>
               <MenuItem value="all">All have</MenuItem>
@@ -143,74 +145,84 @@ const FilterInputs = React.memo(({
         fieldDef.collection === true && collectionOp !== "count" &&
         <Grid item xs={12} md>
           <Autocomplete
+            size="small"
+            {...builderProps.autocompleteProps}
             options={fieldDef.collectionFields?.map(c => ({ label: c.label, field: c.field })) ?? []}
-            renderInput={(params) => <TextField {...params} label="Field" />}
+            renderInput={(params) => <TextField label="Field" {...builderProps.textFieldProps} {...params} />}
             value={{ label: fieldDef.colField?.label, field: collectionField }}
             onChange={(_, val) => onCollectionFieldChange(field, collectionField, op, val.field)}
-            size="small"
             disableClearable
             isOptionEqualToValue={(option, value) => option.field === value.field}
           />
         </Grid>
       }
-      <Grid item xs={12} md>
-        <FormControl fullWidth size="small">
-          <InputLabel id={`${clauseId}_label-op`}>Operation</InputLabel>
-          <Select
-            value={op}
-            onChange={(e) => onOpChange(e.target.value as Operation)}
-            labelId={`${clauseId}_label-op`}
-            label="Operation"
-          >
-            <MenuItem value="eq" disabled={!fieldDef.ops.includes("eq")}>=</MenuItem>
-            <MenuItem value="ne" disabled={!fieldDef.ops.includes("ne")}>≠</MenuItem>
-            <MenuItem value="gt" disabled={!fieldDef.ops.includes("gt")}>&gt;</MenuItem>
-            <MenuItem value="lt" disabled={!fieldDef.ops.includes("lt")}>&lt;</MenuItem>
-            <MenuItem value="ge" disabled={!fieldDef.ops.includes("ge")}>&ge;</MenuItem>
-            <MenuItem value="le" disabled={!fieldDef.ops.includes("le")}>&le;</MenuItem>
-            <MenuItem value="contains" disabled={!fieldDef.ops.includes("contains")}>Contains</MenuItem>
-            <MenuItem value="null" disabled={!fieldDef.ops.includes("null")}>Is Blank</MenuItem>
-            <MenuItem value="notnull" disabled={!fieldDef.ops.includes("notnull")}>Is Not Blank</MenuItem>
-          </Select>
-        </FormControl>
-      </Grid>
+      {
+        fieldDef.renderCustomInput ?
+          fieldDef.renderCustomInput(value, (v) => onValueChange(v))
+          :
+          <Grid item xs={12} md>
+            <FormControl fullWidth size="small">
+              <InputLabel id={`${clauseId}_label-op`}>Operation</InputLabel>
+              <Select
+                {...builderProps.selectProps}
+                value={op}
+                onChange={(e) => onOpChange(e.target.value as Operation)}
+                labelId={`${clauseId}_label-op`}
+                label="Operation"
+              >
+                <MenuItem value="eq" disabled={!fieldDef.ops.includes("eq")}>=</MenuItem>
+                <MenuItem value="ne" disabled={!fieldDef.ops.includes("ne")}>≠</MenuItem>
+                <MenuItem value="gt" disabled={!fieldDef.ops.includes("gt")}>&gt;</MenuItem>
+                <MenuItem value="lt" disabled={!fieldDef.ops.includes("lt")}>&lt;</MenuItem>
+                <MenuItem value="ge" disabled={!fieldDef.ops.includes("ge")}>&ge;</MenuItem>
+                <MenuItem value="le" disabled={!fieldDef.ops.includes("le")}>&le;</MenuItem>
+                <MenuItem value="contains" disabled={!fieldDef.ops.includes("contains")}>Contains</MenuItem>
+                <MenuItem value="null" disabled={!fieldDef.ops.includes("null")}>Is Blank</MenuItem>
+                <MenuItem value="notnull" disabled={!fieldDef.ops.includes("notnull")}>Is Not Blank</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+      }
       <Grid item xs={12} md>
         {
-          op !== "null" && op !== "notnull" &&
+          op !== "null" && op !== "notnull" && !fieldDef.renderCustomInput &&
           <Fragment>
             {
               fieldDef.type === "date" &&
-              <LocalizationProvider dateAdapter={DateAdapter} locale={enGB}>
+              <LocalizationProvider dateAdapter={dateAdapter!} {...builderProps.localizationProviderProps}>
                 <DatePicker
                   label="Value"
+                  {...builderProps.datePickerProps}
                   {...fieldDef.datePickerProps}
                   value={value ?? ""}
-                  renderInput={(params) => <TextField {...params} fullWidth size="small" {...fieldDef.textFieldProps} />}
-                  onChange={(date) => onValueChange(date as Dayjs)}
+                  renderInput={(params) => <TextField fullWidth size="small" {...builderProps.textFieldProps} {...fieldDef.textFieldProps} {...params} />}
+                  onChange={(date) => onValueChange(new dateAdapter!().formatByString(date, "YYYY-MM-DD"))}
                 />
               </LocalizationProvider>
             }
             {
               fieldDef.type === "datetime" &&
-              <LocalizationProvider dateAdapter={DateAdapter} locale={enGB}>
+              <LocalizationProvider dateAdapter={dateAdapter!} {...builderProps.localizationProviderProps}>
                 <DateTimePicker
                   label="Value"
                   {...fieldDef.dateTimePickerProps}
                   value={value ?? ""}
-                  renderInput={(params) => <TextField {...params} fullWidth size="small" {...fieldDef.textFieldProps} />}
-                  onChange={(date) => onValueChange(date as Dayjs)}
+                  renderInput={(params) => <TextField fullWidth size="small" {...builderProps.textFieldProps} {...fieldDef.textFieldProps} {...params} />}
+                  onChange={(date) => onValueChange(new dateAdapter!().toISO(date))}
                 />
               </LocalizationProvider>
             }
             {
               fieldDef.type === "boolean" &&
-              <FormControl fullWidth size="small">
-                <InputLabel id={`${clauseId}_label-bool-value`}>Value</InputLabel>
+              <FormControl fullWidth size="small" {...fieldDef.selectProps?.formControlProps}>
+                <InputLabel id={`${clauseId}_label-bool-value`}>{fieldDef.selectProps?.label ?? "Value"}</InputLabel>
                 <Select
+                  label={fieldDef.selectProps?.label ?? "Value"}
+                  {...builderProps.selectProps}
+                  {...fieldDef.selectProps?.selectProps}
                   value={op}
                   onChange={(e) => onValueChange(e.target.value)}
                   labelId={`${clauseId}_label-bool-value`}
-                  label="Value"
                 >
                   <MenuItem value="true">Yes</MenuItem>
                   <MenuItem value="false">No</MenuItem>
@@ -220,13 +232,13 @@ const FilterInputs = React.memo(({
             }
             {
               fieldDef.type === "singleSelect" && fieldDef.valueOptions &&
-              <FormControl fullWidth size="small">
-                <InputLabel id={`${clauseId}_label-select-value`}>Value</InputLabel>
+              <FormControl fullWidth size="small" {...fieldDef.selectProps?.formControlProps}>
+                <InputLabel id={`${clauseId}_label-select-value`}>{fieldDef.selectProps?.label ?? "Value"}</InputLabel>
                 <Select
+                  label={fieldDef.selectProps?.label ?? "Value"}
                   value={value ?? ""}
                   onChange={(e) => onValueChange(e.target.value)}
                   labelId={`${clauseId}_label-select-value`}
-                  label="Value"
                 >
                   {fieldDef.valueOptions!.map((o, i) =>
                     (<MenuItem value={o.value} key={`${clauseId}_${field}_select_${i}`}>{o.label}</MenuItem>)
@@ -240,7 +252,8 @@ const FilterInputs = React.memo(({
                 size="small"
                 fullWidth
                 label="Value"
-                {...fieldDef!.textFieldProps}
+                {...builderProps.textFieldProps}
+                {...fieldDef.textFieldProps}
                 value={value ?? ""}
                 onChange={(e) => onValueChange(fieldDef.type === "number" ? parseFloat(e.target.value) : e.target.value)}
                 type={fieldDef.type === "number" ? "number" : "text"}

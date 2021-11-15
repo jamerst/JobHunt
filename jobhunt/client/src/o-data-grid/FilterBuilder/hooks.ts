@@ -1,4 +1,3 @@
-import { Dayjs } from "dayjs";
 import { useCallback } from "react";
 import { useRecoilValue } from "recoil"
 import { rootGroupUuid } from "./constants";
@@ -64,7 +63,11 @@ const buildCondition = (schema: FieldDef[], clauses: StateClause, id: string): s
   }
 }
 
-const buildInnerCondition = (schema: BaseFieldDef, field: string, op: Operation, value: any): string  => {
+const buildInnerCondition = (schema: BaseFieldDef, field: string, op: Operation, value: any): string => {
+  if (schema.getCustomFilterString) {
+    return schema.getCustomFilterString(value);
+  }
+
   if (op === "contains") {
     if ((schema.type && schema.type !== "string") || typeof value !== "string") {
       console.warn(`Warning: operation "contains" is only supported for fields of type "string"`);
@@ -80,18 +83,15 @@ const buildInnerCondition = (schema: BaseFieldDef, field: string, op: Operation,
   } else if (op === "notnull") {
     return `${field} ne null`;
   } else {
-    if (!schema.type || schema.type === "string" || typeof value === "string") {
+    if (schema.type === "date") {
+        return `date(${field}) ${op} ${value}`;
+    } else if (schema.type === "datetime") {
+      return `${field} ${op} ${value}`;
+    } else if (!schema.type || schema.type === "string" || typeof value === "string") {
       if (schema.caseSensitive === true) {
         return `${field} ${op} '${value}'`;
       } else {
         return `tolower(${field}) ${op} tolower('${value}')`;
-      }
-    } else if (schema.type === "date" || schema.type === "datetime") {
-      const date = value as Dayjs;
-      if (schema.type === "date") {
-        return `date(${field}) ${op} ${date.format("YYYY-MM-DD")}`;
-      } else {
-        return `${field} ${op} ${date.toISOString()}`;
       }
     } else {
       return `${field} ${op} ${value}`;

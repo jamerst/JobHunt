@@ -221,7 +221,7 @@ const Job = () => {
                 categories={jobData.categories}
                 updateUrl={`/api/jobs/categories/${id}`}
                 onCategoryAdd={(cats) => setJobData({ ...jobData, categories: cats})}
-                onCategoryRemove={(id) => setJobData({ ...jobData, categories: jobData.categories.filter(c => c.id !== id)})}
+                onCategoryRemove={(cats) => setJobData({ ...jobData, categories: cats})}
               >
                 {jobData.companyRecruiter ? <Grid item><Chip label="Recruiter" color="secondary"/></Grid> : null}
               </Categories>

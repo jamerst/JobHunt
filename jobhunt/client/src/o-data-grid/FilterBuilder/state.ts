@@ -1,6 +1,6 @@
 import { atom } from "recoil"
 
-import { FieldDef } from "./types"
+import { ExternalBuilderProps, FieldDef } from "./types"
 import { initialTree, initialClauses } from "./constants";
 
 export const schemaState = atom<FieldDef[]>({
@@ -16,4 +16,9 @@ export const clauseState = atom({
 export const treeState = atom({
   key: "filterTree",
   default: initialTree
+});
+
+export const propsState = atom<ExternalBuilderProps>({
+  key: "props",
+  default: {}
 });

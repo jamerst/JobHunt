@@ -122,7 +122,7 @@ const FilterGroup = ({ clauseId, path, root }: FilterGroupProps) => {
   }, [setConnective]);
 
   return (
-    <Grid container marginBottom={1} paddingLeft={root ? 0 : 3} className={root ? "" : classes.group}>
+    <Grid item={!root} container marginBottom={1} paddingLeft={root ? 0 : 3} className={root ? "" : classes.group}>
       <Grid item container spacing={1} justifyContent={multiple ? "space-between" : "end"} alignItems={r({ xs: "flex-start", md: "center" })} marginBottom={2} direction={r({ xs: "column-reverse", md: "row" })}>
         {multiple && (
           <Grid item xs={12} md="auto">
@@ -150,7 +150,7 @@ const FilterGroup = ({ clauseId, path, root }: FilterGroupProps) => {
         {treeGroup.children.toArray().map((c) => {
           if (typeof c[1] === "string") {
             return (
-              <Grid item xs className={multiple ? classes.child : ""} key={c[0]}>
+              <Grid item container xs className={multiple ? classes.child : ""} key={c[0]}>
                 <FilterCondition
                   clauseId={c[0]}
                   path={childrenPath}
@@ -159,7 +159,7 @@ const FilterGroup = ({ clauseId, path, root }: FilterGroupProps) => {
             );
           } else {
             return (
-              <Grid item xs className={multiple ? classes.child : ""} key={c[0]}>
+              <Grid item container xs className={multiple ? classes.child : ""} key={c[0]}>
                 <FilterGroup
                   clauseId={c[0]}
                   path={childrenPath}

@@ -8,7 +8,7 @@ import Grid from "components/Grid";
 
 import FilterGroup from "./FilterGroup";
 
-import { clauseState, schemaState, treeState } from "../state"
+import { clauseState, propsState, schemaState, treeState } from "../state"
 
 import { initialClauses, initialTree, rootConditionUuid, rootGroupUuid } from "../constants"
 import { FilterBuilderProps } from "./FilterBuilder";
@@ -22,6 +22,7 @@ type FilterRootProps = {
 
 const FilterRoot = ({ props }: FilterRootProps) => {
   const setClauses = useSetRecoilState(clauseState);
+  const setProps = useSetRecoilState(propsState);
   const setSchema = useSetRecoilState(schemaState);
   const setTree = useSetRecoilState(treeState);
 
@@ -52,6 +53,7 @@ const FilterRoot = ({ props }: FilterRootProps) => {
 
   useMountEffect(() => {
     setClauses((old) => old.update(rootConditionUuid, (c) => ({ ...c as ConditionClause, field: props.schema[0].field })));
+    setProps(props);
   });
 
   return (

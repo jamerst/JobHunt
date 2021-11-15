@@ -13,9 +13,10 @@ export type Category = {
 
 type CategoriesProps = {
   categories: Category[],
-  updateUrl: string,
+  updateUrl?: string,
   onCategoryAdd: (cats: Category[]) => void,
-  onCategoryRemove: (id: number) => void
+  onCategoryRemove: (cats: Category[]) => void,
+  openByDefault?: boolean
 }
 
 const useStyles = makeStyles()((theme) => ({
@@ -34,17 +35,17 @@ const useStyles = makeStyles()((theme) => ({
 
 const filter = createFilterOptions<Category>({ ignoreCase: true, trim: true });
 
-const Categories:FunctionComponent<CategoriesProps> = (props) => {
-  const [adding, setAdding] = useState<boolean>(false);
+const Categories:FunctionComponent<CategoriesProps> = ({ children, categories, updateUrl, onCategoryAdd, onCategoryRemove, openByDefault }) => {
+  const [adding, setAdding] = useState<boolean>(openByDefault ?? false);
   const [newCategory, setNewCategory] = useState<Category | string | null>(null);
   const [allCategories, setAllCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   const { classes, cx } = useStyles();
 
-  const fetchCategories = useCallback(async (force: boolean) => {
+  const fetchCategories = useCallback(async (force: boolean = false) => {
     if (allCategories.length > 0 && !force) {
-      return 0;
+      return;
     }
 
     const response = await fetch("/api/categories");
@@ -57,70 +58,85 @@ const Categories:FunctionComponent<CategoriesProps> = (props) => {
     }
   }, [allCategories]);
 
+  if (openByDefault === true) {
+    fetchCategories();
+  }
+
   const addCategory = useCallback(async (keepOpen: boolean) => {
     if (!newCategory) {
       return;
     }
 
     let newName;
+    let newId;
     let refresh = false;
     if (typeof newCategory === "string") {
       newName = newCategory;
       refresh = true;
     } else {
       newName = newCategory?.name;
+      newId = newCategory?.id;
     }
 
     if (!newName) {
       setAdding(false);
-      setNewCategory(null);
       return;
     }
 
-    const newCategories = [...props.categories];
-    newCategories.push({ name: newName });
-    const response = await fetch(props.updateUrl, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json"},
-      body: JSON.stringify(newCategories)
-    });
+    setNewCategory(null);
 
-    if (response.ok) {
-      const data = await response.json();
-      props.onCategoryAdd(data as Category[]);
-      if (refresh) {
-        fetchCategories(true);
+    const newCategories = [...categories];
+    newCategories.push({ id: newId, name: newName });
+    if (updateUrl) {
+      const response = await fetch(updateUrl, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json"},
+        body: JSON.stringify(newCategories)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        onCategoryAdd(data as Category[]);
+        if (refresh) {
+          fetchCategories(true);
+        }
+      } else {
+        console.error(`API request failed: ${updateUrl}, HTTP ${response.status}`);
       }
     } else {
-      console.error(`API request failed: ${props.updateUrl}, HTTP ${response.status}`);
+      onCategoryAdd(newCategories);
     }
 
     if (!keepOpen) {
       setAdding(false);
     }
-    setNewCategory(null);
-  }, [props, newCategory, fetchCategories])
+  }, [categories, updateUrl, onCategoryAdd, newCategory, fetchCategories])
 
   const removeCategory = useCallback(async (id?: number) => {
     if (!id) return;
 
-    const newCategories = props.categories.filter(c => c.id !== id);
-    const response = await fetch(props.updateUrl, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json"},
-      body: JSON.stringify(newCategories)
-    });
+    const newCategories = categories.filter(c => c.id !== id);
+    if (updateUrl) {
+      const response = await fetch(updateUrl, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json"},
+        body: JSON.stringify(newCategories)
+      });
 
-    if (response.ok) {
-      props.onCategoryRemove(id);
+      if (response.ok) {
+        onCategoryRemove(newCategories);
+      } else {
+        console.error(`API request failed: ${updateUrl}, HTTP ${response.status}`);
+      }
     } else {
-      console.error(`API request failed: ${props.updateUrl}, HTTP ${response.status}`);
+      onCategoryRemove(newCategories);
     }
-  }, [props]);
+  }, [categories, updateUrl, onCategoryRemove]);
 
   const handleKeyUp = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      if (e.currentTarget.value) {
+      e.preventDefault();
+      if ((e.target as HTMLInputElement).value) {
         addCategory(true);
       } else {
         setAdding(false);
@@ -133,42 +149,43 @@ const Categories:FunctionComponent<CategoriesProps> = (props) => {
   }, [addCategory]);
 
   const handleBlur = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
-    if (!e.currentTarget.value) {
+    if (!(e.target as HTMLInputElement).value) {
       setAdding(false);
     }
   }, []);
 
+
+
   return (
-    <Grid container spacing={1}>
-      {props.children}
-      {props.categories.map(c =>
-        (<Grid item  key={`category-${c.id}`}><Chip color={c.colour} label={c.name} onDelete={() => removeCategory(c.id)}/></Grid>)
+    <Grid container spacing={1} alignItems="center">
+      {children}
+      {categories.map(c =>
+        (<Grid item key={`category-${c.id}`}><Chip color={c.colour} label={c.name} onDelete={() => removeCategory(c.id)}/></Grid>)
       )}
 
-      { adding ?
-        (<Grid item>
+      {
+        adding &&
+        <Grid item>
           <Autocomplete
-            options={allCategories.filter(c1 => !props.categories.some(c2 => c2.id === c1.id))}
+            options={allCategories.filter(c1 => !categories.some(c2 => c2.id === c1.id))}
             getOptionLabel={(option) => option?.displayName ?? option?.name ?? ""}
             renderInput={(params) => {
               const { InputLabelProps, InputProps, ...rest } = params;
               return <InputBase
-                {...params.InputProps}
                 {...rest}
+                {...params.InputProps}
                 className={cx(classes.input, chipClasses.root, chipClasses.label)}
-                onKeyUp={handleKeyUp}
-                onBlur={handleBlur}
                 autoFocus
                 placeholder="Enter a category"
               />
             }}
             freeSolo
-            value={newCategory}
+            value={newCategory ?? ""}
             onChange={(_, val) => setNewCategory(val)}
             filterOptions={(options, params) => {
               const filtered = filter(options, params);
 
-              if (params.inputValue && !options.some((o) => params.inputValue.toLowerCase() === o.name.toLowerCase())) {
+              if (updateUrl && params.inputValue && !options.some((o) => params.inputValue.toLowerCase() === o.name.toLowerCase())) {
                 filtered.push({
                   displayName: `Add "${params.inputValue}"`,
                   name: params.inputValue
@@ -178,9 +195,10 @@ const Categories:FunctionComponent<CategoriesProps> = (props) => {
               return filtered;
             }}
             loading={loading}
+            onKeyUp={handleKeyUp}
+            onBlur={handleBlur}
           />
-        </Grid>)
-        : (null)
+        </Grid>
       }
 
       <Grid item>
