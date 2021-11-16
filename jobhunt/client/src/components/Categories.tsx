@@ -154,8 +154,6 @@ const Categories:FunctionComponent<CategoriesProps> = ({ children, categories, u
     }
   }, []);
 
-
-
   return (
     <Grid container spacing={1} alignItems="center">
       {children}

@@ -4,13 +4,20 @@ import relativeTime from "dayjs/plugin/relativeTime"
 import { ODataGrid, ODataGridColDef } from "o-data-grid";
 import { GridCellParams, GridSortModel } from "@mui/x-data-grid"
 import { Link as RouterLink } from "react-router-dom"
-import { Typography, Tooltip, Chip, Link } from "@mui/material"
+import { Typography, Tooltip, Chip, Link, TextField, Slider } from "@mui/material"
 import Grid from "components/Grid";
 import makeStyles from "makeStyles";
 
 import DateAdapter from "@mui/lab/AdapterDayjs";
 import enGB from "dayjs/locale/en-gb"
 import Categories, { Category } from "components/Categories";
+import { numericOperators } from "o-data-grid/FilterBuilder/constants";
+import { QueryStringCollection } from "o-data-grid/FilterBuilder/types";
+
+type LocationFilter = {
+  location?: string,
+  distance?: number
+}
 
 dayjs.extend(relativeTime);
 const columns: ODataGridColDef[] = [
@@ -22,7 +29,50 @@ const columns: ODataGridColDef[] = [
       return (<Link component={RouterLink} to={`/job/${params.id}`}>{params.value}</Link>)
     }
   },
-  { field: "Location", headerName: "Location", flex: 1, sortable: false },
+  {
+    field: "Location",
+    headerName: "Location",
+    flex: 1,
+    sortable: false,
+    renderCustomFilter: (value, setValue) => (
+      <Grid item container xs={12} md spacing={1}>
+        <Grid item xs={12} md>
+          <TextField
+            value={(value as LocationFilter)?.location ?? ""}
+            onChange={(e) => setValue({ ...value, location: e.target.value })}
+            size="small"
+            fullWidth
+            label="Search Location"
+            required
+          />
+        </Grid>
+        <Grid item xs={12} md>
+          <Typography variant="body2">Distance</Typography>
+          <Slider
+            value={(value as LocationFilter)?.distance ?? 15}
+            onChange={(_, val) => setValue({ ...value, distance: val as number })}
+            step={5}
+            min={0}
+            max={50}
+            valueLabelFormat={(val) => `${val}mi`}
+            valueLabelDisplay="auto"
+            size="small"
+            sx={{padding: 0}}
+          />
+        </Grid>
+      </Grid>
+    ),
+    getCustomQueryString: (_, v) => {
+      const filter = v as LocationFilter;
+      let result: QueryStringCollection = {};
+      if (filter.location) {
+        result["location"] = filter.location!;
+        result["distance"] = (filter.distance ?? 15).toString();
+      }
+
+      return result;
+    }
+  },
   {
     field: "Company/Name",
     headerName: "Company",
@@ -67,7 +117,8 @@ const columns: ODataGridColDef[] = [
       navigationField: "JobCategories/Category",
       select: "Name"
     },
-    renderCustomInput: (value, setValue) => (
+    flex: 1,
+    renderCustomFilter: (value, setValue) => (
       <Grid item container alignSelf="center" xs={12} md>
         <Categories
           categories={value ? value as Category[] : []}
@@ -81,10 +132,22 @@ const columns: ODataGridColDef[] = [
         </Categories>
       </Grid>
     ),
-    getCustomFilterString: (value) => value && (value as Category[]).length > 0 ? `JobCategories/any(x:x/CategoryId in (${(value as Category[]).map(c => c.id).join(", ")}))` : "",
+    getCustomFilterString: (_, value) =>
+      value && (value as Category[]).length > 0 ?
+        `JobCategories/any(x:x/CategoryId in (${(value as Category[]).map(c => c.id).join(", ")}))`
+        : "",
     renderCell: (params) => {
       return params.row.JobCategories.map((c: any) => c["Category/Name"]).join(", ");
     }
+  },
+  {
+    field: "Salary",
+    filterField: "AvgYearlySalary",
+    sortField: "AvgYearlySalary",
+    label: "Median Yearly Salary",
+    filterType: "number",
+    filterOperators: ["eq", "ne", "gt", "lt", "ge", "le", "null", "notnull"],
+    flex: 1
   }
 ];
 

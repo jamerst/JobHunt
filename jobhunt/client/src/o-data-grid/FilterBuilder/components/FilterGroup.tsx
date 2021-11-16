@@ -39,14 +39,14 @@ const useStyles = makeStyles()((theme) => ({
     },
     "&:first-of-type::before": {
       height: `calc(100% + ${theme.spacing(2)})`,
-      top: `calc(${theme.spacing(-1)} - 1px)`
+      top: 0
     },
     "&::after": {
       content: "''",
       display: "block",
       position: "absolute",
       left: theme.spacing(-1),
-      top: "4px",
+      top: `calc(${theme.spacing(1)} + 1px)`,
       width: theme.spacing(2),
       height: "50%",
       borderWidth: 2,
@@ -146,7 +146,7 @@ const FilterGroup = ({ clauseId, path, root }: FilterGroupProps) => {
           </ButtonGroup>
         </Grid>
       </Grid>
-      <Grid item container xs direction="column" spacing={1} paddingLeft={multiple ? 3 : 0}>
+      <Grid item container xs direction="column" rowSpacing={2} columnSpacing={1} paddingLeft={multiple ? 3 : 0}>
         {treeGroup.children.toArray().map((c) => {
           if (typeof c[1] === "string") {
             return (

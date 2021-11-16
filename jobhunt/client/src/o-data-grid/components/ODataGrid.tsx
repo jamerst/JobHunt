@@ -15,6 +15,7 @@ import { ODataGridProps, ODataGridColDef, PageSettings, ODataResponse } from "o-
 import { Expand, ExpandToQuery, Flatten, GroupArrayBy, GetPageSettingsOrDefault } from "../utils";
 
 import { defaultPageSize } from "o-data-grid/constants";
+import { QueryStringCollection } from "o-data-grid/FilterBuilder/types";
 
 const useStyles = makeStyles()((theme) => ({
   root: {
@@ -42,6 +43,7 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
   const [selected, setSelected] = useState<GridRowId[]>([]);
   const [sortModel, setSortModel] = useState<GridSortModel | undefined>();
   const [filter, setFilter] = useState<string>(props.$filter ?? "");
+  const [queryString, setQueryString] = useState<QueryStringCollection>();
 
   const [visibleColumns, setVisibleColumns] = useState<ODataGridColDef[]>(props.columns.filter(c => c.hide !== true));
   const [columnHideOverrides, setColumnHideOverrides] = useState<{ [key: string]: boolean }>({});
@@ -95,7 +97,8 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
       $expand,
       $top,
       $skip,
-      $count: fetchCount
+      $count: fetchCount,
+      ...queryString
     }
 
     if (filter) {
@@ -109,7 +112,10 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
     }
 
     if (sortModel && sortModel.length > 0) {
-      query.$orderby = sortModel.map(s => `${s.field}${s.sort === "desc" ? " desc" : ""}`).join(",");
+      query.$orderby = sortModel.map(s => {
+        const sortCol = props.columns.find(c => c.field === s.field);
+        return `${sortCol!.sortField ?? sortCol!.field}${s.sort === "desc" ? " desc" : ""}`;
+      }).join(",");
     }
 
     const rawResponse = await o(props.url)
@@ -142,14 +148,15 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
     } else {
       console.error(`API request failed: ${response.url}, HTTP ${response.status}`);
     }
-  }, [pageSettings, visibleColumns, sortModel, filter, fetchCount, props.url, props.idField, props.defaultSortModel]);
+  }, [pageSettings, visibleColumns, sortModel, filter, fetchCount, queryString, props.url, props.idField, props.defaultSortModel, props.columns]);
 
-  const handleBuilderSearch = useCallback((f: string) => {
+  const handleBuilderSearch = useCallback((f: string, q: QueryStringCollection | undefined) => {
     setFilter(f);
+    setQueryString(q);
     setFetchCount(true);
 
     if (props.filterBuilderProps?.onSearch) {
-      props.filterBuilderProps.onSearch(f);
+      props.filterBuilderProps.onSearch(f, q);
     }
 
     fetchData();

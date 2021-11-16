@@ -349,6 +349,21 @@ namespace JobHunt.Services {
         public DbSet<Company> GetSet() {
             return _context.Companies;
         }
+
+        public async Task<IQueryable<Company>> GetFilteredSet(string location, int distance) {
+            double? lat = null, lng = null;
+
+            (lat, lng) = await _nominatim.Geocode(location);
+            if (lat.HasValue && lng.HasValue) {
+                return _context.Companies.Where(j =>
+                    j.Latitude.HasValue
+                    && j.Longitude.HasValue
+                    && _context.GeoDistance(lat.Value, lng.Value, j.Latitude.Value, j.Longitude.Value) <= distance
+                );
+            } else {
+                return GetSet();
+            }
+        }
     }
 
     public interface ICompanyService {
@@ -365,5 +380,6 @@ namespace JobHunt.Services {
         Task<IEnumerable<CompanyNameDto>> GetAllNamesAsync();
         Task<bool> MergeAsync(int srcId, int destId);
         DbSet<Company> GetSet();
+        Task<IQueryable<Company>> GetFilteredSet(string location, int distance);
     }
 }

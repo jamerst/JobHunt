@@ -34,7 +34,8 @@ const FilterRoot = ({ props }: FilterRootProps) => {
   const search = useCallback((e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (onSearch) {
-      onSearch(filter());
+      const result = filter();
+      onSearch(result.filter, result.queryString);
     }
   }, [onSearch, filter]);
 
@@ -43,7 +44,7 @@ const FilterRoot = ({ props }: FilterRootProps) => {
     setTree(initialTree);
 
     if (onSearch) {
-      onSearch("");
+      onSearch("", {});
     }
   }, [setClauses, setTree, onSearch, props.schema]);
 

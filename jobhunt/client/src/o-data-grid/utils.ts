@@ -53,13 +53,15 @@ export const Flatten = (obj: any, sep = ".") => _flatten(obj, sep, "");
 
 const _flatten = (obj: any, sep: string, prefix: string) =>
   Object.keys(obj).reduce((x: { [key: string]: any }, k) => {
-    const pre = prefix.length ? prefix + sep : "";
-    if (Array.isArray(obj[k])) {
-      x[pre + k] = (obj[k] as Array<any>).map(i => Flatten(i, sep));
-    } else if (typeof obj[k] === "object") {
-      Object.assign(x, _flatten(obj[k], sep, pre + k));
-    } else {
-      x[pre + k] = obj[k];
+    if (obj[k] !== null) {
+      const pre = prefix.length ? prefix + sep : "";
+      if (Array.isArray(obj[k])) {
+        x[pre + k] = (obj[k] as Array<any>).map(i => Flatten(i, sep));
+      } else if (typeof obj[k] === "object") {
+        Object.assign(x, _flatten(obj[k], sep, pre + k));
+      } else {
+        x[pre + k] = obj[k];
+      }
     }
     return x;
   }, {});

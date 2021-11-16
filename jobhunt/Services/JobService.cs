@@ -321,6 +321,22 @@ namespace JobHunt.Services {
         public DbSet<Job> GetSet() {
             return _context.Jobs;
         }
+
+        public async Task<IQueryable<Job>> GetFilteredSet(string location, int distance) {
+            double? lat = null, lng = null;
+
+            (lat, lng) = await _nominatim.Geocode(location);
+            if (lat.HasValue && lng.HasValue) {
+                return _context.Jobs
+                .Where(j =>
+                    j.Latitude.HasValue
+                    && j.Longitude.HasValue
+                    && _context.GeoDistance(lat.Value, lng.Value, j.Latitude.Value, j.Longitude.Value) <= distance
+                );
+            } else {
+                return GetSet();
+            }
+        }
     }
 
     public interface IJobService {
@@ -339,5 +355,6 @@ namespace JobHunt.Services {
         Task<IEnumerable<Category>> GetJobCategoriesAsync();
         Task<bool> UpdateStatusAsync(int id, string status);
         DbSet<Job> GetSet();
+        Task<IQueryable<Job>> GetFilteredSet(string location, int distance);
     }
 }

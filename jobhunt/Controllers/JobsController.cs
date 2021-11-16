@@ -22,8 +22,12 @@ namespace JobHunt.Controllers {
         [EnableQuery]
         [ODataAttributeRouting]
         [HttpGet("~/api/odata/job")]
-        public IActionResult OData() {
-            return Ok(_jobService.GetSet());
+        public async Task<IActionResult> OData([FromQuery] string? location = null, [FromQuery] int? distance = null) {
+            if (!string.IsNullOrEmpty(location) && distance.HasValue) {
+                return Ok(await _jobService.GetFilteredSet(location, distance.Value));
+            } else {
+                return Ok(_jobService.GetSet());
+            }
         }
 
         [HttpGet]

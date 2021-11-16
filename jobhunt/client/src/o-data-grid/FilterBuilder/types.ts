@@ -7,7 +7,7 @@ import { ValueOption } from "o-data-grid/types";
 export type ExternalBuilderProps = {
   initialFilter?: GroupClause,
   searchMenuItems?: ({ label: string, onClick: () => void })[],
-  onSearch?: (filter: string) => void,
+  onSearch?: (filter: string, queryString: QueryStringCollection | undefined) => void,
   autocompleteProps?: AutocompleteProps<any, any, any, any>,
   datePickerProps?: DatePickerProps,
   dateTimePickerProps?: DateTimePickerProps,
@@ -18,8 +18,11 @@ export type ExternalBuilderProps = {
 
 export type BaseFieldDef = {
   field: string,
+  filterField?: string,
+  sortField?: string,
   label?: string,
   type?: string,
+  filterType?: string,
   filterable?: boolean,
   filterOperators?: Operation[],
   datePickerProps?: DatePickerProps,
@@ -29,8 +32,10 @@ export type BaseFieldDef = {
   nullable?: boolean,
   valueOptions?: ValueOption[] | ((params: GridValueOptionsParams) => ValueOption[]),
   caseSensitive?: boolean,
+  renderCustomFilter?: (value: any, setValue: (v: any) => void) => React.ReactNode,
   renderCustomInput?: (value: any, setValue: (v: any) => void) => React.ReactNode,
-  getCustomFilterString?: (value: any) => string
+  getCustomFilterString?: (op: Operation, value: any) => string,
+  getCustomQueryString?: (op: Operation, value: any) => QueryStringCollection
 }
 
 export type FieldDef = BaseFieldDef & {
@@ -41,6 +46,10 @@ export type FieldDef = BaseFieldDef & {
 
 export type CollectionFieldDef = BaseFieldDef & {
 
+}
+
+export type QueryStringCollection = {
+  [key: string]: string
 }
 
 export type Connective = "and" | "or"
