@@ -1,7 +1,8 @@
 import { SelectOption, ValueOption } from "o-data-grid/types";
 import { v4 as uuid } from "uuid";
+import { defaultLocale } from "./constants";
 
-import { GroupClause, ConditionClause } from "./types"
+import { GroupClause, ConditionClause, FilterBuilderLocaleText } from "./types"
 
 export const getDefaultCondition = (field: string): ConditionClause => ({
   field: field,
@@ -24,3 +25,6 @@ export const getSelectOption = (option: ValueOption): SelectOption => {
     return option;
   }
 }
+
+export const getLocaleText = (key: keyof FilterBuilderLocaleText, locale: FilterBuilderLocaleText | undefined) =>
+  locale !== undefined && locale[key] ? locale[key]! : defaultLocale[key];

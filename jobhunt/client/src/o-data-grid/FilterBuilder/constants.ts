@@ -1,6 +1,6 @@
 import Immutable from "immutable";
 
-import { ConditionClause, GroupClause, Operation, TreeGroup } from "./types"
+import { ConditionClause, FilterBuilderLocaleText, GroupClause, Operation, TreeGroup } from "./types"
 
 export const rootGroupUuid = "17c63a07-397b-4f03-a74b-2f935dcc6c8a";
 export const rootConditionUuid = "18c1713a-2480-40c0-b60f-220a3fd4b117";
@@ -28,3 +28,34 @@ export const initialTree = Immutable.Map<string, TreeGroup | string>({
     children: Immutable.Map({ [rootConditionUuid]: rootConditionUuid })
   }
 })
+
+export const defaultLocale: Required<FilterBuilderLocaleText> = {
+  and: "And",
+  or: "Or",
+
+  addCondition: "Add Condition",
+  addGroup: "Add Group",
+
+  field: "Field",
+  operation: "Operation",
+  value: "Value",
+  collectionOperation: "Operation",
+  collectionField: "Field",
+
+  search: "Search",
+  reset: "Reset",
+
+  opAny: "Has at least one",
+  opAll: "All have",
+  opCount: "Count",
+
+  opEq: "=",
+  opNe: "≠",
+  opGt: ">",
+  opLt: "<",
+  opGe: "≥",
+  opLe: "≤",
+  opContains: "Contains",
+  opNull: "Is Blank",
+  opNotNull: "Is Not Blank"
+}

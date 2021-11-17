@@ -1,35 +1,35 @@
 
-import { DataGridProps, GridSortModel, GridColDef, GridRowModel } from "@mui/x-data-grid"
+import { DataGridProps, GridSortModel, GridColDef, GridRowModel, GridLocaleText } from "@mui/x-data-grid"
 import { ResponsiveValues } from "utils/hooks"
-import { ExternalBuilderProps, FieldDef } from "./FilterBuilder/types"
+import { ExternalBuilderProps, FieldDef, FilterBuilderLocaleText } from "./FilterBuilder/types"
 
-export type ODataGridProps = Omit<
-  ODataGridPropsFull,
-  "rows"
-  | "rowCount"
-  | "pagination"
-  | "paginationMode"
-  | "page"
-  | "pageSize"
-  | "onPageChange"
-  | "onPageSizeChange"
-  | "loading"
-  | "selectionModel"
-  | "onSelectionModelChange"
-  | "sortingMode"
-  | "sortModel"
->;
-
-type ODataGridPropsFull = Omit<DataGridProps, "columns"> & {
-  url: string,
-  queryParams?: [string, string | undefined][],
-  columns: ODataGridColDef[],
-  idField?: string,
-  $filter?: string,
-  defaultSortModel?: GridSortModel,
-  disableFilterBuilder?: boolean,
-  filterBuilderProps?: ExternalBuilderProps
-}
+export type ODataGridProps =
+  Omit<DataGridProps,
+    "columns"
+    | "rows"
+    | "rowCount"
+    | "pagination"
+    | "paginationMode"
+    | "page"
+    | "pageSize"
+    | "onPageChange"
+    | "onPageSizeChange"
+    | "loading"
+    | "selectionModel"
+    | "onSelectionModelChange"
+    | "sortingMode"
+    | "sortModel">
+  &
+  {
+    url: string,
+    queryParams?: [string, string | undefined][],
+    columns: ODataGridColDef[],
+    idField?: string,
+    $filter?: string,
+    defaultSortModel?: GridSortModel,
+    disableFilterBuilder?: boolean,
+    filterBuilderProps?: ExternalBuilderProps
+  };
 
 export type ODataGridColDef = Omit<GridColDef, "hide" | "filterOperators"> & FieldDef & {
   select?: string,

@@ -5,7 +5,6 @@ import { GridValueOptionsParams } from "@mui/x-data-grid";
 import { ValueOption } from "o-data-grid/types";
 
 export type ExternalBuilderProps = {
-  initialFilter?: GroupClause,
   searchMenuItems?: ({ label: string, onClick: () => void })[],
   onSearch?: (filter: string, queryString: QueryStringCollection | undefined) => void,
   autocompleteProps?: AutocompleteProps<any, any, any, any>,
@@ -14,6 +13,38 @@ export type ExternalBuilderProps = {
   localizationProviderProps?: LocalizationProviderProps,
   selectProps?: SelectProps,
   textFieldProps?: TextFieldProps,
+  localeText?: FilterBuilderLocaleText
+}
+
+export type FilterBuilderLocaleText = {
+  and?: string,
+  or?: string,
+
+  addCondition?: string,
+  addGroup?: string,
+
+  field?: string,
+  operation?: string,
+  value?: string,
+  collectionOperation?: string,
+  collectionField?: string,
+
+  search?: string,
+  reset?: string
+
+  opAny?: string,
+  opAll?: string,
+  opCount?: string,
+
+  opEq?: string,
+  opNe?: string,
+  opGt?: string,
+  opLt?: string,
+  opGe?: string,
+  opLe?: string,
+  opContains?: string,
+  opNull?: string,
+  opNotNull?: string
 }
 
 export type BaseFieldDef = {
@@ -44,9 +75,7 @@ export type FieldDef = BaseFieldDef & {
   collectionFields?: CollectionFieldDef[],
 }
 
-export type CollectionFieldDef = BaseFieldDef & {
-
-}
+export type CollectionFieldDef = BaseFieldDef;
 
 export type QueryStringCollection = {
   [key: string]: string

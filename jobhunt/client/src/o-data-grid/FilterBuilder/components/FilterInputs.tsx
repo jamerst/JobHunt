@@ -9,7 +9,7 @@ import { CollectionFieldDef, CollectionOperation, FieldDef, Operation } from "..
 
 import { propsState, schemaState } from "../state"
 import { SelectOption, ValueOption } from "o-data-grid/types";
-import { getSelectOption } from "../utils";
+import { getLocaleText, getSelectOption } from "../utils";
 import { allOperators, numericOperators } from "../constants";
 
 
@@ -114,8 +114,8 @@ const FilterInputs = React.memo(({
         <Autocomplete
           size="small"
           {...builderProps.autocompleteProps}
-          options={schema.filter(c => c.filterable !== false).map(c => ({ label: c.headerName ?? c.field, field: c.field }))}
-          renderInput={(params) => <TextField label="Field" {...builderProps.textFieldProps} {...params} />}
+          options={schema.filter(c => c.filterable !== false).map(c => ({ label: c.label ?? c.headerName ?? c.field, field: c.field }))}
+          renderInput={(params) => <TextField label={getLocaleText("field", builderProps.localeText)} {...builderProps.textFieldProps} {...params} />}
           value={{ label: fieldDef.fieldLabel, field: fieldDef.field }}
           onChange={(_, val) => onFieldChange(fieldDef.field, op, val.field)}
           disableClearable
@@ -126,17 +126,17 @@ const FilterInputs = React.memo(({
         fieldDef.collection === true &&
         <Grid item xs={12} md>
           <FormControl fullWidth size="small">
-            <InputLabel id={`${clauseId}_label-collection-op`}>Operation</InputLabel>
+            <InputLabel id={`${clauseId}_label-collection-op`}>{getLocaleText("collectionOperation", builderProps.localeText)}</InputLabel>
             <Select
-              label="Operation"
+              label={getLocaleText("collectionOperation", builderProps.localeText)}
               {...builderProps.selectProps}
               value={collectionOp}
               onChange={(e) => onCollectionOpChange(e.target.value as CollectionOperation)}
               labelId={`${clauseId}_label-collection-op`}
             >
-              <MenuItem value="any">Has at least one</MenuItem>
-              <MenuItem value="all">All have</MenuItem>
-              <MenuItem value="count">Count</MenuItem>
+              <MenuItem value="any">{getLocaleText("opAny", builderProps.localeText)}</MenuItem>
+              <MenuItem value="all">{getLocaleText("opAll", builderProps.localeText)}</MenuItem>
+              <MenuItem value="count">{getLocaleText("opCount", builderProps.localeText)}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -148,7 +148,7 @@ const FilterInputs = React.memo(({
             size="small"
             {...builderProps.autocompleteProps}
             options={fieldDef.collectionFields?.map(c => ({ label: c.label, field: c.field })) ?? []}
-            renderInput={(params) => <TextField label="Field" {...builderProps.textFieldProps} {...params} />}
+            renderInput={(params) => <TextField label={getLocaleText("collectionField", builderProps.localeText)} {...builderProps.textFieldProps} {...params} />}
             value={{ label: fieldDef.colField?.label, field: collectionField }}
             onChange={(_, val) => onCollectionFieldChange(field, collectionField, op, val.field)}
             disableClearable
@@ -170,15 +170,15 @@ const FilterInputs = React.memo(({
                 labelId={`${clauseId}_label-op`}
                 label="Operation"
               >
-                <MenuItem value="eq" disabled={!fieldDef.ops.includes("eq")}>=</MenuItem>
-                <MenuItem value="ne" disabled={!fieldDef.ops.includes("ne")}>≠</MenuItem>
-                <MenuItem value="gt" disabled={!fieldDef.ops.includes("gt")}>&gt;</MenuItem>
-                <MenuItem value="lt" disabled={!fieldDef.ops.includes("lt")}>&lt;</MenuItem>
-                <MenuItem value="ge" disabled={!fieldDef.ops.includes("ge")}>&ge;</MenuItem>
-                <MenuItem value="le" disabled={!fieldDef.ops.includes("le")}>&le;</MenuItem>
-                <MenuItem value="contains" disabled={!fieldDef.ops.includes("contains")}>Contains</MenuItem>
-                <MenuItem value="null" disabled={!fieldDef.ops.includes("null")}>Is Blank</MenuItem>
-                <MenuItem value="notnull" disabled={!fieldDef.ops.includes("notnull")}>Is Not Blank</MenuItem>
+                <MenuItem value="eq" disabled={!fieldDef.ops.includes("eq")}>{getLocaleText("opEq", builderProps.localeText)}</MenuItem>
+                <MenuItem value="ne" disabled={!fieldDef.ops.includes("ne")}>{getLocaleText("opNe", builderProps.localeText)}</MenuItem>
+                <MenuItem value="gt" disabled={!fieldDef.ops.includes("gt")}>{getLocaleText("opGt", builderProps.localeText)}</MenuItem>
+                <MenuItem value="lt" disabled={!fieldDef.ops.includes("lt")}>{getLocaleText("opLt", builderProps.localeText)}</MenuItem>
+                <MenuItem value="ge" disabled={!fieldDef.ops.includes("ge")}>{getLocaleText("opGe", builderProps.localeText)}</MenuItem>
+                <MenuItem value="le" disabled={!fieldDef.ops.includes("le")}>{getLocaleText("opLe", builderProps.localeText)}</MenuItem>
+                <MenuItem value="contains" disabled={!fieldDef.ops.includes("contains")}>{getLocaleText("opContains", builderProps.localeText)}</MenuItem>
+                <MenuItem value="null" disabled={!fieldDef.ops.includes("null")}>{getLocaleText("opNull", builderProps.localeText)}</MenuItem>
+                <MenuItem value="notnull" disabled={!fieldDef.ops.includes("notnull")}>{getLocaleText("opNotNull", builderProps.localeText)}</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -194,7 +194,7 @@ const FilterInputs = React.memo(({
                 fieldDef.type === "date" &&
                 <LocalizationProvider dateAdapter={dateAdapter!} {...builderProps.localizationProviderProps}>
                   <DatePicker
-                    label="Value"
+                    label={getLocaleText("value", builderProps.localeText)}
                     {...builderProps.datePickerProps}
                     {...fieldDef.datePickerProps}
                     value={value ?? ""}
@@ -207,7 +207,7 @@ const FilterInputs = React.memo(({
                 fieldDef.type === "datetime" &&
                 <LocalizationProvider dateAdapter={dateAdapter!} {...builderProps.localizationProviderProps}>
                   <DateTimePicker
-                    label="Value"
+                    label={getLocaleText("value", builderProps.localeText)}
                     {...fieldDef.dateTimePickerProps}
                     value={value ?? ""}
                     renderInput={(params) => <TextField fullWidth size="small" {...builderProps.textFieldProps} {...fieldDef.textFieldProps} {...params} />}
@@ -218,9 +218,9 @@ const FilterInputs = React.memo(({
               {
                 fieldDef.type === "boolean" &&
                 <FormControl fullWidth size="small" {...fieldDef.selectProps?.formControlProps}>
-                  <InputLabel id={`${clauseId}_label-bool-value`}>{fieldDef.selectProps?.label ?? "Value"}</InputLabel>
+                  <InputLabel id={`${clauseId}_label-bool-value`}>{fieldDef.selectProps?.label ?? getLocaleText("value", builderProps.localeText)}</InputLabel>
                   <Select
-                    label={fieldDef.selectProps?.label ?? "Value"}
+                    label={fieldDef.selectProps?.label ?? getLocaleText("value", builderProps.localeText)}
                     {...builderProps.selectProps}
                     {...fieldDef.selectProps?.selectProps}
                     value={op}
@@ -236,9 +236,9 @@ const FilterInputs = React.memo(({
               {
                 fieldDef.type === "singleSelect" && fieldDef.valueOptions &&
                 <FormControl fullWidth size="small" {...fieldDef.selectProps?.formControlProps}>
-                  <InputLabel id={`${clauseId}_label-select-value`}>{fieldDef.selectProps?.label ?? "Value"}</InputLabel>
+                  <InputLabel id={`${clauseId}_label-select-value`}>{fieldDef.selectProps?.label ?? getLocaleText("value", builderProps.localeText)}</InputLabel>
                   <Select
-                    label={fieldDef.selectProps?.label ?? "Value"}
+                    label={fieldDef.selectProps?.label ?? getLocaleText("value", builderProps.localeText)}
                     value={value ?? ""}
                     onChange={(e) => onValueChange(e.target.value)}
                     labelId={`${clauseId}_label-select-value`}
@@ -254,7 +254,7 @@ const FilterInputs = React.memo(({
                 <TextField
                   size="small"
                   fullWidth
-                  label="Value"
+                  label={getLocaleText("value", builderProps.localeText)}
                   {...builderProps.textFieldProps}
                   {...fieldDef.textFieldProps}
                   value={value ?? ""}

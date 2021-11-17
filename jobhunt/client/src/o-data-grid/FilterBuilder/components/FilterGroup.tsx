@@ -10,12 +10,13 @@ import FilterCondition from "./FilterCondition";
 
 import { Connective, GroupClause, TreeChildren, TreeGroup } from "../types"
 
-import { clauseState, schemaState, treeState } from "../state"
+import { clauseState, propsState, schemaState, treeState } from "../state"
 
-import { getDefaultCondition, getDefaultGroup } from "../utils";
+import { getDefaultCondition, getDefaultGroup, getLocaleText } from "../utils";
 
 import makeStyles from "makeStyles";
 import { useResponsive } from "utils/hooks";
+import { defaultLocale } from "../constants";
 
 
 const useStyles = makeStyles()((theme) => ({
@@ -73,6 +74,7 @@ const FilterGroup = ({ clauseId, path, root }: FilterGroupProps) => {
   const [tree, setTree] = useRecoilState(treeState);
   const [clauses, setClauses] = useRecoilState(clauseState);
   const schema = useRecoilValue(schemaState);
+  const builderProps = useRecoilValue(propsState);
 
   const group = useMemo(() => clauses.get(clauseId) as GroupClause, [clauses, clauseId]);
   const treeGroup = useMemo(() => tree.getIn([...path, clauseId]) as TreeGroup, [tree, path, clauseId]);
@@ -131,18 +133,18 @@ const FilterGroup = ({ clauseId, path, root }: FilterGroupProps) => {
               exclusive
               onChange={handleConnective}
               color="primary"
-              aria-label="And/or"
+              aria-label={`${getLocaleText("and", builderProps.localeText)}/${getLocaleText("or", builderProps.localeText)}`}
               size="small"
             >
-              <ToggleButton value="and">And</ToggleButton>
-              <ToggleButton value="or">Or</ToggleButton>
+              <ToggleButton value="and">{getLocaleText("and", builderProps.localeText)}</ToggleButton>
+              <ToggleButton value="or">{getLocaleText("or", builderProps.localeText)}</ToggleButton>
             </ToggleButtonGroup>
           </Grid>
         )}
         <Grid item xs={12} md="auto">
           <ButtonGroup variant="contained" size="small" color="secondary">
-            <Button startIcon={<Add/>} onClick={addCondition}>Add Condition</Button>
-            <Button startIcon={<Add/>} onClick={addGroup} >Add Group</Button>
+            <Button startIcon={<Add />} onClick={addCondition}>{getLocaleText("addCondition", builderProps.localeText)}</Button>
+            <Button startIcon={<Add />} onClick={addGroup}>{getLocaleText("addGroup", builderProps.localeText)}</Button>
           </ButtonGroup>
         </Grid>
       </Grid>
