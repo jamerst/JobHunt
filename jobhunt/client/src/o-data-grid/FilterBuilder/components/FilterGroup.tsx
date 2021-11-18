@@ -16,7 +16,6 @@ import { getDefaultCondition, getDefaultGroup, getLocaleText } from "../utils";
 
 import makeStyles from "makeStyles";
 import { useResponsive } from "utils/hooks";
-import { defaultLocale } from "../constants";
 
 
 const useStyles = makeStyles()((theme) => ({

@@ -1,12 +1,6 @@
-import { PageSettings } from "./types";
+import { Expand, PageSettings } from "./types";
 
 import { defaultPageSize } from "./constants";
-
-export type Expand = {
-  navigationField: string,
-  select?: string,
-  expand?: Expand
-}
 
 /**
  * Convert an Expand object to a clause to use in an OData $expand query parameter
@@ -21,8 +15,11 @@ export const ExpandToQuery = (e?: Expand) => {
   let result = `${e.navigationField}`;
 
   const options = [
-    { type: "select", value: `${e.select}` },
-    { type: "expand", value: ExpandToQuery(e.expand)}
+    { type: "select", value: e.select },
+    { type: "expand", value: ExpandToQuery(e.expand) },
+    { type: "orderby", value: e.orderBy },
+    { type: "top", value: e.top },
+    { type: "count", value: e.count }
   ];
 
   if (options.some(o => o.value)) {
@@ -70,8 +67,8 @@ const _flatten = (obj: any, sep: string, prefix: string) =>
  * Get the page settings from the current query string, or the default
  * @returns PageSettings
  */
-export const GetPageSettingsOrDefault = (): PageSettings => {
-  let settings = { page: 0, size: defaultPageSize };
+export const GetPageSettingsOrDefault = (defaultSize?: number): PageSettings => {
+  let settings = { page: 0, size: defaultSize ?? defaultPageSize };
 
   const params = new URLSearchParams(window.location.search);
   if (params.has("page") || params.has("page-size")) {

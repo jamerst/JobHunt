@@ -98,8 +98,10 @@ const buildInnerCondition = (schema: BaseFieldDef, field: string, op: Operation,
     return [`${field} ne null`];
   } else {
     if (schema.type === "date") {
-        return [`date(${field}) ${op} ${value}`];
+      return [`date(${field}) ${op} ${value}`];
     } else if (schema.type === "datetime") {
+      return [`${field} ${op} ${value}`];
+    } else if (schema.type === "boolean") {
       return [`${field} ${op} ${value}`];
     } else if (!schema.type || schema.type === "string" || typeof value === "string") {
       if (schema.caseSensitive === true) {

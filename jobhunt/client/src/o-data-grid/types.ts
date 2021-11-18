@@ -15,8 +15,6 @@ export type ODataGridProps =
     | "onPageChange"
     | "onPageSizeChange"
     | "loading"
-    | "selectionModel"
-    | "onSelectionModelChange"
     | "sortingMode"
     | "sortModel">
   &
@@ -28,10 +26,11 @@ export type ODataGridProps =
     $filter?: string,
     defaultSortModel?: GridSortModel,
     disableFilterBuilder?: boolean,
-    filterBuilderProps?: ExternalBuilderProps
+    filterBuilderProps?: ExternalBuilderProps,
+    defaultPageSize?: number
   };
 
-export type ODataGridColDef = Omit<GridColDef, "hide" | "filterOperators"> & FieldDef & {
+export type ODataGridColDef = Omit<GridColDef, "hide" | "filterOperators" | "sortComparator"> & FieldDef & {
   select?: string,
   expand?: Expand,
   hide?: ResponsiveValues<boolean> | boolean,
@@ -46,7 +45,10 @@ export type ODataResponse = {
 export type Expand = {
   navigationField: string,
   select?: string,
-  expand?: Expand
+  expand?: Expand,
+  orderBy?: string,
+  top?: number,
+  count?: boolean
 }
 
 export type PageSettings = {

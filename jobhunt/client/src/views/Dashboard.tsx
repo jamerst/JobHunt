@@ -36,36 +36,138 @@ const AutoPlaySwipeableView = autoPlay(SwipeableView);
 
 dayjs.extend(relativeTime);
 const columns: ODataGridColDef[] = [
+  // {
+  //   field: "Title",
+  //   headerName: "Job Title",
+  //   flex: 2,
+  //   sortable: false,
+  //   renderCell: (params: GridCellParams) => {
+  //     return (<Link component={RouterLink} to={`/job/${params.id}`}>{params.value}</Link>)
+  //   }
+  // },
+  // { field: "Location", headerName: "Location", flex: 1, sortable: false, },
+  // {
+  //   field: "Company/Name",
+  //   headerName: "Company",
+  //   hide: { xs: true, md: false },
+  //   flex: 2,
+  //   sortable: false,
+  //   renderCell: (params: GridCellParams) => {
+  //     return (<Link component={RouterLink} to={`/company/${params.row.companyId}`}>{params.value}</Link>)
+  //   },
+  //   expand: { navigationField: "Company", select: "Id,Name" }
+  // },
+  // {
+  //   field: "Posted",
+  //   select: "Posted,Seen",
+  //   headerName: "Posted",
+  //   hide: { xs: true, sm: false },
+  //   type: "datetime",
+  //   flex: 1.25,
+  //   sortable: false,
+  //   renderCell: (params: GridCellParams) => {
+  //     let date = dayjs(params.value as string);
+  //     if (date.isBefore(dayjs().subtract(14, "day"), "day")) {
+  //       return (<Fragment>{date.format("DD/MM/YYYY HH:mm")}</Fragment>);
+  //     } else {
+  //       let newTag = params.row.seen ? null : (<Chip label="New" color="secondary" />);
+  //       return (
+  //         <Grid container justifyContent="space-between" alignItems="center">
+  //           <Tooltip
+  //             title={<Typography variant="body2">{date.format("DD/MM/YYYY HH:mm")}</Typography>}
+  //             placement="right"
+  //           >
+  //             <span>{date.fromNow()}</span>
+  //           </Tooltip>
+  //           {newTag}
+  //         </Grid>
+  //       );
+  //     }
+  //   }
+  // }
   {
     field: "Title",
     headerName: "Job Title",
     flex: 2,
-    sortable: false,
-    renderCell: (params: GridCellParams) => {
+    renderCell: (params) => {
       return (<Link component={RouterLink} to={`/job/${params.id}`}>{params.value}</Link>)
     }
   },
-  { field: "Location", headerName: "Location", flex: 1, sortable: false, },
+  {
+    field: "Location",
+    headerName: "Location",
+    flex: 1,
+    sortable: false,
+  },
   {
     field: "Company/Name",
     headerName: "Company",
     hide: { xs: true, md: false },
     flex: 2,
-    sortable: false,
-    renderCell: (params: GridCellParams) => {
-      return (<Link component={RouterLink} to={`/company/${params.row.companyId}`}>{params.value}</Link>)
+    renderCell: (params) => (
+      <Link
+        component={RouterLink}
+        to={`/company/${params.row["Company/Id"]}`}
+      >
+        <Grid container spacing={1} alignItems="center">
+          <Grid item>
+            {params.value}
+          </Grid>
+          {params.row["Company/Recruiter"] && <Grid item><Chip sx={{ cursor: "pointer" }} label="Recruiter" size="small" /></Grid>}
+          {params.row["Company/Watched"] && <Grid item><Chip sx={{ cursor: "pointer" }} label="Watched" size="small" color="primary" /></Grid>}
+        </Grid>
+      </Link>
+    ),
+    expand: { navigationField: "Company", select: "Id,Name,Recruiter,Blacklisted,Watched" }
+  },
+  {
+    field: "Salary",
+    hide: { xs: true, lg: false },
+    filterField: "AvgYearlySalary",
+    sortField: "AvgYearlySalary",
+    label: "Median Yearly Salary",
+    filterType: "number",
+    filterOperators: ["eq", "ne", "gt", "lt", "ge", "le", "null", "notnull"],
+    flex: 1
+  },
+  {
+    field: "Status",
+    type: "singleSelect",
+    valueOptions: ["Not Applied", "Awaiting Response", "In Progress", "Rejected", "Dropped Out"],
+    filterOperators: ["eq", "ne"],
+    hide: true
+  },
+  {
+    field: "JobCategories",
+    headerName: "Categories",
+    label: "Category",
+    expand: {
+      navigationField: "JobCategories/Category",
+      select: "Name"
     },
-    expand: { navigationField: "Company", select: "Id,Name" }
+    sortable: false,
+    flex: 1,
+    hide: true,
+    renderCell: (params) => params.row.JobCategories.map((c: any) => c["Category/Name"]).join(", ")
+  },
+  {
+    field: "Source/DisplayName",
+    expand: { navigationField: "Source", select: "DisplayName" },
+    headerName: "Source",
+    filterable: false,
+    sortable: false,
+    flex: 1,
+    hide: true,
+    valueGetter: (params) => params.value ? params.value : "Added Manually"
   },
   {
     field: "Posted",
     select: "Posted,Seen",
     headerName: "Posted",
     hide: { xs: true, sm: false },
-    type: "datetime",
+    type: "date",
     flex: 1.25,
-    sortable: false,
-    renderCell: (params: GridCellParams) => {
+    renderCell: (params) => {
       let date = dayjs(params.value as string);
       if (date.isBefore(dayjs().subtract(14, "day"), "day")) {
         return (<Fragment>{date.format("DD/MM/YYYY HH:mm")}</Fragment>);
@@ -84,7 +186,7 @@ const columns: ODataGridColDef[] = [
         );
       }
     }
-  }
+  },
 ];
 
 export const Dashboard = () => {

@@ -1,6 +1,7 @@
 import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { DataGrid, GridColDef, GridFeatureModeConstant, GridRowModel, GridRowId, GridColumnVisibilityChangeParams, GridSortModel, GridOverlay } from "@mui/x-data-grid"
 import { LinearProgress } from "@mui/material";
+import { Box } from "@mui/system";
 import { o, OdataQuery } from "odata"
 import { useLocation } from "react-router";
 
@@ -10,12 +11,12 @@ import { ResponsiveValues, useResponsive } from "utils/hooks";
 
 import FilterBuilder from "../FilterBuilder/components/FilterBuilder";
 
-import { ODataGridProps, ODataGridColDef, PageSettings, ODataResponse } from "o-data-grid/types";
+import { Expand, ODataGridProps, ODataGridColDef, PageSettings, ODataResponse } from "../types";
 
-import { Expand, ExpandToQuery, Flatten, GroupArrayBy, GetPageSettingsOrDefault } from "../utils";
+import { ExpandToQuery, Flatten, GroupArrayBy, GetPageSettingsOrDefault } from "../utils";
 
-import { defaultPageSize } from "o-data-grid/constants";
-import { QueryStringCollection } from "o-data-grid/FilterBuilder/types";
+import { defaultPageSize } from "../constants";
+import { QueryStringCollection } from "../FilterBuilder/types";
 
 const useStyles = makeStyles()((theme) => ({
   root: {
@@ -35,12 +36,11 @@ const useStyles = makeStyles()((theme) => ({
 }));
 
 const ODataGrid = React.memo((props: ODataGridProps) => {
-  const [pageSettings, setPageSettings] = useState<PageSettings>(GetPageSettingsOrDefault());
+  const [pageSettings, setPageSettings] = useState<PageSettings>(GetPageSettingsOrDefault(props.defaultPageSize));
   const [rows, setRows] = useState<GridRowModel[]>([])
   const [rowCount, setRowCount] = useState<number>(0);
   const [fetchCount, setFetchCount] = useState(true);
   const [loading, setLoading] = useState<boolean>(true);
-  const [selected, setSelected] = useState<GridRowId[]>([]);
   const [sortModel, setSortModel] = useState<GridSortModel | undefined>();
   const [filter, setFilter] = useState<string>(props.$filter ?? "");
   const [queryString, setQueryString] = useState<QueryStringCollection>();
@@ -61,7 +61,7 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
     // select all fields for visible columns
     const fields = new Set(
       visibleColumns
-        .filter(c => c.expand === undefined)
+        .filter(c => c.expand === undefined && c.filterOnly !== true)
         .map(c => c.select ?? c.field)
     );
 
@@ -83,7 +83,10 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
     groupedExpands.forEach((e, k) => {
       expands.push({
         navigationField: k,
-        select: Array.from(new Set(e.map(e2 => e2.select))).join(",")
+        top: e[0].top,
+        orderBy: e[0].orderBy,
+        count: e.some(e2 => e2.count),
+        select: Array.from(new Set(e.map(e2 => e2.select))).join(","),
       });
     });
 
@@ -293,7 +296,7 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
         settings.size = size;
         changed = true;
       }
-    } else if (settings.size !== defaultPageSize) {
+    } else if (settings.size !== (props.defaultPageSize ?? defaultPageSize)) {
       settings.size = defaultPageSize;
       changed = true;
     }
@@ -305,18 +308,18 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
     } else {
       searchUpdated.current = false;
     }
-  }, [location, pageSettings]);
+  }, [location, pageSettings, props.defaultPageSize]);
 
   const columns = useMemo(() => props.columns.filter(c => c.filterOnly !== true).map((c) => {
-    let hide;
+    let hide: boolean | undefined;
     const override = columnHideOverrides[c.field];
-    const responsive = c.hide as ResponsiveValues<boolean>
     if (override !== undefined) {
       hide = override;
-    } else if (responsive) {
-      hide = r(responsive);
-    } else {
+    } else if (typeof c.hide === "boolean") {
       hide = c.hide;
+    } else if (c.hide) {
+      const responsive = c.hide as ResponsiveValues<boolean>
+      hide = r(responsive);
     }
 
     return { ...c, hide: hide } as GridColDef;
@@ -326,11 +329,13 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
     <Fragment>
       {
         props.$filter === undefined && props.disableFilterBuilder !== false &&
-        <FilterBuilder
-          {...props.filterBuilderProps}
-          schema={props.columns}
-          onSearch={handleBuilderSearch}
-        />
+        <Box mb={2}>
+          <FilterBuilder
+            {...props.filterBuilderProps}
+            schema={props.columns}
+            onSearch={handleBuilderSearch}
+          />
+        </Box>
       }
       <DataGrid
         autoHeight
@@ -351,14 +356,11 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
         page={pageSettings.page}
         pageSize={pageSettings.size}
         rowsPerPageOptions={props.rowsPerPageOptions ?? [10, 15, 20, 50]}
-        onPageChange={(page) => { setPageSettings({ ...pageSettings, page: page }); setSelected([]); }}
-        onPageSizeChange={(page) => { setPageSettings({ ...pageSettings, size: page }); setSelected([]); }}
+        onPageChange={(page) => setPageSettings({ ...pageSettings, page: page })}
+        onPageSizeChange={(page) => setPageSettings({ ...pageSettings, size: page })}
 
         loading={loading}
         className={cx(classes.root, props.className)}
-
-        selectionModel={selected}
-        onSelectionModelChange={(s) => setSelected(s)}
 
         onColumnVisibilityChange={handleColumnVisibility}
 

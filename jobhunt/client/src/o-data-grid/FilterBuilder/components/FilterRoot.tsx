@@ -1,8 +1,7 @@
-import React, { useCallback, useEffect, useState } from "react"
+import React, { Fragment, useCallback, useEffect, useState } from "react"
 import { useSetRecoilState } from "recoil";
 import { ArrowDropDown } from "@mui/icons-material";
 import { Button, ButtonGroup, MenuItem, MenuList, Paper, Popover } from "@mui/material";
-import { Box } from "@mui/system";
 
 import Grid from "components/Grid";
 
@@ -58,7 +57,7 @@ const FilterRoot = ({ props }: FilterRootProps) => {
   });
 
   return (
-    <Box my={2}>
+    <Fragment>
       <form onSubmit={search}>
         <FilterGroup
           clauseId={rootGroupUuid}
@@ -112,7 +111,7 @@ const FilterRoot = ({ props }: FilterRootProps) => {
         }
       </form>
 
-    </Box>
+    </Fragment>
   );
 }
 

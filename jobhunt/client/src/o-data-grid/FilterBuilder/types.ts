@@ -7,13 +7,16 @@ import { ValueOption } from "o-data-grid/types";
 export type ExternalBuilderProps = {
   searchMenuItems?: ({ label: string, onClick: () => void })[],
   onSearch?: (filter: string, queryString: QueryStringCollection | undefined) => void,
+  localeText?: FilterBuilderLocaleText,
+
+  autocompleteGroups?: string[],
+
   autocompleteProps?: AutocompleteProps<any, any, any, any>,
   datePickerProps?: DatePickerProps,
   dateTimePickerProps?: DateTimePickerProps,
   localizationProviderProps?: LocalizationProviderProps,
   selectProps?: SelectProps,
   textFieldProps?: TextFieldProps,
-  localeText?: FilterBuilderLocaleText
 }
 
 export type FilterBuilderLocaleText = {
@@ -52,17 +55,21 @@ export type BaseFieldDef = {
   filterField?: string,
   sortField?: string,
   label?: string,
+  autocompleteGroup?: string,
+
   type?: string,
+  caseSensitive?: boolean,
   filterType?: string,
   filterable?: boolean,
   filterOperators?: Operation[],
+  nullable?: boolean,
+  valueOptions?: ValueOption[] | ((params: GridValueOptionsParams) => ValueOption[]),
+
   datePickerProps?: DatePickerProps,
   dateTimePickerProps?: DateTimePickerProps,
   selectProps?: { selectProps?: SelectProps, formControlProps?: FormControlProps, label?: string },
   textFieldProps?: TextFieldProps,
-  nullable?: boolean,
-  valueOptions?: ValueOption[] | ((params: GridValueOptionsParams) => ValueOption[]),
-  caseSensitive?: boolean,
+
   renderCustomFilter?: (value: any, setValue: (v: any) => void) => React.ReactNode,
   renderCustomInput?: (value: any, setValue: (v: any) => void) => React.ReactNode,
   getCustomFilterString?: (op: Operation, value: any) => string,

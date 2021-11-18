@@ -1,16 +1,22 @@
 import React, { FunctionComponent, useEffect, useState, useCallback } from "react"
-import { Box, Button, Chip, Container, Slider, TextField, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Fab, Link, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+import {  Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Fab, Link, Typography, Slider, Chip } from "@mui/material";
 import Grid from "components/Grid";
-import { GridColDef } from "@mui/x-data-grid"
+import { GridSortModel } from "@mui/x-data-grid"
+import DateAdapter from "@mui/lab/AdapterDayjs";
 import { Helmet } from "react-helmet";
 import makeStyles from "makeStyles";
 import { Add } from "@mui/icons-material";
 import { Link as RouterLink, useHistory } from "react-router-dom";
 
-import Card from "components/Card";
-import CardBody from "components/CardBody";
-import CardHeader from "components/CardHeader";
-import ApiDataGrid from "components/ApiDataGrid";
+import dayjs from "dayjs"
+import relativeTime from "dayjs/plugin/relativeTime"
+import utc from "dayjs/plugin/utc"
+import enGB from "dayjs/locale/en-gb"
+
+import { ODataGrid, ODataGridColDef, QueryStringCollection } from "o-data-grid";
+import { LocationFilter } from "types";
+import Categories from "components/Categories";
+import { numericOperators } from "o-data-grid/FilterBuilder/constants";
 
 type SearchFilter = {
   term?: string,
@@ -44,6 +50,10 @@ type Category = {
   name: string
 }
 
+type JobPosted = {
+  Posted: string
+}
+
 type Company = {
   name: string,
   location: string,
@@ -63,25 +73,168 @@ const useStyles = makeStyles()((theme) => ({
   }
 }));
 
-const columns: GridColDef[] = [
-  { field: "id", hide: true },
+dayjs.extend(relativeTime);
+dayjs.extend(utc);
+
+const columns: ODataGridColDef[] = [
   {
-    field: "name",
+    field: "Name",
+    select: "Name,Recruiter,Blacklisted,Watched",
     headerName: "Name",
     flex: 2,
-    sortable: false,
-    renderCell: (params) => {
-      return (<Link component={RouterLink} to={`/company/${params.id}`}>{params.value}</Link>)
-    }
+    renderCell: (params) => (
+      <Link
+        component={RouterLink}
+        to={`/company/${params.id}`}
+      >
+        <Grid container spacing={1} alignItems="center">
+          <Grid item>
+            {params.value}
+          </Grid>
+          {params.row["Company/Recruiter"] && <Grid item><Chip sx={{ cursor: "pointer" }} label="Recruiter" size="small" /></Grid>}
+          {params.row["Company/Blacklisted"] && <Grid item><Chip sx={{ cursor: "pointer" }} label="Blacklisted" size="small" color="error" /></Grid>}
+          {params.row["Company/Watched"] && <Grid item><Chip sx={{ cursor: "pointer" }} label="Watched" size="small" color="primary" /></Grid>}
+        </Grid>
+      </Link>
+    )
   },
   {
-    field: "location",
+    field: "Location",
     headerName: "Location",
     flex: 1,
     sortable: false,
-    valueGetter: (params) => params.row.distance ? `${params.value} (${(params.row.distance as number).toFixed(1)}mi away)` : params.value
+    renderCustomFilter: (value, setValue) => (
+      <Grid item container xs={12} md spacing={1}>
+        <Grid item xs={12} md>
+          <TextField
+            value={(value as LocationFilter)?.location ?? ""}
+            onChange={(e) => setValue({ ...value, location: e.target.value })}
+            size="small"
+            fullWidth
+            label="Search Location"
+            required
+          />
+        </Grid>
+        <Grid item xs={12} md>
+          <Typography variant="body2">Distance</Typography>
+          <Slider
+            value={(value as LocationFilter)?.distance ?? 15}
+            onChange={(_, val) => setValue({ ...value, distance: val as number })}
+            step={5}
+            min={0}
+            max={50}
+            valueLabelFormat={(val) => `${val}mi`}
+            valueLabelDisplay="auto"
+            size="small"
+            sx={{padding: 0}}
+          />
+        </Grid>
+      </Grid>
+    ),
+    getCustomQueryString: (_, v) => {
+      const filter = v as LocationFilter;
+      let result: QueryStringCollection = {};
+      if (filter.location) {
+        result["location"] = filter.location!;
+        result["distance"] = (filter.distance ?? 15).toString();
+      }
+
+      return result;
+    },
+  },
+  {
+    field: "LatestJob",
+    headerName: "Latest job posted",
+    expand: { navigationField: "Jobs", select: "Posted", orderBy: "Posted desc", top: 1 },
+    type: "datetime",
+    filterable: false,
+    sortable: false,
+    renderCell: (params) => {
+      const jobs = params.row["Jobs"] as JobPosted[];
+      if (jobs && jobs.length > 0) {
+        return dayjs(jobs[0].Posted).format("DD/MM/YYYY HH:mm");
+      } else {
+        return "Never";
+      }
+    },
+    flex: .75
+  },
+  {
+    field: "Jobs@odata.count",
+    filterField: "Jobs/$count",
+    sortField: "Jobs/$count",
+    expand: { navigationField: "Jobs", top: 0, count: true },
+    filterOperators: numericOperators,
+    headerName: "Number of jobs posted",
+    type: "number",
+    flex: .5
+  },
+  {
+    field: "CompanyCategories",
+    headerName: "Categories",
+    label: "Category",
+    expand: {
+      navigationField: "CompanyCategories/Category",
+      select: "Name"
+    },
+    sortable: false,
+    flex: 1,
+    hide: { xs: true, xl: false },
+    renderCustomFilter: (value, setValue) => (
+      <Grid item container alignSelf="center" xs={12} md>
+        <Categories
+          fetchUrl="/api/companies/categories"
+          categories={value ? value as Category[] : []}
+          onCategoryAdd={(cats) => setValue(cats)}
+          onCategoryRemove={(cats) => setValue(cats)}
+          openByDefault
+        >
+          <Grid item>
+            <Typography variant="body1">Is one of:</Typography>
+          </Grid>
+        </Categories>
+      </Grid>
+    ),
+    getCustomFilterString: (_, value) =>
+      value && (value as Category[]).length > 0 ?
+        `CompanyCategories/any(x:x/CategoryId in (${(value as Category[]).map(c => c.id).join(", ")}))`
+        : "",
+    renderCell: (params) => params.row.CompanyCategories.map((c: any) => c["Category/Name"]).join(", "),
+  },
+
+  {
+    field: "Recruiter",
+    label: "Company Type",
+    filterOnly: true,
+    filterOperators: ["eq", "ne"],
+    type: "singleSelect",
+    valueOptions: [
+      { label: "Employer", value: false },
+      { label: "Recruiter", value: true }
+    ],
+  },
+  {
+    field: "Watched",
+    label: "Company Watched",
+    filterOnly: true,
+    filterOperators: ["eq", "ne"],
+    type: "boolean",
+  },
+  {
+    field: "Blacklisted",
+    label: "Company Blacklisted",
+    filterOnly: true,
+    filterOperators: ["eq", "ne"],
+    type: "boolean",
+  },
+  {
+    field: "Notes",
+    filterOnly: true,
+    filterOperators: ["contains"]
   }
 ];
+
+const defaultSort: GridSortModel = [{ field: "Name", sort: "asc" }];
 
 const Companies: FunctionComponent = (props) => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -134,106 +287,28 @@ const Companies: FunctionComponent = (props) => {
   }, [filter]);
 
   return (
-    <Container>
+    <Grid container direction="column" spacing={2}>
       <Helmet>
         <title>Companies | JobHunt</title>
       </Helmet>
-      <Card>
-        <CardHeader>
-         <Typography variant="h4">Saved Companies</Typography>
-        </CardHeader>
-        <CardBody>
-          <Box sx={{mx: {xs: 1, md: 8}}} mb={4} mt={1}>
-            <form onSubmit={(e) => { e.preventDefault(); setQuery(toQuery(filter)); }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <TextField variant="filled" label="Search Term" fullWidth size="small" value={filter.term ?? ""} onChange={(e) => setFilter({...filter, term: e.target.value})}/>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <FormControl fullWidth variant="filled" size="small">
-                  <InputLabel id="label-type">Company Type</InputLabel>
-                  <Select
-                    value={filter.recruiter !== undefined ? (filter.recruiter ? 1 : 0) : ""}
-                    onChange={(e) => setFilter({...filter, recruiter: e.target.value !== undefined ? (e.target.value ? true : false) : undefined})}
-                    labelId="label-type"
-                    >
-                      <MenuItem><em>Any</em></MenuItem>
-                      <MenuItem value={0}>Employer</MenuItem>
-                      <MenuItem value={1}>Recruiter</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  variant="filled"
-                  label="Location"
-                  fullWidth
-                  size="small"
-                  value={filter.location ?? ""}
-                  onChange={(e) => {
-                    let distance = filter.distance;
-                    if (e.target.value && !filter.distance) {
-                      distance = 15;
-                    } else if (!e.target.value) {
-                      distance = undefined;
-                    }
-                    setFilter({...filter, location: e.target.value, distance: distance});
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Typography id="label-distance" gutterBottom>Distance</Typography>
-                <Slider
-                  value={filter.distance ?? 15}
-                  onChange={(_, val) => setFilter({...filter, distance: val as number})}
-                  step={5}
-                  marks
-                  min={0}
-                  max={50}
-                  valueLabelFormat={(val) => `${val}mi`}
-                  valueLabelDisplay="auto"
-                  aria-labelledby="label-distance"
-                  disabled={!filter.location}
-                />
-              </Grid>
-              <Grid item container xs={12} spacing={1}>
-                {categories.map(c => (
-                  <Grid item key={`category-selector-${c.id}`}>
-                    <Chip
-                      label={c.name}
-                      onClick={() => addCategory(c.id)}
-                      onDelete={filter.categories.includes(c.id) ? () => removeCategory(c.id) : undefined}
-                      color={filter.categories.includes(c.id) ? "primary" : "default"}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
-              <Grid item xs={12}>
-                  <Button variant="contained" color="secondary" onClick={() => setQuery(toQuery(filter))} type="submit">Search</Button>
-              </Grid>
-            </Grid>
-            </form>
-          </Box>
-          <Box sx={{mx: {xs: 1, md: 4 }}}>
-            <Typography variant="h6">Search Results</Typography>
-            <ApiDataGrid
-              url="/api/companies/search"
-              columns={columns}
-              disableColumnMenu
-              disableColumnSelector
-              queryParams={query}
-              alwaysUpdateCount
-            />
-          </Box>
-          <Box mt={2}>
-            <Grid container justifyContent="flex-end">
-              <Fab color="secondary" aria-label="add" onClick={() => setDialogOpen(!dialogOpen)}>
-                <Add/>
-              </Fab>
-            </Grid>
-          </Box>
-        </CardBody>
-      </Card>
+
+      <Grid item>
+        <ODataGrid
+          url="/api/odata/company"
+          columns={columns}
+          defaultSortModel={defaultSort}
+          idField="Id"
+          filterBuilderProps={{ localizationProviderProps: { dateAdapter: DateAdapter, locale: enGB } }}
+          defaultPageSize={15}
+        />
+      </Grid>
+
+      <Grid item container justifyContent="flex-end">
+        <Fab color="secondary" aria-label="add" onClick={() => setDialogOpen(!dialogOpen)}>
+          <Add/>
+        </Fab>
+      </Grid>
+
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} aria-labelledby="add-dialog-title">
         <DialogTitle id="add-dialog-title">Add New Company</DialogTitle>
         <form onSubmit={(e) => { e.preventDefault(); create(); }}>
@@ -269,7 +344,7 @@ const Companies: FunctionComponent = (props) => {
           </DialogActions>
         </form>
       </Dialog>
-    </Container>
+    </Grid>
   );
 }
 

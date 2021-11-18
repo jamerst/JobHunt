@@ -104,6 +104,15 @@ const FilterInputs = React.memo(({
     };
   }, [field, collectionField, collectionOp, schema]);
 
+  const fieldOptions = useMemo(() => schema
+    .filter(c => c.filterable !== false)
+    .map(c => ({ label: c.label ?? c.headerName ?? c.field, field: c.field, group: c.autocompleteGroup ?? "" }))
+    .sort((a, b) => builderProps.autocompleteGroups ?
+      builderProps.autocompleteGroups.indexOf(a.group) - builderProps.autocompleteGroups.indexOf(b.group)
+      : a.group.localeCompare(b.group)),
+    [schema, builderProps]
+  );
+
   if (schema.length < 1 || !fieldDef) {
     return null;
   }
@@ -114,12 +123,13 @@ const FilterInputs = React.memo(({
         <Autocomplete
           size="small"
           {...builderProps.autocompleteProps}
-          options={schema.filter(c => c.filterable !== false).map(c => ({ label: c.label ?? c.headerName ?? c.field, field: c.field }))}
+          options={fieldOptions}
           renderInput={(params) => <TextField label={getLocaleText("field", builderProps.localeText)} {...builderProps.textFieldProps} {...params} />}
-          value={{ label: fieldDef.fieldLabel, field: fieldDef.field }}
+          value={{ label: fieldDef.fieldLabel, field: fieldDef.field, group: fieldDef.autocompleteGroup }}
           onChange={(_, val) => onFieldChange(fieldDef.field, op, val.field)}
           disableClearable
           isOptionEqualToValue={(option, value) => option.field === value.field}
+          groupBy={(option) => option.group}
         />
       </Grid>
       {
@@ -185,7 +195,7 @@ const FilterInputs = React.memo(({
       }
       {
         !fieldDef.renderCustomFilter &&
-        <Grid item xs={12} md>
+        <Grid item xs>
           {
             op !== "null" && op !== "notnull" &&
             (fieldDef.renderCustomInput ? fieldDef.renderCustomInput(value, onValueChange) :
@@ -223,7 +233,7 @@ const FilterInputs = React.memo(({
                     label={fieldDef.selectProps?.label ?? getLocaleText("value", builderProps.localeText)}
                     {...builderProps.selectProps}
                     {...fieldDef.selectProps?.selectProps}
-                    value={op}
+                    value={value ?? true}
                     onChange={(e) => onValueChange(e.target.value)}
                     labelId={`${clauseId}_label-bool-value`}
                   >

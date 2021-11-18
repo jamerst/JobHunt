@@ -13,6 +13,7 @@ export type Category = {
 
 type CategoriesProps = {
   categories: Category[],
+  fetchUrl?: string,
   updateUrl?: string,
   onCategoryAdd: (cats: Category[]) => void,
   onCategoryRemove: (cats: Category[]) => void,
@@ -35,7 +36,7 @@ const useStyles = makeStyles()((theme) => ({
 
 const filter = createFilterOptions<Category>({ ignoreCase: true, trim: true });
 
-const Categories:FunctionComponent<CategoriesProps> = ({ children, categories, updateUrl, onCategoryAdd, onCategoryRemove, openByDefault }) => {
+const Categories: FunctionComponent<CategoriesProps> = ({ children, categories, updateUrl, fetchUrl, onCategoryAdd, onCategoryRemove, openByDefault }) => {
   const [adding, setAdding] = useState<boolean>(openByDefault ?? false);
   const [newCategory, setNewCategory] = useState<Category | string | null>(null);
   const [allCategories, setAllCategories] = useState<Category[]>([]);
@@ -48,7 +49,7 @@ const Categories:FunctionComponent<CategoriesProps> = ({ children, categories, u
       return;
     }
 
-    const response = await fetch("/api/categories");
+    const response = await fetch(fetchUrl ?? "/api/categories");
     if (response.ok) {
       const data = await response.json() as Category[];
       setAllCategories(data);
@@ -56,7 +57,7 @@ const Categories:FunctionComponent<CategoriesProps> = ({ children, categories, u
     } else {
       console.error(`API request failed: GET /api/categories, HTTP ${response.status}`);
     }
-  }, [allCategories]);
+  }, [allCategories, fetchUrl]);
 
   if (openByDefault === true) {
     fetchCategories();

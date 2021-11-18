@@ -111,7 +111,7 @@ function App() {
               </MainLayout>
             </Route>
             <Route exact path="/jobs">
-              <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+              <MainLayout pageTitle="Saved Jobs" darkMode={darkMode} setDarkMode={setDarkMode}>
                 <Jobs/>
               </MainLayout>
             </Route>
@@ -121,7 +121,7 @@ function App() {
               </MainLayout>
             </Route>
             <Route exact path="/companies">
-              <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+              <MainLayout pageTitle="Saved Companies" darkMode={darkMode} setDarkMode={setDarkMode}>
                 <Companies/>
               </MainLayout>
             </Route>
