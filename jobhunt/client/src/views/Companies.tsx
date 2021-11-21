@@ -1,57 +1,27 @@
-import React, { FunctionComponent, useEffect, useState, useCallback } from "react"
+import React, { FunctionComponent, useState, useCallback } from "react"
 import {  Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Fab, Link, Typography, Slider, Chip } from "@mui/material";
 import Grid from "components/Grid";
 import { GridSortModel } from "@mui/x-data-grid"
 import DateAdapter from "@mui/lab/AdapterDayjs";
+import { Add, Visibility } from "@mui/icons-material";
 import { Helmet } from "react-helmet";
-import makeStyles from "makeStyles";
-import { Add } from "@mui/icons-material";
-import { Link as RouterLink, useHistory } from "react-router-dom";
+import { useNavigate } from "react-router";
+import { Link as RouterLink } from "react-router-dom";
 
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
 import utc from "dayjs/plugin/utc"
 import enGB from "dayjs/locale/en-gb"
 
+import makeStyles from "makeStyles";
 import { ODataGrid, ODataGridColDef, QueryStringCollection } from "o-data-grid";
 import { LocationFilter } from "types";
-import Categories from "components/Categories";
+import Categories, { Category } from "components/Categories";
 import { numericOperators } from "o-data-grid/FilterBuilder/constants";
 
-type SearchFilter = {
-  term?: string,
-  location?: string,
-  distance?: number,
-  posted?: Date,
-  categories: number[],
-  status?: string,
-  recruiter?: boolean
-}
-
-const toQuery = (f: SearchFilter) =>  {
-  let result:[string, string | undefined][] = [
-    ["term", f.term],
-    ["location", f.location],
-    ["distance", f.distance?.toString()],
-    ["posted", f.posted?.toISOString()],
-    ["status", f.status]
-  ]
-
-  if (f.recruiter !== undefined) {
-    result.push(["recruiter", String(f.recruiter)]);
-  }
-
-  f.categories.forEach(c => result.push(["categories", c.toString()]))
-  return result;
-};
-
-type Category = {
-  id: number,
-  name: string
-}
-
-type JobPosted = {
-  Posted: string
+type JobResult = {
+  Posted: string,
+  AvgYearlySalary: number
 }
 
 type Company = {
@@ -76,6 +46,12 @@ const useStyles = makeStyles()((theme) => ({
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
 
+const currencyFormatter = new Intl.NumberFormat(undefined, {
+  style: "currency",
+  currency: "GBP",
+  maximumFractionDigits: 0
+})
+
 const columns: ODataGridColDef[] = [
   {
     field: "Name",
@@ -87,13 +63,13 @@ const columns: ODataGridColDef[] = [
         component={RouterLink}
         to={`/company/${params.id}`}
       >
-        <Grid container spacing={1} alignItems="center">
+        <Grid container spacing={1} alignItems="center" wrap="nowrap">
           <Grid item>
             {params.value}
           </Grid>
-          {params.row["Company/Recruiter"] && <Grid item><Chip sx={{ cursor: "pointer" }} label="Recruiter" size="small" /></Grid>}
-          {params.row["Company/Blacklisted"] && <Grid item><Chip sx={{ cursor: "pointer" }} label="Blacklisted" size="small" color="error" /></Grid>}
-          {params.row["Company/Watched"] && <Grid item><Chip sx={{ cursor: "pointer" }} label="Watched" size="small" color="primary" /></Grid>}
+          {params.row["Recruiter"] && <Grid item><Chip sx={{ cursor: "pointer" }} label="Recruiter" size="small" /></Grid>}
+          {params.row["Blacklisted"] && <Grid item><Chip sx={{ cursor: "pointer" }} label="Blacklisted" size="small" color="error" /></Grid>}
+          {params.row["Watched"] && <Grid item sx={{ display: "flex", alignItems: "center" }}><Visibility fontSize="small" /></Grid>}
         </Grid>
       </Link>
     )
@@ -143,21 +119,23 @@ const columns: ODataGridColDef[] = [
     },
   },
   {
-    field: "LatestJob",
-    headerName: "Latest job posted",
-    expand: { navigationField: "Jobs", select: "Posted", orderBy: "Posted desc", top: 1 },
-    type: "datetime",
+    // This field has to be calculated clientside - $apply doesn't appear to work for collections
+    field: "AvgSalary",
+    headerName: "Average Salary",
+    expand: { navigationField: "Jobs", select: "AvgYearlySalary" },
+    type: "number",
     filterable: false,
     sortable: false,
-    renderCell: (params) => {
-      const jobs = params.row["Jobs"] as JobPosted[];
+    valueGetter: (params) => {
+      const jobs = (params.row["Jobs"] as JobResult[]).filter(j => j.AvgYearlySalary);
       if (jobs && jobs.length > 0) {
-        return dayjs(jobs[0].Posted).format("DD/MM/YYYY HH:mm");
+        return currencyFormatter.format(jobs.map(j => j.AvgYearlySalary).reduce((a, b) => a + b) / jobs.length);
       } else {
-        return "Never";
+        return "";
       }
     },
-    flex: .75
+    flex: .5,
+    hide: { xs: true, xl: false }
   },
   {
     field: "Jobs@odata.count",
@@ -165,9 +143,46 @@ const columns: ODataGridColDef[] = [
     sortField: "Jobs/$count",
     expand: { navigationField: "Jobs", top: 0, count: true },
     filterOperators: numericOperators,
-    headerName: "Number of jobs posted",
+    headerName: "Jobs Posted",
     type: "number",
-    flex: .5
+    flex: .5,
+    hide: { xs: true, md: false }
+  },
+  {
+    field: "LatestJob",
+    headerName: "Latest Job Posted",
+    expand: { navigationField: "Jobs", select: "Posted", orderBy: "Posted desc" },
+    type: "datetime",
+    filterable: false,
+    sortable: false,
+    renderCell: (params) => {
+      const jobs = params.row["Jobs"] as JobResult[];
+      if (jobs && jobs.length > 0) {
+        return dayjs(jobs[0].Posted).format("DD/MM/YYYY HH:mm");
+      } else {
+        return "";
+      }
+    },
+    flex: .5,
+    hide: { xs: true, md: false }
+  },
+  {
+    field: "LatestPageUpdate",
+    headerName: "Latest Page Updated",
+    expand: { navigationField: "WatchedPages", select: "LastUpdated", orderBy: "LastUpdated desc" },
+    filterable: false,
+    sortable: false,
+    type: "datetime",
+    flex: .5,
+    renderCell: (params) => {
+      const pages = params.row["WatchedPages"] as ({ LastUpdated: string })[];
+      if (pages && pages.length > 0) {
+        return dayjs(pages[0].LastUpdated).format("DD/MM/YYYY HH:mm");
+      } else {
+        return "";
+      }
+    },
+    hide: { xs: true, xl: false }
   },
   {
     field: "CompanyCategories",
@@ -179,7 +194,7 @@ const columns: ODataGridColDef[] = [
     },
     sortable: false,
     flex: 1,
-    hide: { xs: true, xl: false },
+    hide: { xs: true, xxl: false },
     renderCustomFilter: (value, setValue) => (
       <Grid item container alignSelf="center" xs={12} md>
         <Categories
@@ -237,14 +252,11 @@ const columns: ODataGridColDef[] = [
 const defaultSort: GridSortModel = [{ field: "Name", sort: "asc" }];
 
 const Companies: FunctionComponent = (props) => {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [filter, setFilter] = useState<SearchFilter>({ categories: [] });
-  const [query, setQuery] = useState<[string, string | undefined][]>([]);
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [newCompany, setNewCompany] = useState<Company>({ name: "", location: "" });
 
   const { classes } = useStyles();
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const create = useCallback(async () => {
     const response = await fetch("/api/companies/create", {
@@ -255,36 +267,11 @@ const Companies: FunctionComponent = (props) => {
 
     if (response.ok) {
       const data = await response.json();
-      history.push(`/company/${data}`);
+      navigate(`/company/${data}`);
     } else {
       console.error(`API request failed: POST /api/companies/create, HTTP ${response.status}`);
     }
-  }, [newCompany, history])
-
-  useEffect(() => {
-    (async () => {
-      const response = await fetch("api/companies/categories");
-      if (response.ok) {
-        const data = await response.json();
-        setCategories(data as Category[]);
-      } else {
-        console.error(`API request failed: /api/companies/categories, HTTP ${response.status}`);
-      }
-    })();
-  }, []);
-
-  const addCategory = useCallback((id: number) => {
-    if (!filter.categories.includes(id)) {
-      setFilter({...filter, categories: [...filter.categories, id]});
-    }
-  }, [filter]);
-
-  const removeCategory = useCallback((id: number) => {
-    if (filter.categories.includes(id)) {
-      const newCategories = [...filter.categories].filter(c => c !== id);
-      setFilter({...filter, categories: newCategories});
-    }
-  }, [filter]);
+  }, [newCompany, navigate])
 
   return (
     <Grid container direction="column" spacing={2}>

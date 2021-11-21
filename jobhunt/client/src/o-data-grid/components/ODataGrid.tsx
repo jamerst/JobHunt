@@ -1,11 +1,9 @@
 import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { DataGrid, GridColDef, GridFeatureModeConstant, GridRowModel, GridRowId, GridColumnVisibilityChangeParams, GridSortModel, GridOverlay } from "@mui/x-data-grid"
-import { LinearProgress } from "@mui/material";
+import { DataGrid, GridColDef, GridFeatureModeConstant, GridRowModel, GridColumnVisibilityChangeParams, GridSortModel, GridOverlay } from "@mui/x-data-grid"
+import { LinearProgress, Typography } from "@mui/material";
 import { Box } from "@mui/system";
 import { o, OdataQuery } from "odata"
 import { useLocation } from "react-router";
-
-import makeStyles from "makeStyles";
 
 import { ResponsiveValues, useResponsive } from "utils/hooks";
 
@@ -17,23 +15,8 @@ import { ExpandToQuery, Flatten, GroupArrayBy, GetPageSettingsOrDefault } from "
 
 import { defaultPageSize } from "../constants";
 import { QueryStringCollection } from "../FilterBuilder/types";
+import { SearchOff } from "@mui/icons-material";
 
-const useStyles = makeStyles()((theme) => ({
-  root: {
-    '& .MuiDataGrid-columnsContainer': {
-      background: theme.palette.background.default,
-      '& .MuiDataGrid-colCellTitle': {
-        fontWeight: theme.typography.fontWeightBold
-      }
-    },
-    "& a": {
-      textDecoration: "none",
-      "&:hover": {
-        textDecoration: "underline"
-      }
-    }
-  }
-}));
 
 const ODataGrid = React.memo((props: ODataGridProps) => {
   const [pageSettings, setPageSettings] = useState<PageSettings>(GetPageSettingsOrDefault(props.defaultPageSize));
@@ -52,8 +35,6 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
   const searchUpdated = useRef<boolean>(false);
 
   const r = useResponsive();
-
-  const { classes, cx } = useStyles();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -86,7 +67,7 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
         top: e[0].top,
         orderBy: e[0].orderBy,
         count: e.some(e2 => e2.count),
-        select: Array.from(new Set(e.map(e2 => e2.select))).join(","),
+        select: Array.from(new Set(e.filter(e2 => e2.select).map(e2 => e2.select))).join(","),
       });
     });
 
@@ -328,7 +309,7 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
   return (
     <Fragment>
       {
-        props.$filter === undefined && props.disableFilterBuilder !== false &&
+        props.$filter === undefined && props.disableFilterBuilder !== true &&
         <Box mb={2}>
           <FilterBuilder
             {...props.filterBuilderProps}
@@ -341,7 +322,9 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
         autoHeight
         ref={React.createRef()}
         components={{
-          LoadingOverlay: LoadingOverlay
+          LoadingOverlay: LoadingOverlay,
+          NoResultsOverlay: NoResultsOverlay,
+          NoRowsOverlay: NoResultsOverlay
         }}
 
         {...props}
@@ -360,7 +343,6 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
         onPageSizeChange={(page) => setPageSettings({ ...pageSettings, size: page })}
 
         loading={loading}
-        className={cx(classes.root, props.className)}
 
         onColumnVisibilityChange={handleColumnVisibility}
 
@@ -376,6 +358,15 @@ const LoadingOverlay = () => (
   <GridOverlay>
     <div style={{ position: "absolute", top: 0, width: "100%" }}>
       <LinearProgress/>
+    </div>
+  </GridOverlay>
+)
+
+const NoResultsOverlay = () => (
+  <GridOverlay style={{ height: "100%" }}>
+    <div style={{ height: "100%", display: "flex", fontSize: 75, flexDirection: "column", justifyContent: "center", alignItems: "center", opacity: .5 }}>
+      <SearchOff fontSize="inherit" />
+      <Typography variant="h5">No Results</Typography>
     </div>
   </GridOverlay>
 )

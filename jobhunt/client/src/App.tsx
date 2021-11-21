@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Switch, BrowserRouter, Route } from "react-router-dom"
+import { Routes, BrowserRouter, Route } from "react-router-dom"
 import { CssBaseline, gridClasses } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { CacheProvider } from "@emotion/react";
@@ -14,7 +14,6 @@ import Job from 'views/Job';
 import Jobs from 'views/Jobs';
 import Search from 'views/Search';
 import Searches from 'views/Searches';
-import ODataTest from 'views/ODataTest';
 
 export const muiCache = createCache({
   key: "mui",
@@ -104,48 +103,48 @@ function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <BrowserRouter>
-          <Switch>
-            <Route exact path="/">
+          <Routes>
+            <Route path="/" element={
               <MainLayout pageTitle="Dashboard" darkMode={darkMode} setDarkMode={setDarkMode}>
                 <Dashboard/>
               </MainLayout>
-            </Route>
-            <Route exact path="/jobs">
+            } />
+            <Route path="/jobs" element={
               <MainLayout pageTitle="Saved Jobs" darkMode={darkMode} setDarkMode={setDarkMode}>
                 <Jobs/>
               </MainLayout>
-            </Route>
-            <Route exact path="/job/:id">
+            } />
+
+            <Route path="/job/:id" element={
               <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
                 <Job/>
               </MainLayout>
-            </Route>
-            <Route exact path="/companies">
+            } />
+
+            <Route path="/companies" element={
               <MainLayout pageTitle="Saved Companies" darkMode={darkMode} setDarkMode={setDarkMode}>
                 <Companies/>
               </MainLayout>
-            </Route>
-            <Route exact path="/company/:id">
+            } />
+
+            <Route path="/company/:id" element={
               <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
                 <Company/>
               </MainLayout>
-            </Route>
-            <Route exact path="/searches">
+            } />
+
+            <Route path="/searches" element={
               <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
                 <Searches/>
               </MainLayout>
-            </Route>
-            <Route exact path="/search/:id">
+            } />
+
+            <Route path="/search/:id" element={
               <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
                 <Search/>
               </MainLayout>
-            </Route>
-            <Route exact path="/odata-test">
-              <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
-                <ODataTest/>
-              </MainLayout>
-            </Route>
-          </Switch>
+            } />
+          </Routes>
         </BrowserRouter>
       </ThemeProvider>
     </CacheProvider>

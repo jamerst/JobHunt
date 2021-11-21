@@ -3,6 +3,8 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Routing.Attributes;
 
 using JobHunt.DTO;
 using JobHunt.Models;
@@ -15,6 +17,14 @@ namespace JobHunt.Controllers {
         private readonly ISearchService _searchService;
         public SearchController(ISearchService searchService) {
             _searchService = searchService;
+        }
+
+        // route is not named consistently because any OData endpoint which ends with "search" doesn't work
+        [EnableQuery]
+        [ODataAttributeRouting]
+        [HttpGet("~/api/odata/search")]
+        public IActionResult OData() {
+            return Ok(_searchService.GetSet());
         }
 
         [HttpGet]

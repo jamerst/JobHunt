@@ -1,7 +1,7 @@
 import React, { Fragment, useEffect, useState } from "react"
 import { Typography, Tooltip, Chip, Link } from "@mui/material"
 import Grid from "components/Grid";
-import { GridCellParams, GridSortModel } from "@mui/x-data-grid"
+import { GridSortModel } from "@mui/x-data-grid"
 
 import SwipeableView from "react-swipeable-views"
 import { autoPlay } from "react-swipeable-views-utils"
@@ -36,55 +36,6 @@ const AutoPlaySwipeableView = autoPlay(SwipeableView);
 
 dayjs.extend(relativeTime);
 const columns: ODataGridColDef[] = [
-  // {
-  //   field: "Title",
-  //   headerName: "Job Title",
-  //   flex: 2,
-  //   sortable: false,
-  //   renderCell: (params: GridCellParams) => {
-  //     return (<Link component={RouterLink} to={`/job/${params.id}`}>{params.value}</Link>)
-  //   }
-  // },
-  // { field: "Location", headerName: "Location", flex: 1, sortable: false, },
-  // {
-  //   field: "Company/Name",
-  //   headerName: "Company",
-  //   hide: { xs: true, md: false },
-  //   flex: 2,
-  //   sortable: false,
-  //   renderCell: (params: GridCellParams) => {
-  //     return (<Link component={RouterLink} to={`/company/${params.row.companyId}`}>{params.value}</Link>)
-  //   },
-  //   expand: { navigationField: "Company", select: "Id,Name" }
-  // },
-  // {
-  //   field: "Posted",
-  //   select: "Posted,Seen",
-  //   headerName: "Posted",
-  //   hide: { xs: true, sm: false },
-  //   type: "datetime",
-  //   flex: 1.25,
-  //   sortable: false,
-  //   renderCell: (params: GridCellParams) => {
-  //     let date = dayjs(params.value as string);
-  //     if (date.isBefore(dayjs().subtract(14, "day"), "day")) {
-  //       return (<Fragment>{date.format("DD/MM/YYYY HH:mm")}</Fragment>);
-  //     } else {
-  //       let newTag = params.row.seen ? null : (<Chip label="New" color="secondary" />);
-  //       return (
-  //         <Grid container justifyContent="space-between" alignItems="center">
-  //           <Tooltip
-  //             title={<Typography variant="body2">{date.format("DD/MM/YYYY HH:mm")}</Typography>}
-  //             placement="right"
-  //           >
-  //             <span>{date.fromNow()}</span>
-  //           </Tooltip>
-  //           {newTag}
-  //         </Grid>
-  //       );
-  //     }
-  //   }
-  // }
   {
     field: "Title",
     headerName: "Job Title",
@@ -96,8 +47,7 @@ const columns: ODataGridColDef[] = [
   {
     field: "Location",
     headerName: "Location",
-    flex: 1,
-    sortable: false,
+    flex: 1
   },
   {
     field: "Company/Name",
@@ -109,7 +59,7 @@ const columns: ODataGridColDef[] = [
         component={RouterLink}
         to={`/company/${params.row["Company/Id"]}`}
       >
-        <Grid container spacing={1} alignItems="center">
+        <Grid container spacing={1} alignItems="center" wrap="nowrap">
           <Grid item>
             {params.value}
           </Grid>
@@ -122,19 +72,13 @@ const columns: ODataGridColDef[] = [
   },
   {
     field: "Salary",
-    hide: { xs: true, lg: false },
+    hide: { xs: true, xl: false },
     filterField: "AvgYearlySalary",
     sortField: "AvgYearlySalary",
-    label: "Median Yearly Salary",
-    filterType: "number",
-    filterOperators: ["eq", "ne", "gt", "lt", "ge", "le", "null", "notnull"],
     flex: 1
   },
   {
     field: "Status",
-    type: "singleSelect",
-    valueOptions: ["Not Applied", "Awaiting Response", "In Progress", "Rejected", "Dropped Out"],
-    filterOperators: ["eq", "ne"],
     hide: true
   },
   {
@@ -238,7 +182,7 @@ export const Dashboard = () => {
           </Card>
         </Grid>
       </Grid>
-      <Grid item xs={12} lg={8} xxl={6}>
+      <Grid item xs={12} lg={8} xxl={7}>
         <Card>
           <CardHeader>
             <Typography variant="h6">Recent Jobs</Typography>

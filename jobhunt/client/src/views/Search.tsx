@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react"
-import { useHistory, useParams } from "react-router"
 import { Container, Typography, FormControl, InputLabel, TextField, Select, MenuItem, Slider, InputAdornment, FormControlLabel, Switch, Button, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Chip } from "@mui/material";
 import { Delete, Save } from "@mui/icons-material";
 
+import { useParams } from "react-router"
+import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import dayjs from "dayjs"
 
@@ -14,10 +15,6 @@ import Grid from "components/Grid";
 import Tabs from "components/Tabs";
 import Tab from "components/Tab";
 
-
-type SearchRouteParams = {
-  id: string
-}
 
 type SearchResponse = {
   id: number,
@@ -45,8 +42,8 @@ type SearchRun = {
 }
 
 const Search = () => {
-  const { id }: SearchRouteParams = useParams();
-  const history = useHistory();
+  const { id } = useParams();
+  const navigate = useNavigate();
 
   const [search, setSearch] = useState<SearchResponse>();
   const [origSearch, setOrigSearch] = useState<SearchResponse>();
@@ -82,11 +79,11 @@ const Search = () => {
   const remove = useCallback(async () => {
     const response = await fetch(`/api/search/${id}`, { method: "DELETE" });
     if (response.ok) {
-      history.push("/searches");
+      navigate("/searches");
     } else {
       console.error(`API request failed: DELETE /api/search/${id}, HTTP ${response.status}`);
     }
-  }, [id, history])
+  }, [id, navigate])
 
   useEffect(() => {
     fetchData();

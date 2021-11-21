@@ -10,7 +10,8 @@ import { Add } from "@mui/icons-material";
 
 import makeStyles from "makeStyles";
 
-import { Link as RouterLink, useHistory } from "react-router-dom";
+import { useNavigate } from "react-router";
+import { Link as RouterLink } from "react-router-dom";
 import { Helmet } from "react-helmet";
 
 import dayjs from "dayjs"
@@ -66,7 +67,6 @@ const columns: ODataGridColDef[] = [
     field: "Location",
     headerName: "Location",
     flex: 1,
-    sortable: false,
     renderCustomFilter: (value, setValue) => (
       <Grid item container xs={12} md spacing={1}>
         <Grid item xs={12} md>
@@ -117,7 +117,7 @@ const columns: ODataGridColDef[] = [
         component={RouterLink}
         to={`/company/${params.row["Company/Id"]}`}
       >
-        <Grid container spacing={1} alignItems="center">
+        <Grid container spacing={1} alignItems="center" wrap="nowrap">
           <Grid item>
             {params.value}
           </Grid>
@@ -135,7 +135,7 @@ const columns: ODataGridColDef[] = [
     hide: { xs: true, lg: false },
     filterField: "AvgYearlySalary",
     sortField: "AvgYearlySalary",
-    label: "Median Yearly Salary",
+    label: "Median Annual Salary",
     filterType: "number",
     filterOperators: ["eq", "ne", "gt", "lt", "ge", "le", "null", "notnull"],
     flex: 1,
@@ -273,7 +273,7 @@ const Jobs: FunctionComponent = (props) => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const companiesFetched = useRef(false);
 
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const { classes } = useStyles();
 
@@ -286,11 +286,11 @@ const Jobs: FunctionComponent = (props) => {
 
     if (response.ok) {
       const data = await response.json();
-      history.push(`/job/${data}`);
+      navigate(`/job/${data}`);
     } else {
       console.error(`API request failed: POST /api/jobs/create, HTTP ${response.status}`);
     }
-  }, [history]);
+  }, [navigate]);
 
   useEffect(() => {
     if (companiesFetched.current) {

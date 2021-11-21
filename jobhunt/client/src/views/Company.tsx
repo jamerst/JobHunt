@@ -1,14 +1,13 @@
 import React, { Fragment, useCallback, useEffect, useState } from "react"
-import { Box, Button, Container, Chip, IconButton, Menu, MenuItem, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Tooltip, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Link, useMediaQuery, Select, FormControl, InputLabel } from "@mui/material"
+import { Box, Button, Container, Chip, IconButton, Menu, MenuItem, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Tooltip, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Link, Select, FormControl, InputLabel } from "@mui/material"
 import Grid from "components/Grid";
-import { GridColDef } from "@mui/x-data-grid"
 import { AccountBalance, Block, Delete, LinkedIn, Map, MoreHoriz, OpenInNew, RateReview, Save, Visibility, VisibilityOff, Web } from "@mui/icons-material";
 import makeStyles from "makeStyles";
 import Autocomplete from '@mui/material/Autocomplete';
-import { useTheme } from "@mui/system";
+import { GridSortModel } from "@mui/x-data-grid"
 
-import { useHistory, useParams } from "react-router"
-import { Link as RouterLink } from "react-router-dom"
+import { useParams } from "react-router"
+import { Link as RouterLink, useNavigate } from "react-router-dom"
 import { Helmet } from "react-helmet"
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
@@ -21,12 +20,8 @@ import CardBody from "components/CardBody";
 
 import Tabs from "components/Tabs";
 import Tab from "components/Tab";
-import ApiDataGrid from "components/ApiDataGrid";
 import Markdown from "components/Markdown";
-
-type CompanyRouteParams = {
-  id: string
-}
+import { ODataGrid, ODataGridColDef } from "o-data-grid";
 
 type CompanyResponse = {
   id: number,
@@ -70,31 +65,69 @@ const UpdateArray = <T, >(array: T[], index: number, update: (current: T) => T) 
 }
 
 dayjs.extend(relativeTime);
-const jobsColumns = (small: boolean | undefined): GridColDef[] => [
-  { field: "id", hide: true },
+
+const columns: ODataGridColDef[] = [
   {
-    field: "title",
+    field: "Title",
     headerName: "Job Title",
     flex: 2,
-    sortable: false,
     renderCell: (params) => {
       return (<Link component={RouterLink} to={`/job/${params.id}`}>{params.value}</Link>)
     }
   },
-  { field: "location", headerName: "Location", flex: 1, sortable: false, hide: small, },
-  { field: "companyName", headerName: "Company", flex: 2, sortable: false, hide: small },
   {
-    field: "posted",
-    headerName: "Posted",
-    type: "datetime",
-    flex: 1,
+    field: "Location",
+    headerName: "Location",
+    flex: 1
+  },
+  {
+    field: "Salary",
+    hide: { xs: true, xl: false },
+    filterField: "AvgYearlySalary",
+    sortField: "AvgYearlySalary",
+    label: "Median Annual Salary",
+    flex: 1
+  },
+  {
+    field: "Status",
+    hide: true
+  },
+  {
+    field: "JobCategories",
+    headerName: "Categories",
+    label: "Category",
+    expand: {
+      navigationField: "JobCategories/Category",
+      select: "Name"
+    },
     sortable: false,
+    flex: 1,
+    hide: true,
+    renderCell: (params) => params.row.JobCategories.map((c: any) => c["Category/Name"]).join(", ")
+  },
+  {
+    field: "Source/DisplayName",
+    expand: { navigationField: "Source", select: "DisplayName" },
+    headerName: "Source",
+    filterable: false,
+    sortable: false,
+    flex: 1,
+    hide: true,
+    valueGetter: (params) => params.value ? params.value : "Added Manually"
+  },
+  {
+    field: "Posted",
+    select: "Posted,Seen",
+    headerName: "Posted",
+    hide: { xs: true, sm: false },
+    type: "date",
+    flex: 1.25,
     renderCell: (params) => {
       let date = dayjs(params.value as string);
       if (date.isBefore(dayjs().subtract(14, "day"), "day")) {
         return (<Fragment>{date.format("DD/MM/YYYY HH:mm")}</Fragment>);
       } else {
-        let newTag = params.row.seen ? null : (<Chip label="New" color="secondary"/>);
+        let newTag = params.row.seen ? null : (<Chip label="New" color="secondary" />);
         return (
           <Grid container justifyContent="space-between" alignItems="center">
             <Tooltip
@@ -108,8 +141,10 @@ const jobsColumns = (small: boolean | undefined): GridColDef[] => [
         );
       }
     }
-  }
+  },
 ];
+
+const defaultSort:GridSortModel = [{ field: "Posted", sort: "desc" }]
 
 const useStyles = makeStyles()((theme) => ({
   unseen: {
@@ -124,10 +159,8 @@ const useStyles = makeStyles()((theme) => ({
 const Company = () => {
   const { classes } = useStyles();
 
-  const { id }: CompanyRouteParams = useParams();
-  const history = useHistory();
-  const theme = useTheme();
-  const small = useMediaQuery(theme.breakpoints.down("md"));
+  const { id } = useParams();
+  const navigate = useNavigate();
 
   const [companyData, setCompanyData] = useState<CompanyResponse>();
   const [origCompanyData, setOrigCompanyData] = useState<CompanyResponse>();
@@ -159,7 +192,7 @@ const Company = () => {
     const response = await fetch("/api/companies/names");
     if (response.ok) {
       const data = await response.json() as CompanyName[];
-      setAllCompanies(data.filter(c => c.companyId !== parseInt(id, 10)));
+      setAllCompanies(data.filter(c => c.companyId !== parseInt(id!, 10)));
     } else {
       console.error(`API request failed: GET /api/companies/names, HTTP ${response.status}`);
     }
@@ -175,12 +208,12 @@ const Company = () => {
 
       if (response.ok) {
         setMergeOpen(false);
-        history.push(`/company/${mergeCompany.companyId}`);
+        navigate(`/company/${mergeCompany.companyId}`);
       } else {
         console.error(`API request failed: PATCH /api/companies/merge/${id}, HTTP ${response.status}`);
       }
     }
-  }, [mergeCompany, history, id]);
+  }, [mergeCompany, navigate, id]);
 
   const saveChanges = useCallback(async () => {
     if (!companyData) return;
@@ -560,14 +593,15 @@ const Company = () => {
               </EditableComponent>
             </Tab>
 
-            <Tab keepMounted>
-              <ApiDataGrid
-                url={`/api/companies/${id}/jobs`}
-                columns={jobsColumns(small)}
-                disableColumnMenu
-                disableColumnSelector
+            <Tab>
+              <ODataGrid
+                url={`/api/odata/job`}
+                columns={columns}
+                $filter={`CompanyId eq ${id}`}
+                idField="Id"
+                disableFilterBuilder
                 getRowClassName={(params) => params.row.seen ? "" : classes.unseen}
-                checkboxSelection={false}
+                defaultSortModel={defaultSort}
               />
             </Tab>
           </Tabs>

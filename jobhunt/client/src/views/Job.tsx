@@ -17,9 +17,6 @@ import { Map, MoreHoriz, OpenInNew, Save, Subject } from "@mui/icons-material";
 import { Link as RouterLink } from "react-router-dom";
 import dayjs from "dayjs";
 
-type JobRouteParams = {
-  id: string
-}
 
 type JobResponse = {
   id: number,
@@ -47,7 +44,7 @@ type JobResponse = {
 }
 
 const Job = () => {
-  const { id }: JobRouteParams = useParams();
+  const { id } = useParams();
 
   const [jobData, setJobData] = useState<JobResponse>();
   const [origJobData, setOrigJobData] = useState<JobResponse>();
@@ -172,7 +169,7 @@ const Job = () => {
                     <TextField
                       value={jobData.avgYearlySalary ?? ""}
                       onChange={(e) => setJobData({...jobData, avgYearlySalary: isNaN(parseInt(e.target.value, 10)) ? undefined : parseInt(e.target.value, 10)})}
-                      label="Yearly Salary"
+                      label="Median Annual Salary"
                       variant="outlined"
                       fullWidth
                       size="small"

@@ -1,9 +1,10 @@
 import React, { FunctionComponent, Fragment, useState, useCallback } from "react"
-import { Button, Box, Chip, Container, Dialog, DialogActions, DialogContent, DialogTitle, Fab, Switch, Typography, TextField, FormControl, InputLabel, Select, MenuItem, Slider, FormControlLabel, InputAdornment, Link, useMediaQuery } from "@mui/material";
+import { Button, Box, Chip, Container, Dialog, DialogActions, DialogContent, DialogTitle, Fab, Switch, Typography, TextField, FormControl, InputLabel, Select, MenuItem, Slider, FormControlLabel, InputAdornment, Link } from "@mui/material";
 import Grid from "components/Grid";
-import { GridColDef } from "@mui/x-data-grid"
-import { useTheme } from "@mui/system";
+import { Add } from "@mui/icons-material";
 import { Helmet } from "react-helmet";
+import { useNavigate } from "react-router";
+import { Link as RouterLink } from "react-router-dom";
 
 import makeStyles from "makeStyles";
 
@@ -13,11 +14,9 @@ import relativeTime from "dayjs/plugin/relativeTime"
 import Card from "components/Card";
 import CardBody from "components/CardBody";
 import CardHeader from "components/CardHeader";
-import ApiDataGrid from "components/ApiDataGrid";
-import { Link as RouterLink, useHistory } from "react-router-dom";
-import { Add } from "@mui/icons-material";
 import CountrySelector from "components/CountrySelector";
 import { IndeedSupportedCountries } from "utils/constants";
+import { ODataGrid, ODataGridColDef } from "o-data-grid";
 
 const toggleEnabled = async (id: string) => {
   const response = await fetch(`/api/search/enable/${id}`, { method: "PATCH" });
@@ -34,10 +33,10 @@ const useStyles = makeStyles()((theme) => ({
 }));
 
 dayjs.extend(relativeTime);
-const columns = (small: boolean | undefined): GridColDef[] => [
-  { field: "id", hide: true },
+
+const columns: ODataGridColDef[] = [
   {
-    field: "description",
+    field: "DisplayName",
     headerName: "Description",
     flex: 2,
     sortable: false,
@@ -46,17 +45,16 @@ const columns = (small: boolean | undefined): GridColDef[] => [
     }
   },
   {
-    field: "enabled",
+    field: "Enabled",
     headerName: "Enabled",
-    sortable: false,
-    renderCell: (params) => (<Switch defaultChecked={params.row.enabled} onChange={(e) => {toggleEnabled(params.row.id)}}/>)
+    renderCell: (params) => (<Switch defaultChecked={params.row.Enabled} onChange={(e) => {toggleEnabled(params.row.id)}}/>)
   },
   {
-    field: "lastRun",
+    field: "LastRun",
     headerName: "Last Run",
     flex: 1,
     sortable: false,
-    hide: small,
+    hide: { xs: true, md: false },
     renderCell: (params) => {
       if (params.value === null) {
         return <Fragment>Never</Fragment>;
@@ -80,7 +78,7 @@ const columns = (small: boolean | undefined): GridColDef[] => [
       }
     }
   }
-];
+]
 
 type Search = {
   provider: string,
@@ -96,7 +94,7 @@ type Search = {
 const Searches: FunctionComponent = (props) => {
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [newSearch, setNewSearch] = useState<Search>({ provider: "Indeed", query: "", country: "gb", employerOnly: false, distance: 15 });
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const create = useCallback(async () => {
     const response = await fetch("/api/search/create", {
@@ -107,15 +105,13 @@ const Searches: FunctionComponent = (props) => {
 
     if (response.ok) {
       const data = await response.json();
-      history.push(`/search/${data}`);
+      navigate(`/search/${data}`);
     } else {
       console.error(`API request failed: POST /api/search/create, HTTP ${response.status}`);
     }
-  }, [newSearch, history])
+  }, [newSearch, navigate])
 
   const { classes } = useStyles();
-  const theme = useTheme();
-  const small = useMediaQuery(theme.breakpoints.down("md"));
 
   return (
     <Container>
@@ -127,12 +123,11 @@ const Searches: FunctionComponent = (props) => {
          <Typography variant="h4">Searches</Typography>
         </CardHeader>
         <CardBody>
-          <ApiDataGrid
-            url="/api/search"
-            columns={columns(small)}
-            disableColumnMenu
-            disableColumnSelector
-            disableSelectionOnClick
+          <ODataGrid
+            url="/api/odata/search"
+            columns={columns}
+            disableFilterBuilder
+            idField="Id"
           />
           <Box mt={2}>
             <Grid container justifyContent="flex-end">

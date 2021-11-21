@@ -158,6 +158,10 @@ namespace JobHunt.Services {
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public DbSet<Search> GetSet() {
+            return _context.Searches;
+        }
     }
 
     public interface ISearchService {
@@ -169,5 +173,6 @@ namespace JobHunt.Services {
         Task<Search?> GetByIdAsync(int id);
         Task<(bool, string)> UpdateAsync(SearchDto details);
         Task<bool> RemoveAsync(int id);
+        DbSet<Search> GetSet();
     }
 }

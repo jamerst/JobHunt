@@ -10,7 +10,10 @@ const useStyles = makeStyles()((theme) => ({
   paper: {
     display: "flex",
     flexDirection: "column",
-    marginTop: theme.spacing(3)
+    marginTop: theme.spacing(3),
+    "& .MuiDataGrid-columnHeaders": {
+      background: theme.palette.background.default,
+    }
   }
 }));
 
