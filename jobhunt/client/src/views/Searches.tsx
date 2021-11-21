@@ -51,6 +51,7 @@ const columns: ODataGridColDef[] = [
   },
   {
     field: "LastRun",
+    select: "LastRun,LastFetchSuccess",
     headerName: "Last Run",
     flex: 1,
     sortable: false,
@@ -64,7 +65,7 @@ const columns: ODataGridColDef[] = [
       if (date.isBefore(dayjs().subtract(1, "day"), "day")) {
         return (<Fragment>{date.format("DD/MM/YYYY HH:mm")}</Fragment>);
       } else {
-        let failedTag = params.row.lastRunSuccess ? null : (<Chip label="Failed" color="default"/>);
+        let failedTag = params.row.LastFetchSuccess ? null : (<Chip label="Failed" color="error"/>);
         return (
           <Grid container spacing={1}>
             <Grid item>

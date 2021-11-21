@@ -13,7 +13,7 @@ import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
 
 import Card from "components/Card"
-import { Work } from "@mui/icons-material"
+import { Visibility, Work } from "@mui/icons-material"
 import { Link as RouterLink } from "react-router-dom"
 import CardHeader from "components/CardHeader"
 import CardBody from "components/CardBody"
@@ -64,7 +64,7 @@ const columns: ODataGridColDef[] = [
             {params.value}
           </Grid>
           {params.row["Company/Recruiter"] && <Grid item><Chip sx={{ cursor: "pointer" }} label="Recruiter" size="small" /></Grid>}
-          {params.row["Company/Watched"] && <Grid item><Chip sx={{ cursor: "pointer" }} label="Watched" size="small" color="primary" /></Grid>}
+          {params.row["Company/Watched"] && <Grid item sx={{ display: "flex", alignItems: "center" }}><Visibility fontSize="small" /></Grid>}
         </Grid>
       </Link>
     ),
@@ -116,7 +116,7 @@ const columns: ODataGridColDef[] = [
       if (date.isBefore(dayjs().subtract(14, "day"), "day")) {
         return (<Fragment>{date.format("DD/MM/YYYY HH:mm")}</Fragment>);
       } else {
-        let newTag = params.row.seen ? null : (<Chip label="New" color="secondary" />);
+        let newTag = params.row.Seen ? null : (<Chip label="New" color="secondary" />);
         return (
           <Grid container justifyContent="space-between" alignItems="center">
             <Tooltip
@@ -192,7 +192,7 @@ export const Dashboard = () => {
             <ODataGrid
               url="/api/odata/job"
               columns={columns}
-              getRowClassName={(params) => params.row.seen ? "" : classes.unseen}
+              getRowClassName={(params) => params.row.Seen ? "" : classes.unseen}
               idField="Id"
               defaultSortModel={defaultSort}
               $filter="Archived eq false"

@@ -6,7 +6,7 @@ import DateAdapter from "@mui/lab/AdapterDayjs";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
 import { GridSortModel } from "@mui/x-data-grid"
 import Autocomplete from '@mui/material/Autocomplete';
-import { Add } from "@mui/icons-material";
+import { Add, Visibility } from "@mui/icons-material";
 
 import makeStyles from "makeStyles";
 
@@ -123,7 +123,7 @@ const columns: ODataGridColDef[] = [
           </Grid>
           {params.row["Company/Recruiter"] && <Grid item><Chip sx={{ cursor: "pointer" }} label="Recruiter" size="small" /></Grid>}
           {params.row["Company/Blacklisted"] && <Grid item><Chip sx={{ cursor: "pointer" }} label="Blacklisted" size="small" color="error" /></Grid>}
-          {params.row["Company/Watched"] && <Grid item><Chip sx={{ cursor: "pointer" }} label="Watched" size="small" color="primary" /></Grid>}
+          {params.row["Company/Watched"] && <Grid item sx={{ display: "flex", alignItems: "center" }}><Visibility fontSize="small" /></Grid>}
         </Grid>
       </Link>
     ),
@@ -205,7 +205,7 @@ const columns: ODataGridColDef[] = [
       if (date.isBefore(dayjs().subtract(14, "day"), "day")) {
         return (<Fragment>{date.format("DD/MM/YYYY HH:mm")}</Fragment>);
       } else {
-        let newTag = params.row.seen ? null : (<Chip label="New" color="secondary" />);
+        let newTag = params.row.Seen ? null : (<Chip label="New" color="secondary" />);
         return (
           <Grid container justifyContent="space-between" alignItems="center">
             <Tooltip
@@ -321,7 +321,7 @@ const Jobs: FunctionComponent = (props) => {
         <ODataGrid
           url="/api/odata/job"
           columns={columns}
-          getRowClassName={(params) => params.row.seen ? "" : classes.unseen}
+          getRowClassName={(params) => params.row.Seen ? "" : classes.unseen}
           idField="Id"
           defaultSortModel={defaultSort}
           filterBuilderProps={{ localizationProviderProps: { dateAdapter: DateAdapter, locale: enGB }, autocompleteGroups: ["Job", "Company"] }}

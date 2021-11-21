@@ -127,7 +127,7 @@ const columns: ODataGridColDef[] = [
       if (date.isBefore(dayjs().subtract(14, "day"), "day")) {
         return (<Fragment>{date.format("DD/MM/YYYY HH:mm")}</Fragment>);
       } else {
-        let newTag = params.row.seen ? null : (<Chip label="New" color="secondary" />);
+        let newTag = params.row.Seen ? null : (<Chip label="New" color="secondary" />);
         return (
           <Grid container justifyContent="space-between" alignItems="center">
             <Tooltip
@@ -600,7 +600,7 @@ const Company = () => {
                 $filter={`CompanyId eq ${id}`}
                 idField="Id"
                 disableFilterBuilder
-                getRowClassName={(params) => params.row.seen ? "" : classes.unseen}
+                getRowClassName={(params) => params.row.Seen ? "" : classes.unseen}
                 defaultSortModel={defaultSort}
               />
             </Tab>
