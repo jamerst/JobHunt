@@ -426,7 +426,7 @@ namespace JobHunt.Searching {
             public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
                 Debug.Assert(typeToConvert == typeof(DateTime));
                 // Indeed returns dates as RFC1123 format, which is always as UTC/GMT
-                return DateTime.ParseExact(reader.GetString()!, "r", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+                return DateTime.ParseExact(reader.GetString()!, "r", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
             }
 
             public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options) {

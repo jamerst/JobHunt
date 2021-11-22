@@ -34,7 +34,10 @@ namespace JobHunt {
         public void ConfigureServices(IServiceCollection services) {
 
             services.AddDbContext<JobHuntContext>(options =>
-                options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"))
+                options.UseNpgsql(
+                    Configuration.GetConnectionString("DefaultConnection"),
+                    o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
+                )
                 // .EnableSensitiveDataLogging()
             );
 
