@@ -8,7 +8,7 @@
     <SpaRoot>client\</SpaRoot>
     <DefaultItemExcludes>$(DefaultItemExcludes);$(SpaRoot)node_modules\**</DefaultItemExcludes>
     <Nullable>enable</Nullable>
-    <UserSecretsId>74c44d11-d57f-4acd-9f4f-995410598eee</UserSecretsId>
+    <UserSecretsId>98ac0d66-dbca-4c63-89db-2913b2257734</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -62,7 +62,7 @@
     <!-- Include the newly-built files in the publish output -->
     <ItemGroup>
       <DistFiles Include="$(SpaRoot)build\**" />
-      <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+      <ResolvedFileToPublish Include="@(DistFiles-&gt;'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
         <RelativePath>%(DistFiles.Identity)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
         <ExcludeFromSingleFile>true</ExcludeFromSingleFile>

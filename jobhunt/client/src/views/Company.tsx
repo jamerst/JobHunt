@@ -113,7 +113,7 @@ const columns: ODataGridColDef[] = [
     sortable: false,
     flex: 1,
     hide: true,
-    valueGetter: (params) => params.value ? params.value : "Added Manually"
+    valueGetter: (params) => params.row[params.field] ? params.row[params.field] : "Added Manually"
   },
   {
     field: "Posted",

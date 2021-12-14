@@ -10,7 +10,7 @@ services:
     depends_on:
       - db
     volumes:
-      - ./:/app
+      - ./:/app:Z
       - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro,Z
       - /etc/localtime:/etc/localtime:ro
     environment:

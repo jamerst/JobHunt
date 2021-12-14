@@ -126,30 +126,35 @@ namespace JobHunt.Searching {
                 query["start"] = start.ToString();
                 try {
                     using (var httpResponse = await _client.GetAsync(QueryHelpers.AddQueryString(_apiUrl, query), HttpCompletionOption.ResponseHeadersRead)) {
+                        string responseContent = await httpResponse.Content.ReadAsStringAsync();
                         if (httpResponse.IsSuccessStatusCode) {
+                            response = JsonSerializer.Deserialize<IndeedResponse>(responseContent, _jsonOptions);
+
+                            if (response?.Results == null) {
+                                sw.Stop();
+                                _logger.LogError("Indeed API request error {@Response}", new { Uri = httpResponse?.RequestMessage?.RequestUri?.ToString(), Content = responseContent });
+                                await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", "Indeed API error");
+                                await _searchService.CreateSearchRunAsync(search.Id!, false, "Indeed API error", 0, 0, (int) sw.Elapsed.TotalSeconds);
+                                return;
+                            }
                             using (var stream = await httpResponse.Content.ReadAsStreamAsync()) {
-                                response = await JsonSerializer.DeserializeAsync<IndeedResponse>(stream, _jsonOptions);
                             }
                         } else {
                             sw.Stop();
-                            _logger.LogError("Indeed API request failed", httpResponse);
-                            await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", $"Indeed API error: HTTP {(int)httpResponse.StatusCode}");
+                            _logger.LogError("Indeed API request failed {@Response}", new { Uri = httpResponse?.RequestMessage?.RequestUri?.ToString(), Content = responseContent });
+                            await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", $"Indeed API error: HTTP {(int)httpResponse!.StatusCode}");
                             await _searchService.CreateSearchRunAsync(search.Id!, false, $"Indeed API error: HTTP {(int) httpResponse.StatusCode}", 0, 0, (int) sw.Elapsed.TotalSeconds);
                             return;
                         }
                     }
                 } catch (HttpRequestException ex) {
                     _logger.LogError(ex, "Indeed API request exception");
-                }
-
-                if (response == null || response.Results == null) {
-                    sw.Stop();
-                    await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", "Indeed API deserialisation error");
-                    await _searchService.CreateSearchRunAsync(search.Id!, false, "Indeed API deserialisation error", 0, 0, (int) sw.Elapsed.TotalSeconds);
+                    await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", $"Indeed API request error");
+                    await _searchService.CreateSearchRunAsync(search.Id!, false, $"Indeed API request error", 0, 0, (int) sw.Elapsed.TotalSeconds);
                     return;
                 }
 
-                foreach (IndeedJobResult job in response.Results) {
+                foreach (IndeedJobResult job in response!.Results) {
                     if (token.IsCancellationRequested) {
                         break;
                     }
@@ -286,16 +291,19 @@ namespace JobHunt.Searching {
             Dictionary<string, string>? jobDescs = new Dictionary<string, string>();
             try {
                 using (var httpResponse = await _client.GetAsync($"{_descUrl}?jks={jobKeys}", HttpCompletionOption.ResponseHeadersRead)) {
+                    string responseContent = await httpResponse.Content.ReadAsStringAsync();
                     if (httpResponse.IsSuccessStatusCode) {
-                        string temp = await httpResponse.Content.ReadAsStringAsync();
-                        using (var stream = await httpResponse.Content.ReadAsStreamAsync()) {
-                            jobDescs = await JsonSerializer.DeserializeAsync<Dictionary<string, string>>(stream);
+                        jobDescs = JsonSerializer.Deserialize<Dictionary<string, string>>(responseContent);
+
+                        if (jobDescs == null || !jobDescs.Any()) {
+                            _logger.LogError("Indeed Job Descriptions request error {@Response}", new { Uri = httpResponse?.RequestMessage?.RequestUri?.ToString(), Content = responseContent });
+                            await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", "Indeed job descriptions request error");
+                            await _searchService.CreateSearchRunAsync(search.Id!, true, "Indeed job descriptions request error", newJobs, companies.Count, (int) sw.Elapsed.TotalSeconds);
                         }
-                    } else {
-                        sw.Stop();
-                        _logger.LogError("Indeed Job Descriptions request failed", httpResponse);
-                        await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", $"Indeed Job Descriptions API error: HTTP {(int)httpResponse.StatusCode}");
-                        await _searchService.CreateSearchRunAsync(search.Id!, true, $"Job descriptions API error: HTTP {(int) httpResponse.StatusCode}", newJobs, companies.Count, (int) sw.Elapsed.TotalSeconds);
+                    } else {;
+                        _logger.LogError("Indeed Job Descriptions request failed {@Response}", new { Uri = httpResponse?.RequestMessage?.RequestUri?.ToString(), Content = responseContent });
+                        await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", $"Indeed Job Descriptions API error: HTTP {(int)httpResponse!.StatusCode}");
+                        await _searchService.CreateSearchRunAsync(search.Id!, true, $"Job descriptions API error: HTTP {(int)httpResponse!.StatusCode}", newJobs, companies.Count, (int) sw.Elapsed.TotalSeconds);
                     }
                 }
             } catch (HttpRequestException ex) {
