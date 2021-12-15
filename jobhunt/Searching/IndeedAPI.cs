@@ -64,7 +64,7 @@ namespace JobHunt.Searching {
                 try {
                     await SearchAsync(search, token);
                 } catch (Exception e) {
-                    _logger.LogError(e, "Uncaught IndeedAPI exception");
+                    _logger.LogError(e, "Uncaught IndeedAPI exception {Search}", search);
                 }
             }
         }
@@ -132,7 +132,7 @@ namespace JobHunt.Searching {
 
                             if (response?.Results == null) {
                                 sw.Stop();
-                                _logger.LogError("Indeed API request error {@Response}", new { Uri = httpResponse?.RequestMessage?.RequestUri?.ToString(), Content = responseContent });
+                                _logger.LogError("Indeed API request error {Uri} {Content}", httpResponse?.RequestMessage?.RequestUri?.ToString(), responseContent);
                                 await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", "Indeed API error");
                                 await _searchService.CreateSearchRunAsync(search.Id!, false, "Indeed API error", 0, 0, (int) sw.Elapsed.TotalSeconds);
                                 return;
@@ -141,14 +141,14 @@ namespace JobHunt.Searching {
                             }
                         } else {
                             sw.Stop();
-                            _logger.LogError("Indeed API request failed {@Response}", new { Uri = httpResponse?.RequestMessage?.RequestUri?.ToString(), Content = responseContent });
+                            _logger.LogError("Indeed API request error {Uri} {Content}", httpResponse?.RequestMessage?.RequestUri?.ToString(), responseContent);
                             await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", $"Indeed API error: HTTP {(int)httpResponse!.StatusCode}");
                             await _searchService.CreateSearchRunAsync(search.Id!, false, $"Indeed API error: HTTP {(int) httpResponse.StatusCode}", 0, 0, (int) sw.Elapsed.TotalSeconds);
                             return;
                         }
                     }
                 } catch (HttpRequestException ex) {
-                    _logger.LogError(ex, "Indeed API request exception");
+                    _logger.LogError(ex, "Indeed API request exception {Uri}", QueryHelpers.AddQueryString(_apiUrl, query));
                     await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", $"Indeed API request error");
                     await _searchService.CreateSearchRunAsync(search.Id!, false, $"Indeed API request error", 0, 0, (int) sw.Elapsed.TotalSeconds);
                     return;
@@ -161,7 +161,7 @@ namespace JobHunt.Searching {
 
                     if (job.Date < maxAge) {
                         existingFound = true;
-                        _logger.LogInformation($"Found job older than MaxAge={maxAge:s}, JobKey={job.JobKey}");
+                        _logger.LogInformation("Found job posted before {MaxAge}, {JobKey}", maxAge, job.JobKey);
                     }
 
                     if (!await _jobService.AnyWithSourceIdAsync(SearchProviderName.Indeed, job.JobKey)) {
@@ -185,14 +185,14 @@ namespace JobHunt.Searching {
                                     using (var stream = await httpResponse.Content.ReadAsStreamAsync()) {
                                         try {
                                             salaryResponse = await JsonSerializer.DeserializeAsync<IndeedSalaryResponse>(stream, _jsonOptions);
-                                        } catch (JsonException) {
-                                            _logger.LogError("Indeed Salary deserialisation failed - likely requires a captcha");
+                                        } catch (JsonException ex) {
+                                            _logger.LogError(ex, "Indeed Salary deserialisation failed - likely requires a captcha");
                                             salaryFailCount++;
                                         }
                                     }
                                 } else {
                                     await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", $"Indeed Salary API error: HTTP {(int)httpResponse.StatusCode}");
-                                    _logger.LogError("Indeed Salary API request failed", httpResponse);
+                                    _logger.LogError("Indeed Salary API request failed {Response}", httpResponse);
                                 }
                             }
 
@@ -296,12 +296,12 @@ namespace JobHunt.Searching {
                         jobDescs = JsonSerializer.Deserialize<Dictionary<string, string>>(responseContent);
 
                         if (jobDescs == null || !jobDescs.Any()) {
-                            _logger.LogError("Indeed Job Descriptions request error {@Response}", new { Uri = httpResponse?.RequestMessage?.RequestUri?.ToString(), Content = responseContent });
+                            _logger.LogError("Indeed Job Descriptions request error {Uri} {Content}", httpResponse?.RequestMessage?.RequestUri, responseContent);
                             await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", "Indeed job descriptions request error");
                             await _searchService.CreateSearchRunAsync(search.Id!, true, "Indeed job descriptions request error", newJobs, companies.Count, (int) sw.Elapsed.TotalSeconds);
                         }
                     } else {;
-                        _logger.LogError("Indeed Job Descriptions request failed {@Response}", new { Uri = httpResponse?.RequestMessage?.RequestUri?.ToString(), Content = responseContent });
+                        _logger.LogError("Indeed Job Descriptions request failed {Uri} {Content}", httpResponse?.RequestMessage?.RequestUri, responseContent);
                         await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", $"Indeed Job Descriptions API error: HTTP {(int)httpResponse!.StatusCode}");
                         await _searchService.CreateSearchRunAsync(search.Id!, true, $"Job descriptions API error: HTTP {(int)httpResponse!.StatusCode}", newJobs, companies.Count, (int) sw.Elapsed.TotalSeconds);
                     }
@@ -311,34 +311,17 @@ namespace JobHunt.Searching {
             }
 
             if (jobDescs != null && jobDescs.Keys.Count > 0) {
-                for (int i = 0; i < jobs.Count; i++) {
-                    if (jobDescs.TryGetValue(jobs[i].ProviderId!, out string? desc)) {
+                foreach (Job job in jobs.Concat(companies.SelectMany(c => c.Jobs))) {
+                    if (jobDescs.TryGetValue(job.ProviderId!, out string? desc)) {
                         try {
                             (bool success, string output) = await PandocConverter.Convert("html", "markdown_strict", desc);
                             if (success) {
-                                jobs[i].Description = output;
+                                job.Description = output;
                             } else {
-                                _logger.LogError($"Failed to convert Indeed job description to markdown (JobKey={jobs[i].ProviderId}) - {output}");
+                                _logger.LogError("Failed to convert Indeed job description for {JobKey} to markdown {Output}", job.ProviderId, output);
                             }
                         } catch (Exception e) {
-                            _logger.LogError($"Failed to convert Indeed job description to markdown (JobKey={jobs[i].ProviderId}) - {e}");
-                        }
-                    }
-                }
-
-                for (int i = 0; i < companies.Count; i++) {
-                    for (int j = 0; j < companies[i].Jobs.Count; j++) {
-                        if (jobDescs.TryGetValue(companies[i].Jobs[j].ProviderId!, out string? desc)) {
-                            try {
-                                (bool success, string output) = await PandocConverter.Convert("html", "markdown_strict", desc);
-                                if (success) {
-                                    companies[i].Jobs[j].Description = output;
-                                } else {
-                                    _logger.LogError($"Failed to convert Indeed job description to markdown (JobKey={companies[i].Jobs[j].ProviderId}) - {output}");
-                                }
-                            } catch (Exception e) {
-                                _logger.LogError($"Failed to convert Indeed job description to markdown (JobKey={companies[i].Jobs[j].ProviderId}) - {e}");
-                            }
+                            _logger.LogError(e, "Failed to convert Indeed job description for {JobKey} to markdown", job.ProviderId);
                         }
                     }
                 }

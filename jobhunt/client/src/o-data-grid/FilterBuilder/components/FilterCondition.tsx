@@ -120,13 +120,17 @@ const FilterCondition = ({ clauseId, path }: FilterConditionProps) => {
     // if not root group
     if (path.length > 2) {
       setTree(oldTree => oldTree.withMutations((old) => {
+        // delete self
+        old.deleteIn([...path, clauseId]);
+
         // get path to parent node (i.e. remove "children" from end of path)
         let parentPath = [...path];
         parentPath.splice(-1, 1);
+
         do {
           const node = old.getIn(parentPath) as TreeGroup;
-          // delete parent if empty
-          if (node && node.children.count() <= 1) {
+          // delete parent if now empty
+          if (node && node.children.count() < 1) {
             old.deleteIn(parentPath);
           } else { // not the only child, so only remove self and stop
             old.deleteIn([...path, clauseId]);

@@ -33,19 +33,18 @@ namespace JobHunt.Geocoding {
             using (var client = new HttpClient()) {
                 client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("JobHunt", "1.0"));
                 using (var httpResponse = await client.GetAsync(QueryHelpers.AddQueryString(_searchUrl, query), HttpCompletionOption.ResponseHeadersRead)) {
+                    string responseContent = await httpResponse.Content.ReadAsStringAsync();
                     if (httpResponse.IsSuccessStatusCode) {
-                        using (var stream = await httpResponse.Content.ReadAsStreamAsync()) {
-                            response = await JsonSerializer.DeserializeAsync<NominatimResponse[]>(stream);
-                        }
+                        response = JsonSerializer.Deserialize<NominatimResponse[]>(responseContent);
                     } else {
-                        _logger.LogError($"Nominatim request failed", httpResponse);
+                        _logger.LogError("Nominatim request failed {Response} {Content}", httpResponse, responseContent);
                         return (null, null);
                     }
                 }
             }
 
             if (response == null) {
-                _logger.LogError($"Nominatim request deserialisation failed");
+                _logger.LogError("Nominatim request deserialisation failed");
                 return (null, null);
             }
 

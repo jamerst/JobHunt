@@ -38,7 +38,7 @@ namespace JobHunt.Searching {
                 try {
                     await RefreshAsync(page, token);
                 } catch (Exception e) {
-                    _logger.LogError(e, "Uncaught PageWatcher exception");
+                    _logger.LogError(e, "Uncaught PageWatcher exception {WatchedPage}", page);
                 }
             }
         }
