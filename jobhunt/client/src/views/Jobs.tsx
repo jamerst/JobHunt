@@ -1,7 +1,7 @@
 import React, { FunctionComponent, useEffect, useState, useCallback, Fragment, useRef } from "react"
 import { Button, Chip, Slider, TextField, Tooltip, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Fab, Link } from "@mui/material";
 import Grid from "components/Grid";
-import { DatePicker } from "@mui/lab";
+import DatePicker from "@mui/lab/DatePicker";
 import DateAdapter from "@mui/lab/AdapterDayjs";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
 import { GridSortModel } from "@mui/x-data-grid"
@@ -132,6 +132,7 @@ const columns: ODataGridColDef[] = [
   },
   {
     field: "Salary",
+    type: "number",
     hide: { xs: true, lg: false },
     filterField: "AvgYearlySalary",
     sortField: "AvgYearlySalary",

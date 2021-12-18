@@ -14,7 +14,7 @@ import { Expand, ODataGridProps, ODataGridColDef, PageSettings, ODataResponse } 
 import { ExpandToQuery, Flatten, GroupArrayBy, GetPageSettingsOrDefault } from "../utils";
 
 import { defaultPageSize } from "../constants";
-import { QueryStringCollection } from "../FilterBuilder/types";
+import { Group, QueryStringCollection } from "../FilterBuilder/types";
 import { SearchOff } from "@mui/icons-material";
 
 
@@ -22,11 +22,8 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
   const [pageSettings, setPageSettings] = useState<PageSettings>(GetPageSettingsOrDefault(props.defaultPageSize));
   const [rows, setRows] = useState<GridRowModel[]>([])
   const [rowCount, setRowCount] = useState<number>(0);
-  const [fetchCount, setFetchCount] = useState(true);
   const [loading, setLoading] = useState<boolean>(true);
-  const [sortModel, setSortModel] = useState<GridSortModel | undefined>();
-  const [filter, setFilter] = useState<string>(props.$filter ?? "");
-  const [queryString, setQueryString] = useState<QueryStringCollection>();
+  const [sortModel, setSortModel] = useState<GridSortModel | undefined>(props.defaultSortModel);
 
   const [visibleColumns, setVisibleColumns] = useState<ODataGridColDef[]>(props.columns.filter(c => c.hide !== true));
   const [columnHideOverrides, setColumnHideOverrides] = useState<{ [key: string]: boolean }>({});
@@ -36,7 +33,7 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
 
   const r = useResponsive();
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (filter?: string, queryString?: QueryStringCollection, fetchCount?: boolean) => {
     setLoading(true);
 
     // select all fields for visible columns
@@ -81,18 +78,14 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
       $expand,
       $top,
       $skip,
-      $count: fetchCount,
+      $count: fetchCount || firstLoad.current,
       ...queryString
     }
 
     if (filter) {
       query.$filter = filter;
-    }
-
-    // set the default sort model if one is provided
-    if (props.defaultSortModel && !sortModel) {
-      setSortModel(props.defaultSortModel);
-      return;
+    } else if (props.$filter) {
+      query.$filter = props.$filter;
     }
 
     if (sortModel && sortModel.length > 0) {
@@ -123,7 +116,6 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
 
       if (data["@odata.count"]) {
         setRowCount(data["@odata.count"]);
-        setFetchCount(false);
       }
 
       setRows(rows);
@@ -132,19 +124,15 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
     } else {
       console.error(`API request failed: ${response.url}, HTTP ${response.status}`);
     }
-  }, [pageSettings, visibleColumns, sortModel, filter, fetchCount, queryString, props.url, props.idField, props.defaultSortModel, props.columns]);
+  }, [pageSettings, visibleColumns, sortModel, props.url, props.idField, props.columns, props.$filter]);
 
-  const handleBuilderSearch = useCallback((f: string, q: QueryStringCollection | undefined) => {
-    setFilter(f);
-    setQueryString(q);
-    setFetchCount(true);
-
+  const handleBuilderSearch = useCallback((f: string, s: Group | undefined, q: QueryStringCollection | undefined) => {
     if (props.filterBuilderProps?.onSearch) {
-      props.filterBuilderProps.onSearch(f, q);
+      props.filterBuilderProps.onSearch(f, s, q);
     }
 
-    fetchData();
-  }, [setFilter, props.filterBuilderProps, fetchData]);
+    fetchData(f, q, true);
+  }, [ props.filterBuilderProps, fetchData]);
 
   const { onColumnVisibilityChange, onSortModelChange } = props;
 
@@ -189,7 +177,7 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
     setSortModel(model);
   }, [onSortModelChange]);
 
-  useEffect(() => { fetchData() }, [pageSettings, fetchData]);
+  useEffect(() => { fetchData() }, [fetchData, pageSettings]);
 
   useEffect(() => {
     let changed = false;
@@ -242,9 +230,9 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
       const search = params.toString();
 
       if (search) {
-        window.history.pushState(null, "", `${window.location.pathname}?${search}${window.location.hash}`);
+        window.history.pushState(window.history.state, "", `${window.location.pathname}?${search}${window.location.hash}`);
       } else {
-        window.history.pushState(null, "", `${window.location.pathname}${window.location.hash}`);
+        window.history.pushState(window.history.state, "", `${window.location.pathname}${window.location.hash}`);
       }
     }
   }, [pageSettings]);

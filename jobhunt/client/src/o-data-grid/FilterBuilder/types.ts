@@ -6,7 +6,7 @@ import { ValueOption } from "o-data-grid/types";
 
 export type ExternalBuilderProps = {
   searchMenuItems?: ({ label: string, onClick: () => void })[],
-  onSearch?: (filter: string, queryString: QueryStringCollection | undefined) => void,
+  onSearch?: (filter: string, serialised: Group | undefined, queryString: QueryStringCollection | undefined) => void,
   localeText?: FilterBuilderLocaleText,
 
   autocompleteGroups?: string[],
@@ -17,6 +17,8 @@ export type ExternalBuilderProps = {
   localizationProviderProps?: LocalizationProviderProps,
   selectProps?: SelectProps,
   textFieldProps?: TextFieldProps,
+
+  disableHistory?: boolean
 }
 
 export type FilterBuilderLocaleText = {
@@ -117,18 +119,11 @@ export type TreeGroup = Clause & {
 
 export type TreeChildren = Immutable.Map<string, TreeGroup | string>;
 
-export type Group = {
-  connective: Connective,
-  children: (Group | Connective)[]
-}
-
-export type Condition = {
-  field: string,
-  op: Operation;
-  collectionOp?: CollectionOperation,
-  collectionField?: string,
-  value: any
-}
-
 export type StateClause = Immutable.Map<string, GroupClause | ConditionClause>;
 export type StateTree = Immutable.Map<string, string | TreeGroup>;
+
+export type Group = Omit<GroupClause, "id"> & {
+  children: (Group | Condition)[]
+}
+
+export type Condition = Omit<ConditionClause, "id" | "default">

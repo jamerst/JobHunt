@@ -13,7 +13,8 @@ import { initialClauses, initialTree, rootConditionUuid, rootGroupUuid } from ".
 import { FilterBuilderProps } from "./FilterBuilder";
 import { UseODataFilter } from "../hooks";
 import { useMountEffect } from "utils/hooks";
-import { ConditionClause } from "../types";
+import { ConditionClause, Group, QueryStringCollection } from "../types";
+import { deserialise } from "../utils";
 
 type FilterRootProps = {
   props: FilterBuilderProps
@@ -29,27 +30,86 @@ const FilterRoot = ({ props }: FilterRootProps) => {
 
   const [anchor, setAnchor] = useState<null | HTMLElement>(null);
 
-  const { onSearch } = props;
+  const { onSearch, disableHistory } = props;
   const search = useCallback((e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (onSearch) {
       const result = filter();
-      onSearch(result.filter, result.queryString);
-    }
-  }, [onSearch, filter]);
 
-  const reset = useCallback(() => {
+      if (result.filter) {
+        onSearch(result.filter, result.serialised, result.queryString);
+
+        if (disableHistory !== true) {
+          window.history.pushState({
+              ...window.history.state,
+              filterBuilder: {
+                filter: result.filter,
+                serialised: result.serialised,
+                queryString: result.queryString
+              }
+            },
+            ""
+          );
+        }
+      }
+    }
+  }, [onSearch, filter, disableHistory]);
+
+  const reset = useCallback((noHistory?: boolean) => {
     setClauses(initialClauses.update(rootConditionUuid, (c) => ({ ...c as ConditionClause, field: props.schema[0].field })));
     setTree(initialTree);
 
     if (onSearch) {
-      onSearch("", {});
+      onSearch("", undefined, {});
     }
-  }, [setClauses, setTree, onSearch, props.schema]);
+
+    if (disableHistory !== true && noHistory !== true) {
+      window.history.pushState({
+        ...window.history.state,
+        filterBuilder: {
+          reset: true
+        }
+      }, "");
+    }
+  }, [setClauses, setTree, onSearch, props.schema, disableHistory]);
+
+  const handleReset = useCallback(() => reset(), [reset]);
 
   useEffect(() => {
     setSchema(props.schema);
   }, [props.schema, setSchema]);
+
+  useEffect(() => {
+    if (disableHistory !== true) {
+      const handlePopState = (e: PopStateEvent) => {
+        let filter, obj, queryString;
+
+        if (e.state.filterBuilder) {
+          if (e.state.filterBuilder.reset === true) {
+            reset(true);
+          }
+
+          filter = e.state.filterBuilder.filter as string;
+          obj = e.state.filterBuilder.serialised as Group;
+          queryString = e.state.filterBuilder.queryString as QueryStringCollection;
+        }
+
+        if (filter && obj) {
+          if (onSearch) {
+            onSearch(filter, obj, queryString);
+          }
+
+          const [tree, clauses] = deserialise(obj);
+
+          setClauses(clauses);
+          setTree(tree);
+        }
+      }
+
+      window.addEventListener("popstate", handlePopState);
+      return () => window.removeEventListener("popstate", handlePopState);
+    }
+  }, [onSearch, setClauses, setTree, disableHistory, reset]);
 
   useMountEffect(() => {
     setClauses((old) => old.update(rootConditionUuid, (c) => ({ ...c as ConditionClause, field: props.schema[0].field })));
@@ -84,7 +144,7 @@ const FilterRoot = ({ props }: FilterRootProps) => {
             </ButtonGroup>
           </Grid>
           <Grid item>
-            <Button variant="outlined" onClick={reset}>Reset</Button>
+            <Button variant="outlined" onClick={handleReset}>Reset</Button>
           </Grid>
         </Grid>
         {

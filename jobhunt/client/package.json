@@ -41,7 +41,8 @@
     "start": "craco start",
     "build": "craco build",
     "test": "craco test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "analyze": "source-map-explorer 'build/static/js/*.js'"
   },
   "eslintConfig": {
     "extends": [
@@ -72,6 +73,8 @@
     "craco-esbuild": "^0.4.2",
     "eslint-config-react-app": "6.0.0",
     "react-audible-debug": "^1.0.3",
-    "react-scripts": "5.0.0"
+    "react-error-overlay": "6.0.9",
+    "react-scripts": "4.0.3",
+    "source-map-explorer": "^2.5.2"
   }
 }

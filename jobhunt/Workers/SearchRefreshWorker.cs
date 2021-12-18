@@ -29,7 +29,7 @@ namespace JobHunt.Workers {
         }
 
         public async Task StartAsync(CancellationToken token) {
-            _logger.LogInformation("SearchRefreshWorker started {Now}", DateTime.Now);
+            _logger.LogInformation("SearchRefreshWorker started");
             if (_options.Schedules == null) {
                 _logger.LogWarning("No search refresh schedule provided. Stopping.");
                 return;
@@ -47,11 +47,11 @@ namespace JobHunt.Workers {
                         return;
                     }
 
-                    _logger.LogInformation("SearchRefresh started {Now}", DateTime.Now);
+                    _logger.LogInformation("SearchRefresh started");
                     await DoRefresh(token);
-                    _logger.LogInformation("SearchRefresh completed {Now}", DateTime.Now);
+                    _logger.LogInformation("SearchRefresh completed");
                 } else {
-                    _logger.LogInformation("SearchRefreshWorker stopping: no more occurrences {Now}", DateTime.Now);
+                    _logger.LogInformation("SearchRefreshWorker stopping: no more occurrences");
                     return;
                 }
             }

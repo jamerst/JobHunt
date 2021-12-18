@@ -15,6 +15,8 @@ import Grid from "components/Grid";
 import Tabs from "components/Tabs";
 import Tab from "components/Tab";
 
+import { IndeedSupportedCountries } from "utils/constants"
+
 
 type SearchResponse = {
   id: number,
@@ -142,6 +144,8 @@ const Search = () => {
                     value={search.country}
                     onChange={(code: string) => { setEdited(true); setSearch({...search, country: code}); }}
                     required
+                    allowedCountries={search.provider === "Indeed" ? IndeedSupportedCountries : undefined}
+                    hideForbiddenCountries
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -149,11 +153,11 @@ const Search = () => {
                     <InputLabel id="add-type-select-label">Job Type</InputLabel>
                     <Select
                       labelId="add-type-select-label"
-                      value={search.jobType}
+                      value={search.jobType ?? ""}
                       onChange={(e) => { setEdited(true); setSearch({...search, jobType: e.target.value as string}); }}
                       label="Job Type"
                     >
-                      <MenuItem><em>Any</em></MenuItem>
+                      <MenuItem value=""><em>Any</em></MenuItem>
                       <MenuItem value="permanent">Permanent</MenuItem>
                       <MenuItem value="fulltime">Full-time</MenuItem>
                       <MenuItem value="contract">Contract</MenuItem>
