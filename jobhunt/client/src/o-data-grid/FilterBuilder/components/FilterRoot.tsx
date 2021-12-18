@@ -1,4 +1,4 @@
-import React, { Fragment, useCallback, useEffect, useState } from "react"
+import React, { Fragment, useCallback, useEffect, useRef, useState } from "react"
 import { useSetRecoilState } from "recoil";
 import { ArrowDropDown } from "@mui/icons-material";
 import { Button, ButtonGroup, MenuItem, MenuList, Paper, Popover } from "@mui/material";
@@ -27,6 +27,7 @@ const FilterRoot = ({ props }: FilterRootProps) => {
   const setTree = useSetRecoilState(treeState);
 
   const filter = UseODataFilter();
+  const currentFilter = useRef("");
 
   const [anchor, setAnchor] = useState<null | HTMLElement>(null);
 
@@ -36,7 +37,9 @@ const FilterRoot = ({ props }: FilterRootProps) => {
     if (onSearch) {
       const result = filter();
 
-      if (result.filter) {
+      if (result.filter && result.filter !== currentFilter.current) {
+        currentFilter.current = result.filter;
+
         onSearch(result.filter, result.serialised, result.queryString);
 
         if (disableHistory !== true) {
@@ -56,6 +59,8 @@ const FilterRoot = ({ props }: FilterRootProps) => {
   }, [onSearch, filter, disableHistory]);
 
   const reset = useCallback((noHistory?: boolean) => {
+    currentFilter.current = "";
+
     setClauses(initialClauses.update(rootConditionUuid, (c) => ({ ...c as ConditionClause, field: props.schema[0].field })));
     setTree(initialTree);
 
@@ -79,41 +84,53 @@ const FilterRoot = ({ props }: FilterRootProps) => {
     setSchema(props.schema);
   }, [props.schema, setSchema]);
 
+  const restoreState = useCallback((state: any, isPopstate: boolean) => {
+    let filter, obj, queryString;
+
+    if (state.filterBuilder) {
+      if (state.filterBuilder.reset === true && isPopstate === true) {
+        reset(true);
+      }
+
+      filter = state.filterBuilder.filter as string;
+      obj = state.filterBuilder.serialised as Group;
+      queryString = state.filterBuilder.queryString as QueryStringCollection;
+    } else {
+      return false;
+    }
+
+    if (filter && obj && filter !== currentFilter.current) {
+      currentFilter.current = filter;
+
+      if (onSearch) {
+        onSearch(filter, obj, queryString);
+      }
+
+      const [tree, clauses] = deserialise(obj);
+
+      setClauses(clauses);
+      setTree(tree);
+    }
+
+    return true;
+  }, [onSearch, setClauses, setTree, reset])
+
   useEffect(() => {
     if (disableHistory !== true) {
-      const handlePopState = (e: PopStateEvent) => {
-        let filter, obj, queryString;
-
-        if (e.state.filterBuilder) {
-          if (e.state.filterBuilder.reset === true) {
-            reset(true);
-          }
-
-          filter = e.state.filterBuilder.filter as string;
-          obj = e.state.filterBuilder.serialised as Group;
-          queryString = e.state.filterBuilder.queryString as QueryStringCollection;
-        }
-
-        if (filter && obj) {
-          if (onSearch) {
-            onSearch(filter, obj, queryString);
-          }
-
-          const [tree, clauses] = deserialise(obj);
-
-          setClauses(clauses);
-          setTree(tree);
-        }
-      }
+      const handlePopState = (e: PopStateEvent) => restoreState(e.state, true);
 
       window.addEventListener("popstate", handlePopState);
       return () => window.removeEventListener("popstate", handlePopState);
     }
-  }, [onSearch, setClauses, setTree, disableHistory, reset]);
+  }, [disableHistory, restoreState]);
 
   useMountEffect(() => {
-    setClauses((old) => old.update(rootConditionUuid, (c) => ({ ...c as ConditionClause, field: props.schema[0].field })));
     setProps(props);
+
+    // set default state if history support is disabled, or if there is no state in the history
+    if (disableHistory === true || !restoreState(window.history.state, false)) {
+      setClauses((old) => old.update(rootConditionUuid, (c) => ({ ...c as ConditionClause, field: props.schema[0].field })));
+    }
   });
 
   return (

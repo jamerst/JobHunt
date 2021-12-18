@@ -30,6 +30,7 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
 
   const firstLoad = useRef<boolean>(true);
   const searchUpdated = useRef<boolean>(false);
+  const pendingFilter = useRef<boolean>(false);
 
   const r = useResponsive();
 
@@ -71,7 +72,7 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
     const $select = Array.from(fields).join(",");
     const $expand = expands.map(e => ExpandToQuery(e)).join(",");
     const $top = pageSettings.size;
-    const $skip = pageSettings.page * pageSettings.size;
+    const $skip = pendingFilter.current ? 0 : pageSettings.page * pageSettings.size;
 
     let query: OdataQuery = {
       $select,
@@ -121,16 +122,20 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
       setRows(rows);
       setLoading(false);
       firstLoad.current = false;
+      pendingFilter.current = false;
     } else {
       console.error(`API request failed: ${response.url}, HTTP ${response.status}`);
     }
   }, [pageSettings, visibleColumns, sortModel, props.url, props.idField, props.columns, props.$filter]);
 
   const handleBuilderSearch = useCallback((f: string, s: Group | undefined, q: QueryStringCollection | undefined) => {
+    pendingFilter.current = true;
+
     if (props.filterBuilderProps?.onSearch) {
       props.filterBuilderProps.onSearch(f, s, q);
     }
 
+    setPageSettings((ps) => ({ ...ps, page: 0 }));
     fetchData(f, q, true);
   }, [ props.filterBuilderProps, fetchData]);
 
@@ -177,7 +182,14 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
     setSortModel(model);
   }, [onSortModelChange]);
 
-  useEffect(() => { fetchData() }, [fetchData, pageSettings]);
+  useEffect(() => {
+    // prevent fetching if a fetch with a filter is already running
+    // this allows the query to be restored when the component is first mounted
+    // e.g.after going to a different page and clicking back
+    if (!pendingFilter.current) {
+      fetchData()
+    }
+  }, [fetchData, pageSettings]);
 
   useEffect(() => {
     let changed = false;
@@ -279,6 +291,14 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
     }
   }, [location, pageSettings, props.defaultPageSize]);
 
+  const handlePageChange = useCallback((page: number) => {
+    setPageSettings((ps) => ({ ...ps, page: page }));
+  }, []);
+
+  const handlePageSizeChange = useCallback((page: number) => {
+    setPageSettings((ps) => ({ ...ps, size: page }));
+  }, [])
+
   const columns = useMemo(() => props.columns.filter(c => c.filterOnly !== true).map((c) => {
     let hide: boolean | undefined;
     const override = columnHideOverrides[c.field];
@@ -327,8 +347,8 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
         page={pageSettings.page}
         pageSize={pageSettings.size}
         rowsPerPageOptions={props.rowsPerPageOptions ?? [10, 15, 20, 50]}
-        onPageChange={(page) => setPageSettings({ ...pageSettings, page: page })}
-        onPageSizeChange={(page) => setPageSettings({ ...pageSettings, size: page })}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
 
         loading={loading}
 

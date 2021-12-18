@@ -3,6 +3,7 @@ WORKDIR /app
 
 RUN curl -sL https://deb.nodesource.com/setup_16.x |  bash -
 RUN apt-get install -y nodejs unzip ca-certificates
+RUN npm install -g pnpm
 
 # Copy csproj and restore as distinct layers
 COPY *.csproj ./
