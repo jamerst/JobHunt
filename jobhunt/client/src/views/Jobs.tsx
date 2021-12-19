@@ -47,12 +47,18 @@ const useStyles = makeStyles()((theme) => ({
   },
   archived: {
     fontStyle: "italic"
+  },
+  fab: {
+    position: "fixed",
+    bottom: theme.spacing(2),
+    right: theme.spacing(2)
   }
 }));
 
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
 
+const alwaysFetch = ["Archived"];
 const columns: ODataGridColDef[] = [
   {
     field: "Title",
@@ -196,29 +202,43 @@ const columns: ODataGridColDef[] = [
   },
   {
     field: "Posted",
-    select: "Posted,Seen",
+    select: "Posted,Seen,Archived",
     headerName: "Posted",
     hide: { xs: true, sm: false },
     type: "date",
     flex: .9,
     renderCell: (params) => {
       let date = dayjs(params.value as string);
+      let dateComponent;
+      let chip;
+
+      if (params.row.Seen === false) {
+        chip = (<Chip label="New" color="secondary" />);
+      }
+
+      if (params.row.Archived === true) {
+        chip = (<Chip label="Archived" />);
+      }
+
       if (date.isBefore(dayjs().subtract(14, "day"), "day")) {
-        return (<Fragment>{date.format("DD/MM/YYYY HH:mm")}</Fragment>);
+        dateComponent = (<Fragment>{date.format("DD/MM/YYYY HH:mm")}</Fragment>);
       } else {
-        let newTag = params.row.Seen ? null : (<Chip label="New" color="secondary" />);
-        return (
-          <Grid container justifyContent="space-between" alignItems="center">
-            <Tooltip
-              title={<Typography variant="body2">{date.format("DD/MM/YYYY HH:mm")}</Typography>}
-              placement="right"
-            >
-              <span>{date.fromNow()}</span>
-            </Tooltip>
-            {newTag}
-          </Grid>
+        dateComponent = (
+          <Tooltip
+            title={<Typography variant="body2">{date.format("DD/MM/YYYY HH:mm")}</Typography>}
+            placement="right"
+          >
+            <span>{date.fromNow()}</span>
+          </Tooltip>
         );
       }
+
+      return (
+        <Grid container justifyContent="space-between" alignItems="center">
+          <Grid item>{dateComponent}</Grid>
+          <Grid item>{chip}</Grid>
+        </Grid>
+      )
     },
     autocompleteGroup: "Job"
   },
@@ -313,30 +333,25 @@ const Jobs: FunctionComponent = (props) => {
   }, [dialogOpen]);
 
   return (
-    <Grid container direction="column" spacing={2}>
+    <Fragment>
       <Helmet>
         <title>Jobs | JobHunt</title>
       </Helmet>
 
-      <Grid item>
-        <ODataGrid
-          url="/api/odata/job"
-          columns={columns}
-          getRowClassName={(params) => params.row.Seen ? "" : classes.unseen}
-          idField="Id"
-          defaultSortModel={defaultSort}
-          filterBuilderProps={{ localizationProviderProps: { dateAdapter: DateAdapter, locale: enGB }, autocompleteGroups: ["Job", "Company"] }}
-          defaultPageSize={15}
-        />
-      </Grid>
+      <ODataGrid
+        url="/api/odata/job"
+        columns={columns}
+        getRowClassName={(params) => params.row.Archived ? classes.archived : params.row.Seen ? "" : classes.unseen}
+        idField="Id"
+        alwaysFetch={alwaysFetch}
+        defaultSortModel={defaultSort}
+        filterBuilderProps={{ localizationProviderProps: { dateAdapter: DateAdapter, locale: enGB }, autocompleteGroups: ["Job", "Company"] }}
+        defaultPageSize={15}
+      />
 
-      <Grid item container xs justifyContent="flex-end">
-        <Grid item>
-          <Fab color="secondary" aria-label="add" onClick={() => { setDialogOpen(!dialogOpen); }}>
-            <Add/>
-          </Fab>
-        </Grid>
-      </Grid>
+      <Fab className={classes.fab} color="secondary" aria-label="add" onClick={() => { setDialogOpen(!dialogOpen); }}>
+        <Add/>
+      </Fab>
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} aria-labelledby="add-dialog-title">
         <DialogTitle id="add-dialog-title">Add New Job</DialogTitle>
@@ -401,7 +416,7 @@ const Jobs: FunctionComponent = (props) => {
           </DialogActions>
         </form>
       </Dialog>
-    </Grid>
+    </Fragment>
   );
 }
 

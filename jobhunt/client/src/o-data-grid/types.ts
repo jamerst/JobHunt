@@ -23,6 +23,7 @@ export type ODataGridProps =
     queryParams?: [string, string | undefined][],
     columns: ODataGridColDef[],
     idField?: string,
+    alwaysFetch?: string[],
     $filter?: string,
     defaultSortModel?: GridSortModel,
     disableFilterBuilder?: boolean,

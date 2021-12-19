@@ -36,11 +36,11 @@ const FilterRoot = ({ props }: FilterRootProps) => {
     e.preventDefault();
     if (onSearch) {
       const result = filter();
-
-      if (result.filter && result.filter !== currentFilter.current) {
+      console.log(result);
+      if (result.filter) {
         currentFilter.current = result.filter;
 
-        onSearch(result.filter, result.serialised, result.queryString);
+        onSearch(result.filter, result.serialised, result.queryString, false);
 
         if (disableHistory !== true) {
           window.history.pushState({
@@ -58,17 +58,17 @@ const FilterRoot = ({ props }: FilterRootProps) => {
     }
   }, [onSearch, filter, disableHistory]);
 
-  const reset = useCallback((noHistory?: boolean) => {
+  const reset = useCallback((isNavigation: boolean) => {
     currentFilter.current = "";
 
     setClauses(initialClauses.update(rootConditionUuid, (c) => ({ ...c as ConditionClause, field: props.schema[0].field })));
     setTree(initialTree);
 
     if (onSearch) {
-      onSearch("", undefined, {});
+      onSearch("", undefined, {}, isNavigation);
     }
 
-    if (disableHistory !== true && noHistory !== true) {
+    if (disableHistory !== true && isNavigation !== true) {
       window.history.pushState({
         ...window.history.state,
         filterBuilder: {
@@ -78,7 +78,7 @@ const FilterRoot = ({ props }: FilterRootProps) => {
     }
   }, [setClauses, setTree, onSearch, props.schema, disableHistory]);
 
-  const handleReset = useCallback(() => reset(), [reset]);
+  const handleReset = useCallback(() => reset(false), [reset]);
 
   useEffect(() => {
     setSchema(props.schema);
@@ -95,15 +95,17 @@ const FilterRoot = ({ props }: FilterRootProps) => {
       filter = state.filterBuilder.filter as string;
       obj = state.filterBuilder.serialised as Group;
       queryString = state.filterBuilder.queryString as QueryStringCollection;
+    } else if (isPopstate) {
+      reset(true);
     } else {
-      return false;
+      setClauses((old) => old.update(rootConditionUuid, (c) => ({ ...c as ConditionClause, field: props.schema[0].field })));
     }
 
-    if (filter && obj && filter !== currentFilter.current) {
+    if (filter && obj) {
       currentFilter.current = filter;
 
       if (onSearch) {
-        onSearch(filter, obj, queryString);
+        onSearch(filter, obj, queryString, true);
       }
 
       const [tree, clauses] = deserialise(obj);
@@ -111,13 +113,11 @@ const FilterRoot = ({ props }: FilterRootProps) => {
       setClauses(clauses);
       setTree(tree);
     }
-
-    return true;
-  }, [onSearch, setClauses, setTree, reset])
+  }, [onSearch, setClauses, setTree, reset, props.schema])
 
   useEffect(() => {
     if (disableHistory !== true) {
-      const handlePopState = (e: PopStateEvent) => restoreState(e.state, true);
+      const handlePopState = (e: PopStateEvent) => { restoreState(e.state, true); };
 
       window.addEventListener("popstate", handlePopState);
       return () => window.removeEventListener("popstate", handlePopState);
@@ -127,8 +127,10 @@ const FilterRoot = ({ props }: FilterRootProps) => {
   useMountEffect(() => {
     setProps(props);
 
-    // set default state if history support is disabled, or if there is no state in the history
-    if (disableHistory === true || !restoreState(window.history.state, false)) {
+    // restore query from history state if enabled
+    if (disableHistory !== true) {
+      restoreState(window.history.state, false);
+    } else {
       setClauses((old) => old.update(rootConditionUuid, (c) => ({ ...c as ConditionClause, field: props.schema[0].field })));
     }
   });

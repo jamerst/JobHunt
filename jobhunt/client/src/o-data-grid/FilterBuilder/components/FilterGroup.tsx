@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from "react"
-import { useRecoilState, useRecoilValue } from "recoil";
+import { useRecoilValue, useSetRecoilState, waitForAll } from "recoil";
 import Immutable from "immutable";
 import { Button, ButtonGroup, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { Add } from "@mui/icons-material";
@@ -70,8 +70,9 @@ const FilterGroup = ({ clauseId, path, root }: FilterGroupProps) => {
   const { classes } = useStyles();
   const r = useResponsive();
 
-  const [tree, setTree] = useRecoilState(treeState);
-  const [clauses, setClauses] = useRecoilState(clauseState);
+  const [tree, clauses] = useRecoilValue(waitForAll([treeState, clauseState]));
+  const setTree = useSetRecoilState(treeState);
+  const setClauses = useSetRecoilState(clauseState);
   const schema = useRecoilValue(schemaState);
   const builderProps = useRecoilValue(propsState);
 

@@ -1,13 +1,12 @@
 import { useCallback } from "react";
-import { useRecoilValue } from "recoil"
+import { useRecoilValue, waitForAll } from "recoil"
 import { rootGroupUuid } from "./constants";
 import { clauseState, schemaState, treeState } from "./state"
 import { BaseFieldDef, Condition, ConditionClause, FieldDef, Group, GroupClause, Operation, QueryStringCollection, StateClause, StateTree, TreeGroup } from "./types";
 
 export const UseODataFilter = () => {
   const schema = useRecoilValue(schemaState);
-  const clauses = useRecoilValue(clauseState);
-  const tree = useRecoilValue(treeState);
+  const [clauses, tree] = useRecoilValue(waitForAll([clauseState, treeState]));
 
   return useCallback(() => {
     return buildGroup(schema, clauses, tree, rootGroupUuid, []) as BuiltQuery<Group>;
@@ -56,6 +55,7 @@ const buildGroup = (schema: FieldDef[], clauses: StateClause, tree: StateTree, i
       queryString: childClauses[0].queryString
     }
   } else {
+    console.error("Group has no children");
     return false;
   }
 }
@@ -65,6 +65,7 @@ const buildCondition = (schema: FieldDef[], clauses: StateClause, id: string): (
 
   let condition: Condition | undefined = undefined;
   if (!clause || clause.default === true) {
+    console.error(`Clause not found: ${id}`);
     return false;
   } else {
     condition = {
@@ -79,6 +80,7 @@ const buildCondition = (schema: FieldDef[], clauses: StateClause, id: string): (
   const def = schema.find(d => d.field === clause.field);
 
   if (!def) {
+    console.error(`Schema entry not found for field "${clause.field}"`);
     return false;
   }
 
