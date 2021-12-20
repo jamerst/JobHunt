@@ -31,16 +31,16 @@ const FilterRoot = ({ props }: FilterRootProps) => {
 
   const [anchor, setAnchor] = useState<null | HTMLElement>(null);
 
-  const { onSearch, disableHistory } = props;
+  const { onSearch, onRestoreState, disableHistory } = props;
   const search = useCallback((e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (onSearch) {
       const result = filter();
-      console.log(result);
+
       if (result.filter) {
         currentFilter.current = result.filter;
 
-        onSearch(result.filter, result.serialised, result.queryString, false);
+        onSearch(result.filter, result.serialised, result.queryString);
 
         if (disableHistory !== true) {
           window.history.pushState({
@@ -58,17 +58,17 @@ const FilterRoot = ({ props }: FilterRootProps) => {
     }
   }, [onSearch, filter, disableHistory]);
 
-  const reset = useCallback((isNavigation: boolean) => {
+  const reset = useCallback(() => {
     currentFilter.current = "";
 
     setClauses(initialClauses.update(rootConditionUuid, (c) => ({ ...c as ConditionClause, field: props.schema[0].field })));
     setTree(initialTree);
 
     if (onSearch) {
-      onSearch("", undefined, {}, isNavigation);
+      onSearch("", undefined, undefined);
     }
 
-    if (disableHistory !== true && isNavigation !== true) {
+    if (disableHistory !== true) {
       window.history.pushState({
         ...window.history.state,
         filterBuilder: {
@@ -78,42 +78,45 @@ const FilterRoot = ({ props }: FilterRootProps) => {
     }
   }, [setClauses, setTree, onSearch, props.schema, disableHistory]);
 
-  const handleReset = useCallback(() => reset(false), [reset]);
+  const handleReset = useCallback(() => reset(), [reset]);
 
   useEffect(() => {
     setSchema(props.schema);
   }, [props.schema, setSchema]);
 
+  const restoreDefault = useCallback(() => {
+    setClauses(initialClauses.update(rootConditionUuid, (c) => ({ ...c as ConditionClause, field: props.schema[0].field })));
+    setTree(initialTree);
+  }, [props.schema, setClauses, setTree]);
+
   const restoreState = useCallback((state: any, isPopstate: boolean) => {
-    let filter, obj, queryString;
+    let filter = "", obj, queryString;
 
     if (state.filterBuilder) {
       if (state.filterBuilder.reset === true && isPopstate === true) {
-        reset(true);
+        restoreDefault();
       }
 
       filter = state.filterBuilder.filter as string;
       obj = state.filterBuilder.serialised as Group;
       queryString = state.filterBuilder.queryString as QueryStringCollection;
-    } else if (isPopstate) {
-      reset(true);
     } else {
-      setClauses((old) => old.update(rootConditionUuid, (c) => ({ ...c as ConditionClause, field: props.schema[0].field })));
+      restoreDefault();
     }
 
     if (filter && obj) {
       currentFilter.current = filter;
-
-      if (onSearch) {
-        onSearch(filter, obj, queryString, true);
-      }
 
       const [tree, clauses] = deserialise(obj);
 
       setClauses(clauses);
       setTree(tree);
     }
-  }, [onSearch, setClauses, setTree, reset, props.schema])
+
+    if (onRestoreState) {
+      onRestoreState(filter, obj, queryString);
+    }
+  }, [onRestoreState, restoreDefault, setClauses, setTree])
 
   useEffect(() => {
     if (disableHistory !== true) {
@@ -131,7 +134,7 @@ const FilterRoot = ({ props }: FilterRootProps) => {
     if (disableHistory !== true) {
       restoreState(window.history.state, false);
     } else {
-      setClauses((old) => old.update(rootConditionUuid, (c) => ({ ...c as ConditionClause, field: props.schema[0].field })));
+      restoreDefault();
     }
   });
 

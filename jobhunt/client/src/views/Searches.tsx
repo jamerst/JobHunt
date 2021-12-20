@@ -6,8 +6,6 @@ import { Helmet } from "react-helmet";
 import { useNavigate } from "react-router";
 import { Link as RouterLink } from "react-router-dom";
 
-import makeStyles from "makeStyles";
-
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
 
@@ -24,13 +22,6 @@ const toggleEnabled = async (id: string) => {
     console.error(`API request failed: /api/search/enable/${id}, HTTP ${response.status}`);
   }
 }
-
-const useStyles = makeStyles()((theme) => ({
-  dialog: {
-    minWidth: "40em",
-    maxWidth: "100%"
-  }
-}));
 
 dayjs.extend(relativeTime);
 
@@ -110,9 +101,7 @@ const Searches: FunctionComponent = (props) => {
     } else {
       console.error(`API request failed: POST /api/search/create, HTTP ${response.status}`);
     }
-  }, [newSearch, navigate])
-
-  const { classes } = useStyles();
+  }, [newSearch, navigate]);
 
   return (
     <Container>
@@ -139,10 +128,11 @@ const Searches: FunctionComponent = (props) => {
           </Box>
         </CardBody>
       </Card>
+
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} aria-labelledby="add-dialog-title">
         <DialogTitle id="add-dialog-title">Add New Search</DialogTitle>
         <form onSubmit={(e) => { e.preventDefault(); create(); }}>
-          <DialogContent className={classes.dialog}>
+          <DialogContent>
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <FormControl fullWidth variant="outlined" required>

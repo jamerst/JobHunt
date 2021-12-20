@@ -3,15 +3,14 @@ import { DataGrid, GridColDef, GridFeatureModeConstant, GridRowModel, GridColumn
 import { LinearProgress, Typography } from "@mui/material";
 import { Box } from "@mui/system";
 import { o, OdataQuery } from "odata"
-import { useLocation } from "react-router";
 
 import { ResponsiveValues, useResponsive } from "utils/hooks";
 
 import FilterBuilder from "../FilterBuilder/components/FilterBuilder";
 
-import { Expand, ODataGridProps, ODataGridColDef, PageSettings, ODataResponse } from "../types";
+import { Expand, ODataGridProps, ODataGridColDef, ODataResponse } from "../types";
 
-import { ExpandToQuery, Flatten, GroupArrayBy, GetPageSettingsOrDefault } from "../utils";
+import { ExpandToQuery, Flatten, GroupArrayBy, GetPageNumber, GetPageSizeOrDefault } from "../utils";
 
 import { defaultPageSize } from "../constants";
 import { Group, QueryStringCollection } from "../FilterBuilder/types";
@@ -19,7 +18,8 @@ import { SearchOff } from "@mui/icons-material";
 
 
 const ODataGrid = React.memo((props: ODataGridProps) => {
-  const [pageSettings, setPageSettings] = useState<PageSettings>(GetPageSettingsOrDefault(props.defaultPageSize));
+  const [pageNumber, setPageNumber] = useState<number>(GetPageNumber());
+  const [pageSize, setPageSize] = useState<number>(GetPageSizeOrDefault(props.defaultPageSize));
   const [rows, setRows] = useState<GridRowModel[]>([])
   const [rowCount, setRowCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
@@ -32,12 +32,25 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
   const [columnHideOverrides, setColumnHideOverrides] = useState<{ [key: string]: boolean }>({});
 
   const firstLoad = useRef<boolean>(true);
-  const searchUpdated = useRef<boolean>(false);
+  const fetchCount = useRef<boolean>(true);
   const pendingFilter = useRef<boolean>(false);
 
   const r = useResponsive();
 
-  const fetchData = useCallback(async (fetchCount?: boolean) => {
+  const fetchData = useCallback(async () => {
+    if (
+      !filter
+      && props.disableFilterBuilder !== true
+      && props.filterBuilderProps?.disableHistory !== true
+      && window.history.state.filterBuilder
+      && window.history.state.filterBuilder.reset !== true
+    ) {
+      // stop fetch if there is no filter but there is one in history which will be/has been restored
+      // this prevents a race condition between the initial data load and the query being restored
+      return;
+    }
+    console.debug("fetching", filter);
+
     setLoading(true);
 
     // select all fields for visible columns
@@ -78,15 +91,15 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
 
     const $select = Array.from(fields).join(",");
     const $expand = expands.map(e => ExpandToQuery(e)).join(",");
-    const $top = pageSettings.size;
-    const $skip = pageSettings.page * pageSettings.size;
+    const $top = pageSize;
+    const $skip = pageNumber * pageSize;
 
     let query: OdataQuery = {
       $select,
       $expand,
       $top,
       $skip,
-      $count: pendingFilter.current || firstLoad.current,
+      $count: fetchCount.current,
       ...queryString
     }
 
@@ -130,24 +143,51 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
       setLoading(false);
       firstLoad.current = false;
       pendingFilter.current = false;
+      fetchCount.current = false;
     } else {
       console.error(`API request failed: ${response.url}, HTTP ${response.status}`);
     }
-  }, [pageSettings, visibleColumns, sortModel, filter, queryString, props.url, props.idField, props.alwaysFetch, props.columns, props.$filter]);
+  },
+    [
+      pageNumber,
+      pageSize,
+      visibleColumns,
+      sortModel,
+      filter,
+      queryString,
+      props.url,
+      props.idField,
+      props.alwaysFetch,
+      props.columns,
+      props.$filter,
+      props.disableFilterBuilder,
+      props.filterBuilderProps?.disableHistory
+    ]
+  );
 
-  const handleBuilderSearch = useCallback((f: string, s: Group | undefined, q: QueryStringCollection | undefined, isNavigation: boolean) => {
-    console.debug("isNavigation", isNavigation);
+
+  const handleBuilderSearch = useCallback((f: string, s: Group | undefined, q: QueryStringCollection | undefined) => {
+    pendingFilter.current = true;
+    fetchCount.current = true;
+
     if (props.filterBuilderProps?.onSearch) {
-      props.filterBuilderProps.onSearch(f, s, q, isNavigation);
+      props.filterBuilderProps.onSearch(f, s, q);
     }
 
     setFilter(f);
     setQueryString(q);
+    setPageNumber(0);
+  }, [props.filterBuilderProps]);
 
-    if (!isNavigation) {
-      // pendingFilter.current = true;
-      setPageSettings((ps) => ({ ...ps, page: 0 }));
+  const handleBuilderRestore = useCallback((f: string, s: Group | undefined, q: QueryStringCollection | undefined) => {
+    fetchCount.current = true;
+
+    if (props.filterBuilderProps?.onRestoreState) {
+      props.filterBuilderProps.onRestoreState(f, s, q);
     }
+
+    setFilter(f);
+    setQueryString(q);
   }, [props.filterBuilderProps]);
 
   useEffect(() => {
@@ -200,7 +240,7 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
 
   useEffect(() => {
     let changed = false;
-    searchUpdated.current = false;
+
     const params = new URLSearchParams(window.location.search);
 
     // update page query string parameter
@@ -208,9 +248,9 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
     if (pageStr) {
       const page = parseInt(pageStr, 10) - 1;
       // update if already exists and is different to settings
-      if (page !== pageSettings.page) {
-        if (pageSettings.page !== 0) {
-          params.set("page", (pageSettings.page + 1).toString());
+      if (page !== pageNumber) {
+        if (pageNumber !== 0) {
+          params.set("page", (pageNumber + 1).toString());
         } else {
           // remove if first page
           params.delete("page");
@@ -218,9 +258,9 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
 
         changed = true;
       }
-    } else if (pageSettings.page !== 0) {
+    } else if (pageNumber !== 0) {
       // add if doesn't already exist and not on first page
-      params.set("page", (pageSettings.page + 1).toString());
+      params.set("page", (pageNumber + 1).toString());
       changed = true;
     }
 
@@ -228,84 +268,70 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
     const sizeStr = params.get("page-size");
     if (sizeStr) {
       const size = parseInt(sizeStr, 10);
-      if (size !== pageSettings.size) {
-        if (pageSettings.size !== (props.defaultPageSize ?? defaultPageSize)) {
-          params.set("page-size", pageSettings.size.toString());
+      if (size !== pageSize) {
+        if (pageSize !== (props.defaultPageSize ?? defaultPageSize)) {
+          params.set("page-size", pageSize.toString());
         } else {
           params.delete("page-size");
         }
 
         changed = true;
       }
-    } else if (pageSettings.size !== (props.defaultPageSize ?? defaultPageSize)) {
-      params.set("page-size", pageSettings.size.toString());
+    } else if (pageSize !== (props.defaultPageSize ?? defaultPageSize)) {
+      params.set("page-size", pageSize.toString());
       changed = true;
     }
 
     // only run if modified and not the first load
     if (changed && !firstLoad.current) {
-      searchUpdated.current = true;
-
       const search = params.toString();
       const url = search ? `${window.location.pathname}?${search}${window.location.hash}` : `${window.location.pathname}${window.location.hash}`;
 
+      // replace the state instead of pushing if a state has already been pushed by a filter
       if (pendingFilter.current) {
+        console.debug("replacing");
         window.history.replaceState(window.history.state, "", url);
       } else {
         window.history.pushState(window.history.state, "", url);
       }
     }
-  }, [pageSettings, props.defaultPageSize]);
+  }, [pageNumber, pageSize, props.defaultPageSize]);
 
-  const location = useLocation();
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    let settings = { ...pageSettings };
-    let changed = false;
+    const handlePopState = (e: PopStateEvent) => {
+      const params = new URLSearchParams(window.location.search);
 
-    const pageVal = params.get("page");
-    // read page number from page query string parameter
-    if (pageVal) {
-      const page = parseInt(pageVal, 10) - 1;
-      // update if different to setting
-      if (page !== settings.page) {
-        settings.page = page;
-        changed = true;
+      const pageVal = params.get("page");
+      if (pageVal) {
+        const page = parseInt(pageVal, 10) - 1;
+        setPageNumber(page);
+      } else if (pageNumber !== 0) {
+        // reset to first page if not provided and not already on first page
+        setPageNumber(0);
       }
-    } else if (settings.page !== 0) {
-      // reset to first page if not provided
-      settings.page = 0;
-      changed = true;
-    }
 
-    const sizeVal = params.get("page-size");
-    if (sizeVal) {
-      const size = parseInt(sizeVal, 10);
-      if (size !== settings.size) {
-        settings.size = size;
-        changed = true;
+      const sizeVal = params.get("page-size");
+      if (sizeVal) {
+        const size = parseInt(sizeVal, 10) - 1;
+        setPageSize(size);
+      } else if (pageSize !== props.defaultPageSize ?? defaultPageSize) {
+        // reset to default if not provided and not already default
+        setPageSize(props.defaultPageSize ?? defaultPageSize);
       }
-    } else if (settings.size !== (props.defaultPageSize ?? defaultPageSize)) {
-      settings.size = defaultPageSize;
-      changed = true;
-    }
+    };
 
-    // only update if modified and there isn't a pending change to the query string
-    // this is required to prevent cancelling out the change just made to pageSettings
-    if (changed && !searchUpdated.current) {
-      setPageSettings(settings);
-    } else {
-      searchUpdated.current = false;
-    }
-  }, [location, pageSettings, props.defaultPageSize]);
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [pageNumber, pageSize, props.defaultPageSize]);
 
   const handlePageChange = useCallback((page: number) => {
-    setPageSettings((ps) => ({ ...ps, page: page }));
+    setPageNumber(page);
   }, []);
 
   const handlePageSizeChange = useCallback((page: number) => {
-    setPageSettings((ps) => ({ ...ps, size: page }));
-  }, [])
+    setPageSize(page);
+  }, []);
+
 
   const columns = useMemo(() => props.columns.filter(c => c.filterOnly !== true).map((c) => {
     let hide: boolean | undefined;
@@ -330,7 +356,8 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
           <FilterBuilder
             {...props.filterBuilderProps}
             schema={props.columns}
-            onSearch={handleBuilderSearch}
+              onSearch={handleBuilderSearch}
+              onRestoreState={handleBuilderRestore}
           />
         </Box>
       }
@@ -352,8 +379,8 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
 
         pagination
         paginationMode={GridFeatureModeConstant.server}
-        page={pageSettings.page}
-        pageSize={pageSettings.size}
+        page={pageNumber}
+        pageSize={pageSize}
         rowsPerPageOptions={props.rowsPerPageOptions ?? [10, 15, 20, 50]}
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}

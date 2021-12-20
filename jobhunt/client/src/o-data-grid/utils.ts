@@ -1,4 +1,4 @@
-import { Expand, PageSettings } from "./types";
+import { Expand } from "./types";
 
 import { defaultPageSize } from "./constants";
 
@@ -63,25 +63,26 @@ const _flatten = (obj: any, sep: string, prefix: string) =>
     return x;
   }, {});
 
-/**
- * Get the page settings from the current query string, or the default
- * @returns PageSettings
- */
-export const GetPageSettingsOrDefault = (defaultSize?: number): PageSettings => {
-  let settings = { page: 0, size: defaultSize ?? defaultPageSize };
-
+export const GetPageNumber = () => {
   const params = new URLSearchParams(window.location.search);
-  if (params.has("page") || params.has("page-size")) {
+  if (params.has("page")) {
     const pageVal = params.get("page");
     if (pageVal) {
-      settings.page = parseInt(pageVal, 10);
-    }
-
-    const sizeVal = params.get("page-size");
-    if (sizeVal) {
-      settings.size = parseInt(sizeVal, 10);
+      return parseInt(pageVal, 10) - 1;
     }
   }
 
-  return settings;
+  return 0;
+}
+
+export const GetPageSizeOrDefault = (defaultSize?: number) => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.has("page-size")) {
+    const sizeVal = params.get("page-size");
+    if (sizeVal) {
+      return parseInt(sizeVal, 10);
+    }
+  }
+
+  return defaultSize ?? defaultPageSize;
 }

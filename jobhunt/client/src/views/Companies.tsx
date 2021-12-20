@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState, useCallback } from "react"
+import React, { FunctionComponent, useState, useCallback, Fragment } from "react"
 import {  Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Fab, Link, Typography, Slider, Chip } from "@mui/material";
 import Grid from "components/Grid";
 import { GridSortModel } from "@mui/x-data-grid"
@@ -34,12 +34,10 @@ type Company = {
 }
 
 const useStyles = makeStyles()((theme) => ({
-  dialog: {
-    minWidth: "40em",
-    maxWidth: "100%",
-    [theme.breakpoints.down('md')]: {
-      minWidth: 0
-    }
+  fab: {
+    position: "fixed",
+    bottom: theme.spacing(2),
+    right: theme.spacing(2)
   }
 }));
 
@@ -274,32 +272,28 @@ const Companies: FunctionComponent = (props) => {
   }, [newCompany, navigate])
 
   return (
-    <Grid container direction="column" spacing={2}>
+    <Fragment>
       <Helmet>
         <title>Companies | JobHunt</title>
       </Helmet>
 
-      <Grid item>
-        <ODataGrid
-          url="/api/odata/company"
-          columns={columns}
-          defaultSortModel={defaultSort}
-          idField="Id"
-          filterBuilderProps={{ localizationProviderProps: { dateAdapter: DateAdapter, locale: enGB } }}
-          defaultPageSize={15}
-        />
-      </Grid>
+      <ODataGrid
+        url="/api/odata/company"
+        columns={columns}
+        defaultSortModel={defaultSort}
+        idField="Id"
+        filterBuilderProps={{ localizationProviderProps: { dateAdapter: DateAdapter, locale: enGB } }}
+        defaultPageSize={15}
+      />
 
-      <Grid item container justifyContent="flex-end">
-        <Fab color="secondary" aria-label="add" onClick={() => setDialogOpen(!dialogOpen)}>
-          <Add/>
-        </Fab>
-      </Grid>
+      <Fab color="secondary" className={classes.fab} aria-label="add" onClick={() => setDialogOpen(!dialogOpen)}>
+        <Add/>
+      </Fab>
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} aria-labelledby="add-dialog-title">
         <DialogTitle id="add-dialog-title">Add New Company</DialogTitle>
         <form onSubmit={(e) => { e.preventDefault(); create(); }}>
-          <DialogContent className={classes.dialog}>
+          <DialogContent>
             <Grid container spacing={2}>
               <Grid item xs={12} md={6}>
                 <TextField label="Name" value={newCompany.name} onChange={(e) => setNewCompany({...newCompany, name: e.target.value})} variant="outlined" fullWidth required />
@@ -331,7 +325,7 @@ const Companies: FunctionComponent = (props) => {
           </DialogActions>
         </form>
       </Dialog>
-    </Grid>
+    </Fragment>
   );
 }
 

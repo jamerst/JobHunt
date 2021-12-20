@@ -52,11 +52,6 @@ export type Expand = {
   count?: boolean
 }
 
-export type PageSettings = {
-  page: number,
-  size: number
-}
-
 export type ValueOption = string | number | SelectOption;
 
 export type SelectOption = {

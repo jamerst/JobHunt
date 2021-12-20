@@ -4,7 +4,7 @@ import Grid from "components/Grid";
 import DatePicker from "@mui/lab/DatePicker";
 import DateAdapter from "@mui/lab/AdapterDayjs";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
-import { GridSortModel } from "@mui/x-data-grid"
+import { GridRowParams, GridSortModel } from "@mui/x-data-grid"
 import Autocomplete from '@mui/material/Autocomplete';
 import { Add, Visibility } from "@mui/icons-material";
 
@@ -313,6 +313,8 @@ const Jobs: FunctionComponent = (props) => {
     }
   }, [navigate]);
 
+  const getClass = useCallback((params: GridRowParams) => params.row.Archived ? classes.archived : params.row.Seen ? "" : classes.unseen, [classes]);
+
   useEffect(() => {
     if (companiesFetched.current) {
       return;
@@ -341,7 +343,7 @@ const Jobs: FunctionComponent = (props) => {
       <ODataGrid
         url="/api/odata/job"
         columns={columns}
-        getRowClassName={(params) => params.row.Archived ? classes.archived : params.row.Seen ? "" : classes.unseen}
+        getRowClassName={getClass}
         idField="Id"
         alwaysFetch={alwaysFetch}
         defaultSortModel={defaultSort}
