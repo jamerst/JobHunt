@@ -49,7 +49,6 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
       // this prevents a race condition between the initial data load and the query being restored
       return;
     }
-    console.debug("fetching", filter);
 
     setLoading(true);
 
@@ -289,7 +288,6 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
 
       // replace the state instead of pushing if a state has already been pushed by a filter
       if (pendingFilter.current) {
-        console.debug("replacing");
         window.history.replaceState(window.history.state, "", url);
       } else {
         window.history.pushState(window.history.state, "", url);
