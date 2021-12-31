@@ -23,6 +23,7 @@ import { LocationFilter } from "types";
 import Categories, { Category } from "components/Categories";
 import { ODataGrid, ODataGridColDef } from "o-data-grid";
 import { QueryStringCollection } from "o-data-grid/FilterBuilder/types";
+import HideOnScroll from "components/HideOnScroll";
 
 type Job = {
   company?: Company | null,
@@ -351,9 +352,11 @@ const Jobs: FunctionComponent = (props) => {
         defaultPageSize={15}
       />
 
-      <Fab className={classes.fab} color="secondary" aria-label="add" onClick={() => { setDialogOpen(!dialogOpen); }}>
-        <Add/>
-      </Fab>
+      <HideOnScroll>
+        <Fab className={classes.fab} color="secondary" aria-label="add" onClick={() => { setDialogOpen(!dialogOpen); }}>
+          <Add/>
+        </Fab>
+      </HideOnScroll>
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} aria-labelledby="add-dialog-title">
         <DialogTitle id="add-dialog-title">Add New Job</DialogTitle>

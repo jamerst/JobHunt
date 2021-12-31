@@ -31,20 +31,22 @@ const FilterRoot = ({ props }: FilterRootProps) => {
 
   const [anchor, setAnchor] = useState<null | HTMLElement>(null);
 
-  const { onSearch, onRestoreState, disableHistory } = props;
-  const search = useCallback((e: React.FormEvent<HTMLFormElement>) => {
+  const { onSubmit, onRestoreState, disableHistory } = props;
+  const submit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (onSearch) {
+    if (onSubmit) {
       const result = filter();
 
       if (result.filter) {
         currentFilter.current = result.filter;
 
-        onSearch(result.filter, result.serialised, result.queryString);
+        const returned = onSubmit(result.filter, result.serialised, result.queryString);
 
         if (disableHistory !== true) {
-          window.history.pushState({
+          window.history.pushState(
+            {
               ...window.history.state,
+              ...returned,
               filterBuilder: {
                 filter: result.filter,
                 serialised: result.serialised,
@@ -56,7 +58,7 @@ const FilterRoot = ({ props }: FilterRootProps) => {
         }
       }
     }
-  }, [onSearch, filter, disableHistory]);
+  }, [onSubmit, filter, disableHistory]);
 
   const reset = useCallback(() => {
     currentFilter.current = "";
@@ -64,8 +66,8 @@ const FilterRoot = ({ props }: FilterRootProps) => {
     setClauses(initialClauses.update(rootConditionUuid, (c) => ({ ...c as ConditionClause, field: props.schema[0].field })));
     setTree(initialTree);
 
-    if (onSearch) {
-      onSearch("", undefined, undefined);
+    if (onSubmit) {
+      onSubmit("", undefined, undefined);
     }
 
     if (disableHistory !== true) {
@@ -76,7 +78,7 @@ const FilterRoot = ({ props }: FilterRootProps) => {
         }
       }, "");
     }
-  }, [setClauses, setTree, onSearch, props.schema, disableHistory]);
+  }, [setClauses, setTree, onSubmit, props.schema, disableHistory]);
 
   const handleReset = useCallback(() => reset(), [reset]);
 
@@ -114,9 +116,9 @@ const FilterRoot = ({ props }: FilterRootProps) => {
     }
 
     if (onRestoreState) {
-      onRestoreState(filter, obj, queryString);
+      onRestoreState(filter, obj, queryString, state);
     }
-  }, [onRestoreState, restoreDefault, setClauses, setTree])
+  }, [onRestoreState, restoreDefault, setClauses, setTree]);
 
   useEffect(() => {
     if (disableHistory !== true) {
@@ -140,7 +142,7 @@ const FilterRoot = ({ props }: FilterRootProps) => {
 
   return (
     <Fragment>
-      <form onSubmit={search}>
+      <form onSubmit={submit}>
         <FilterGroup
           clauseId={rootGroupUuid}
           path={[]}

@@ -15,6 +15,7 @@ import { ExpandToQuery, Flatten, GroupArrayBy, GetPageNumber, GetPageSizeOrDefau
 import { defaultPageSize } from "../constants";
 import { Group, QueryStringCollection } from "../FilterBuilder/types";
 import { SearchOff } from "@mui/icons-material";
+import makeStyles from "makeStyles";
 
 
 const ODataGrid = React.memo((props: ODataGridProps) => {
@@ -165,29 +166,39 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
   );
 
 
-  const handleBuilderSearch = useCallback((f: string, s: Group | undefined, q: QueryStringCollection | undefined) => {
+  const handleBuilderSubmit = useCallback((f: string, s: Group | undefined, q: QueryStringCollection | undefined) => {
     pendingFilter.current = true;
     fetchCount.current = true;
 
-    if (props.filterBuilderProps?.onSearch) {
-      props.filterBuilderProps.onSearch(f, s, q);
+    if (props.filterBuilderProps?.onSubmit) {
+      props.filterBuilderProps.onSubmit(f, s, q);
     }
 
     setFilter(f);
     setQueryString(q);
     setPageNumber(0);
-  }, [props.filterBuilderProps]);
 
-  const handleBuilderRestore = useCallback((f: string, s: Group | undefined, q: QueryStringCollection | undefined) => {
+    return { oDataGrid: { sortModel: sortModel } };
+  }, [props.filterBuilderProps, sortModel]);
+
+  const handleBuilderRestore = useCallback((f: string, s: Group | undefined, q: QueryStringCollection | undefined, state: any) => {
     fetchCount.current = true;
 
     if (props.filterBuilderProps?.onRestoreState) {
-      props.filterBuilderProps.onRestoreState(f, s, q);
+      props.filterBuilderProps.onRestoreState(f, s, q, state);
+    }
+
+    if (props.disableHistory !== true) {
+      if (state.oDataGrid?.sortModel) {
+        setSortModel(state.oDataGrid.sortModel as GridSortModel);
+      } else {
+        setSortModel(props.defaultSortModel);
+      }
     }
 
     setFilter(f);
     setQueryString(q);
-  }, [props.filterBuilderProps]);
+  }, [props.filterBuilderProps, props.disableHistory, props.defaultSortModel]);
 
   useEffect(() => {
     fetchData()
@@ -234,7 +245,11 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
     }
 
     setSortModel(model);
-  }, [onSortModelChange]);
+
+    if (props.disableHistory !== true) {
+      window.history.pushState({ ...window.history.state, oDataGrid: { sortModel: model } }, "");
+    }
+  }, [onSortModelChange, props.disableHistory]);
 
 
   useEffect(() => {
@@ -316,11 +331,21 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
         // reset to default if not provided and not already default
         setPageSize(props.defaultPageSize ?? defaultPageSize);
       }
+
+      if (props.disableHistory !== true && props.disableFilterBuilder === true) {
+        // only restore sort model from history if history is enabled and FilterBuilder is disabled
+        // if FilterBuilder is enabled sort model restoration is handled in handleBuilderRestore
+        if (e.state.oDataGrid?.sortModel) {
+          setSortModel(e.state.oDataGrid.sortModel as GridSortModel);
+        } else {
+          setSortModel(props.defaultSortModel);
+        }
+      }
     };
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [pageNumber, pageSize, props.defaultPageSize]);
+  }, [pageNumber, pageSize, props.defaultPageSize, props.defaultSortModel, props.disableHistory, props.disableFilterBuilder]);
 
   const handlePageChange = useCallback((page: number) => {
     setPageNumber(page);
@@ -354,8 +379,8 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
           <FilterBuilder
             {...props.filterBuilderProps}
             schema={props.columns}
-              onSearch={handleBuilderSearch}
-              onRestoreState={handleBuilderRestore}
+            onSubmit={handleBuilderSubmit}
+            onRestoreState={handleBuilderRestore}
           />
         </Box>
       }
@@ -382,6 +407,7 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
         rowsPerPageOptions={props.rowsPerPageOptions ?? [10, 15, 20, 50]}
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
+        disableColumnFilter
 
         loading={loading}
 
@@ -395,21 +421,51 @@ const ODataGrid = React.memo((props: ODataGridProps) => {
   )
 });
 
-const LoadingOverlay = () => (
-  <GridOverlay>
-    <div style={{ position: "absolute", top: 0, width: "100%" }}>
-      <LinearProgress/>
-    </div>
-  </GridOverlay>
-)
+const useLoadingStyles = makeStyles()(() => ({
+  container: {
+    position: "absolute",
+    top: 0,
+    width: "100%"
+  }
+}));
 
-const NoResultsOverlay = () => (
-  <GridOverlay style={{ height: "100%" }}>
-    <div style={{ height: "100%", display: "flex", fontSize: 75, flexDirection: "column", justifyContent: "center", alignItems: "center", opacity: .5 }}>
-      <SearchOff fontSize="inherit" />
-      <Typography variant="h5">No Results</Typography>
-    </div>
-  </GridOverlay>
-)
+const LoadingOverlay = () => {
+  const { classes } = useLoadingStyles();
+
+  return (
+    <GridOverlay>
+      <div className={classes.container}>
+        <LinearProgress />
+      </div>
+    </GridOverlay>
+  )
+}
+
+const useNoResultsStyles = makeStyles()(() => ({
+  overlay: {
+    height: "100%"
+  },
+  container: {
+    height: "100%",
+    display: "flex",
+    fontSize: 75,
+    flexDirection: "column",
+    alignItems: "center",
+    opacity: .5
+  }
+}));
+
+const NoResultsOverlay = () => {
+  const { classes } = useNoResultsStyles();
+
+  return (
+    <GridOverlay className={classes.overlay}>
+      <div className={classes.container}>
+        <SearchOff fontSize="inherit" />
+        <Typography variant="h5">No Results</Typography>
+      </div>
+    </GridOverlay>
+  )
+}
 
 export default ODataGrid;

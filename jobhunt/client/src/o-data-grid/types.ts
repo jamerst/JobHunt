@@ -16,7 +16,10 @@ export type ODataGridProps =
     | "onPageSizeChange"
     | "loading"
     | "sortingMode"
-    | "sortModel">
+    | "sortModel"
+    | "disableColumnFilter"
+    | "onFilterModelChange"
+  >
   &
   {
     url: string,
@@ -28,7 +31,8 @@ export type ODataGridProps =
     defaultSortModel?: GridSortModel,
     disableFilterBuilder?: boolean,
     filterBuilderProps?: ExternalBuilderProps,
-    defaultPageSize?: number
+    defaultPageSize?: number,
+    disableHistory?: boolean
   };
 
 export type ODataGridColDef = Omit<GridColDef, "hide" | "filterOperators" | "sortComparator"> & FieldDef & {

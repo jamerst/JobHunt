@@ -6,8 +6,8 @@ import { ValueOption } from "o-data-grid/types";
 
 export type ExternalBuilderProps = {
   searchMenuItems?: ({ label: string, onClick: () => void })[],
-  onSearch?: (filter: string, serialised: Group | undefined, queryString: QueryStringCollection | undefined) => void,
-  onRestoreState?: (filter: string, serialised: Group | undefined, queryString: QueryStringCollection | undefined) => void,
+  onSubmit?: (filter: string, serialised: Group | undefined, queryString: QueryStringCollection | undefined) => (void | any),
+  onRestoreState?: (filter: string, serialised: Group | undefined, queryString: QueryStringCollection | undefined, state: any) => void,
   localeText?: FilterBuilderLocaleText,
 
   autocompleteGroups?: string[],
