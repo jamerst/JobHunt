@@ -1,7 +1,9 @@
-import React, { Fragment, useEffect, useState } from "react"
+import React, { Fragment, useCallback, useEffect, useState } from "react"
 import { Typography, Tooltip, Chip, Link } from "@mui/material"
 import Grid from "components/Grid";
-import { GridSortModel } from "@mui/x-data-grid"
+import { GridRowParams, GridSortModel } from "@mui/x-data-grid"
+import { ODataGridColDef } from "o-data-grid";
+import ODataGrid from "components/ODataGrid";
 
 import SwipeableView from "react-swipeable-views"
 import { autoPlay } from "react-swipeable-views-utils"
@@ -18,7 +20,6 @@ import { Link as RouterLink } from "react-router-dom"
 import CardHeader from "components/CardHeader"
 import CardBody from "components/CardBody"
 
-import { ODataGrid, ODataGridColDef } from "o-data-grid";
 
 type JobCount = {
   daily: number,
@@ -153,6 +154,8 @@ export const Dashboard = () => {
     fetchJobCounts()
   }, []);
 
+  const getClass = useCallback((params: GridRowParams) => params.row.Seen ? "" : classes.unseen, [classes]);
+
   return (
     <Grid container spacing={4}>
       <Helmet>
@@ -192,7 +195,7 @@ export const Dashboard = () => {
             <ODataGrid
               url="/api/odata/job"
               columns={columns}
-              getRowClassName={(params) => params.row.Seen ? "" : classes.unseen}
+              getRowClassName={getClass}
               idField="Id"
               defaultSortModel={defaultSort}
               $filter="Archived eq false"

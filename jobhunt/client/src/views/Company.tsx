@@ -4,7 +4,9 @@ import Grid from "components/Grid";
 import { AccountBalance, Block, Delete, LinkedIn, Map, MoreHoriz, OpenInNew, RateReview, Save, Visibility, VisibilityOff, Web } from "@mui/icons-material";
 import makeStyles from "makeStyles";
 import Autocomplete from '@mui/material/Autocomplete';
-import { GridSortModel } from "@mui/x-data-grid"
+import { GridRowParams, GridSortModel } from "@mui/x-data-grid"
+import { ODataGridColDef } from "o-data-grid";
+import ODataGrid from "components/ODataGrid";
 
 import { useParams } from "react-router"
 import { Link as RouterLink, useNavigate } from "react-router-dom"
@@ -21,7 +23,6 @@ import CardBody from "components/CardBody";
 import Tabs from "components/Tabs";
 import Tab from "components/Tab";
 import Markdown from "components/Markdown";
-import { ODataGrid, ODataGridColDef } from "o-data-grid";
 
 type CompanyResponse = {
   id: number,
@@ -255,6 +256,8 @@ const Company = () => {
       console.error(`API request failed: PATCH /api/companies/blacklist/${id}, HTTP ${response.status}`);
     }
   }, [id, companyData]);
+
+  const getClass = useCallback((params: GridRowParams) => params.row.Seen ? "" : classes.unseen, [classes]);
 
   useEffect(() => { fetchData() }, [fetchData]);
 
@@ -600,7 +603,7 @@ const Company = () => {
                 $filter={`CompanyId eq ${id}`}
                 idField="Id"
                 disableFilterBuilder
-                getRowClassName={(params) => params.row.Seen ? "" : classes.unseen}
+                getRowClassName={getClass}
                 defaultSortModel={defaultSort}
               />
             </Tab>

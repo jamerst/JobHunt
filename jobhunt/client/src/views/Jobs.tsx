@@ -7,6 +7,8 @@ import LocalizationProvider from "@mui/lab/LocalizationProvider";
 import { GridRowParams, GridSortModel } from "@mui/x-data-grid"
 import Autocomplete from '@mui/material/Autocomplete';
 import { Add, Visibility } from "@mui/icons-material";
+import { ODataGridColDef, QueryStringCollection } from "o-data-grid";
+import ODataGrid from "components/ODataGrid";
 
 import makeStyles from "makeStyles";
 
@@ -21,8 +23,6 @@ import enGB from "dayjs/locale/en-gb"
 
 import { LocationFilter } from "types";
 import Categories, { Category } from "components/Categories";
-import { ODataGrid, ODataGridColDef } from "o-data-grid";
-import { QueryStringCollection } from "o-data-grid/FilterBuilder/types";
 import HideOnScroll from "components/HideOnScroll";
 
 type Job = {

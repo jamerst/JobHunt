@@ -7,6 +7,8 @@ import { Add, Visibility } from "@mui/icons-material";
 import { Helmet } from "react-helmet";
 import { useNavigate } from "react-router";
 import { Link as RouterLink } from "react-router-dom";
+import { ODataGridColDef, QueryStringCollection, numericOperators } from "o-data-grid";
+import ODataGrid from "components/ODataGrid";
 
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
@@ -14,10 +16,8 @@ import utc from "dayjs/plugin/utc"
 import enGB from "dayjs/locale/en-gb"
 
 import makeStyles from "makeStyles";
-import { ODataGrid, ODataGridColDef, QueryStringCollection } from "o-data-grid";
 import { LocationFilter } from "types";
 import Categories, { Category } from "components/Categories";
-import { numericOperators } from "o-data-grid/FilterBuilder/constants";
 import HideOnScroll from "components/HideOnScroll";
 
 type JobResult = {
