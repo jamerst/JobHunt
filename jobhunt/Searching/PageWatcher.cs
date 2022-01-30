@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
@@ -9,20 +10,23 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 using AngleSharp;
-using AngleSharp.Html.Parser;
+using AngleSharp.Diffing;
 
+using JobHunt.Diffing;
 using JobHunt.Models;
 using JobHunt.Services;
 
 namespace JobHunt.Searching {
     public class PageWatcher : IPageWatcher {
-        private readonly IWatchedPageService _wpService;
         private readonly IAlertService _alertService;
+        private readonly IWatchedPageService _wpService;
+        private readonly IWatchedPageChangeService _wpcService;
         private readonly HttpClient _client;
         private readonly ILogger _logger;
-        public PageWatcher(IAlertService alertService, IWatchedPageService wpService, HttpClient client, ILogger<PageWatcher> logger) {
+        public PageWatcher(IAlertService alertService, IWatchedPageService wpService, IWatchedPageChangeService wpcService, HttpClient client, ILogger<PageWatcher> logger) {
             _alertService = alertService;
             _wpService = wpService;
+            _wpcService = wpcService;
             _client = client;
             _logger = logger;
         }
@@ -50,18 +54,18 @@ namespace JobHunt.Searching {
                     if (httpResponse.IsSuccessStatusCode) {
                         response = await httpResponse.Content.ReadAsStringAsync();
                     } else {
-                        await _wpService.UpdateStatusAsync(page.Id, null, $"Request failed, HTTP {(int)httpResponse.StatusCode}");
+                        await _wpService.UpdateStatusAsync(page.Id, statusMessage: $"Request failed, HTTP {(int)httpResponse.StatusCode}");
                         return;
                     }
                 }
             } catch (HttpRequestException e) {
                 _logger.LogError(e, $"HTTP Request failed", page);
-                await _wpService.UpdateStatusAsync(page.Id, null, "HTTP request error");
+                await _wpService.UpdateStatusAsync(page.Id, statusMessage: "HTTP request error");
                 return;
             }
 
             if (string.IsNullOrEmpty(response)) {
-                await _wpService.UpdateStatusAsync(page.Id, null, "No content returned");
+                await _wpService.UpdateStatusAsync(page.Id, statusMessage: "No content returned");
                 return;
             }
 
@@ -69,38 +73,36 @@ namespace JobHunt.Searching {
                 return;
             }
 
-            var context = BrowsingContext.New();
-            var document = await context.OpenAsync(req => req.Content(response));
+            WatchedPageChange? previous = await _wpcService.GetLatestChangeOrDefaultAsync(page.Id);
+            if (previous == default) {
+                await _wpcService.CreateAsync(new WatchedPageChange {
+                    WatchedPageId = page.Id,
+                    Created = DateTime.UtcNow,
+                    Html = response
+                });
 
-            string cssSelector = "body";
-            if (!string.IsNullOrEmpty(page.CssSelector)) {
-                cssSelector = page.CssSelector;
-            }
-
-            if (!string.IsNullOrEmpty(page.CssBlacklist)) {
-                foreach (var elem in document.QuerySelectorAll(page.CssBlacklist)) {
-                    elem.Remove();
-                }
-            }
-
-            var elems = document.QuerySelectorAll(cssSelector);
-            StringBuilder elemsHtml = new StringBuilder();
-            foreach(var elem in elems) {
-                elemsHtml.Append(elem.ToHtml());
-            }
-
-            string content = elemsHtml.ToString();
-            if (string.IsNullOrEmpty(content)) {
-                await _wpService.UpdateStatusAsync(page.Id, null, "No content matching CSS selector");
                 return;
             }
 
-            string hash = "";
-            using (var sha1 = SHA1.Create()) {
-                hash = Convert.ToBase64String(sha1.ComputeHash(Encoding.UTF8.GetBytes(content)));
-            }
+            bool changed = false;
 
-            if (hash != page.Hash && !string.IsNullOrEmpty(page.Hash)) {
+            var diffs = DiffBuilder
+                .Compare(previous.Html)
+                .WithTest(response)
+                .WithOptions(options => options
+                    .AddDefaultOptions()
+                    .AddCssWhitelistBlacklistFilter(page.CssSelector, page.CssBlacklist))
+                .Build();
+
+            if (diffs.Any()) {
+                changed = true;
+
+                await _wpcService.CreateAsync(new WatchedPageChange {
+                    WatchedPageId = page.Id,
+                    Created = DateTime.UtcNow,
+                    Html = response
+                });
+
                 await _alertService.CreateAsync(new Alert {
                     Type = AlertType.PageUpdate,
                     Title = $"{page.Company.Name} page updated",
@@ -109,7 +111,7 @@ namespace JobHunt.Searching {
                 });
             }
 
-            await _wpService.UpdateStatusAsync(page.Id, hash);
+            await _wpService.UpdateStatusAsync(page.Id, changed);
         }
 
         public async Task GetInitialAsync(int companyId, CancellationToken token) {

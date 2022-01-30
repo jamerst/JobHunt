@@ -28,7 +28,10 @@ const useStyles = makeStyles()((theme) => ({
     [theme.breakpoints.up("md")] : {
       marginLeft: drawerWidth,
       padding: theme.spacing(2),
-    }
+    },
+    minHeight: "100vh",
+    display: "flex",
+    flexDirection: "column"
   },
   themeIcon: {
     color: "inherit"

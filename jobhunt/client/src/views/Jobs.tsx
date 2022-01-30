@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useEffect, useState, useCallback, Fragment, useRef } from "react"
+import React, { FunctionComponent, Fragment, useEffect, useState, useCallback, useRef } from "react"
 import { Button, Chip, Slider, TextField, Tooltip, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Fab, Link } from "@mui/material";
 import Grid from "components/Grid";
 import DatePicker from "@mui/lab/DatePicker";
@@ -336,7 +336,7 @@ const Jobs: FunctionComponent = (props) => {
   }, [dialogOpen]);
 
   return (
-    <Fragment>
+    <div>
       <Helmet>
         <title>Jobs | JobHunt</title>
       </Helmet>
@@ -421,7 +421,7 @@ const Jobs: FunctionComponent = (props) => {
           </DialogActions>
         </form>
       </Dialog>
-    </Fragment>
+    </div>
   );
 }
 

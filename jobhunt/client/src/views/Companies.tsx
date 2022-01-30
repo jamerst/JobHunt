@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState, useCallback, Fragment } from "react"
+import React, { FunctionComponent, useState, useCallback } from "react"
 import {  Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Fab, Link, Typography, Slider, Chip } from "@mui/material";
 import Grid from "components/Grid";
 import { GridSortModel } from "@mui/x-data-grid"
@@ -273,7 +273,7 @@ const Companies: FunctionComponent = (props) => {
   }, [newCompany, navigate])
 
   return (
-    <Fragment>
+    <div>
       <Helmet>
         <title>Companies | JobHunt</title>
       </Helmet>
@@ -328,7 +328,7 @@ const Companies: FunctionComponent = (props) => {
           </DialogActions>
         </form>
       </Dialog>
-    </Fragment>
+    </div>
   );
 }
 

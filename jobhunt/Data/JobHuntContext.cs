@@ -77,6 +77,11 @@ namespace JobHunt.Data {
                 .WithOne(sr => sr.Search)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            builder.Entity<WatchedPage>()
+                .HasMany(p => p.Changes)
+                .WithOne(c => c.WatchedPage)
+                .OnDelete(DeleteBehavior.Cascade);
+
             builder.HasDbFunction(
                 typeof(JobHuntContext)
                 .GetMethod(nameof(GeoDistance),
@@ -88,13 +93,14 @@ namespace JobHunt.Data {
         public DbSet<Alert> Alerts => Set<Alert>();
         public DbSet<Category> Categories => Set<Category>();
         public DbSet<Company> Companies => Set<Company>();
-        public DbSet<WatchedPage> WatchedPages => Set<WatchedPage>();
         public DbSet<CompanyCategory> CompanyCategories => Set<CompanyCategory>();
         public DbSet<CompanyName> CompanyNames => Set<CompanyName>();
         public DbSet<Job> Jobs => Set<Job>();
         public DbSet<JobCategory> JobCategories => Set<JobCategory>();
         public DbSet<Search> Searches => Set<Search>();
         public DbSet<SearchRun> SearchRuns => Set<SearchRun>();
+        public DbSet<WatchedPage> WatchedPages => Set<WatchedPage>();
+        public DbSet<WatchedPageChange> WatchedPageChanges => Set<WatchedPageChange>();
         public double GeoDistance(double alat, double alng, double blat, double blng) => throw new NotSupportedException();
     }
 }

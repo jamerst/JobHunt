@@ -14,6 +14,7 @@ import Job from 'views/Job';
 import Jobs from 'views/Jobs';
 import Search from 'views/Search';
 import Searches from 'views/Searches';
+import PageChanges from 'views/PageChanges';
 
 export const muiCache = createCache({
   key: "mui",
@@ -142,6 +143,12 @@ function App() {
             <Route path="/search/:id" element={
               <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
                 <Search/>
+              </MainLayout>
+            } />
+
+            <Route path="/page-changes/:id" element={
+              <MainLayout pageTitle="Page Changes" darkMode={darkMode} setDarkMode={setDarkMode}>
+                <PageChanges/>
               </MainLayout>
             } />
           </Routes>

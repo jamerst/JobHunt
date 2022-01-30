@@ -15,10 +15,14 @@ namespace JobHunt.Services {
             _context = context;
         }
 
-        public async Task UpdateStatusAsync(int id, string? hash = null, string? statusMessage = null) {
+        public async Task<WatchedPage?> FindByIdAsync(int id) {
+            return await _context.WatchedPages.FirstOrDefaultAsync(p => p.Id == id);
+        }
+
+        public async Task UpdateStatusAsync(int id, bool changed = false, string? statusMessage = null) {
             WatchedPage? page = await _context.WatchedPages.FirstOrDefaultAsync(p => p.Id == id);
 
-            if (page == null) {
+            if (page == default) {
                 return;
             }
 
@@ -26,11 +30,8 @@ namespace JobHunt.Services {
 
             if (!string.IsNullOrEmpty(statusMessage)) {
                 page.StatusMessage = statusMessage;
-            } else if (!string.IsNullOrEmpty(hash)) {
-                if (hash != page.Hash) {
-                    page.LastUpdated = DateTime.UtcNow;
-                    page.Hash = hash;
-                }
+            } else if (changed) {
+                page.LastUpdated = DateTime.UtcNow;
                 page.StatusMessage = null;
             }
 
@@ -46,7 +47,7 @@ namespace JobHunt.Services {
 
         public async Task<List<WatchedPage>> GetUnfetchedAsync(int companyId) {
             return await _context.WatchedPages
-                .Where(wp => wp.CompanyId == companyId && string.IsNullOrEmpty(wp.Hash))
+                .Where(wp => wp.CompanyId == companyId && !wp.Changes.Any())
                 .ToListAsync();
         }
 
@@ -58,7 +59,8 @@ namespace JobHunt.Services {
     }
 
     public interface IWatchedPageService {
-        Task UpdateStatusAsync(int id, string? hash = null, string? statusMessage = null);
+        Task<WatchedPage?> FindByIdAsync(int id);
+        Task UpdateStatusAsync(int id, bool changed = false, string? statusMessage = null);
         Task<List<WatchedPage>> GetAllActiveAsync();
         Task<List<WatchedPage>> GetUnfetchedAsync(int companyId);
         Task<List<WatchedPage>> GetByCompanyAsync(int companyId);

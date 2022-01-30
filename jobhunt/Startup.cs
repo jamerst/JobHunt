@@ -80,6 +80,7 @@ namespace JobHunt {
             services.AddTransient<IJobService, JobService>();
             services.AddTransient<ISearchService, SearchService>();
             services.AddTransient<IWatchedPageService, WatchedPageService>();
+            services.AddTransient<IWatchedPageChangeService, WatchedPageChangeService>();
 
             services.AddTransient<IIndeedAPI, IndeedAPI>();
             services.AddTransient<IPageWatcher, PageWatcher>();
