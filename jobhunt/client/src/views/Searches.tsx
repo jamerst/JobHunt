@@ -14,7 +14,7 @@ import CardBody from "components/CardBody";
 import CardHeader from "components/CardHeader";
 import CountrySelector from "components/CountrySelector";
 import { IndeedSupportedCountries } from "utils/constants";
-import { ODataGrid, ODataGridColDef } from "o-data-grid";
+import { ODataColumnVisibilityModel, ODataGrid, ODataGridColDef } from "o-data-grid";
 
 const toggleEnabled = async (id: string) => {
   const response = await fetch(`/api/search/enable/${id}`, { method: "PATCH" });
@@ -38,7 +38,7 @@ const columns: ODataGridColDef[] = [
   {
     field: "Enabled",
     headerName: "Enabled",
-    renderCell: (params) => (<Switch defaultChecked={params.row.Enabled} onChange={(e) => {toggleEnabled(params.row.id)}}/>)
+    renderCell: (params) => (<Switch defaultChecked={params.row.Enabled} onChange={(e) => { toggleEnabled(params.row.id) }} />)
   },
   {
     field: "LastRun",
@@ -46,7 +46,6 @@ const columns: ODataGridColDef[] = [
     headerName: "Last Run",
     flex: 1,
     sortable: false,
-    hide: { xs: true, md: false },
     renderCell: (params) => {
       if (params.value === null) {
         return <Fragment>Never</Fragment>;
@@ -56,7 +55,7 @@ const columns: ODataGridColDef[] = [
       if (date.isBefore(dayjs().subtract(1, "day"), "day")) {
         return (<Fragment>{date.format("DD/MM/YYYY HH:mm")}</Fragment>);
       } else {
-        let failedTag = params.row.LastFetchSuccess ? null : (<Chip label="Failed" color="error"/>);
+        let failedTag = params.row.LastFetchSuccess ? null : (<Chip label="Failed" color="error" />);
         return (
           <Grid container spacing={1}>
             <Grid item>
@@ -70,7 +69,13 @@ const columns: ODataGridColDef[] = [
       }
     }
   }
-]
+];
+
+const columnVisibility: ODataColumnVisibilityModel = {
+  "LastRun": { xs: false, md: true }
+}
+
+const alwaysSelect = ["Id"];
 
 type Search = {
   provider: string,
@@ -116,8 +121,10 @@ const Searches: FunctionComponent = (props) => {
           <ODataGrid
             url="/api/odata/search"
             columns={columns}
+            columnVisibilityModel={columnVisibility}
+            getRowId={(row) => row["Id"]}
+            alwaysSelect={alwaysSelect}
             disableFilterBuilder
-            idField="Id"
           />
           <Box mt={2}>
             <Grid container justifyContent="flex-end">

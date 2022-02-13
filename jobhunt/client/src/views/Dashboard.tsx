@@ -2,7 +2,7 @@ import React, { Fragment, useCallback, useEffect, useState } from "react"
 import { Typography, Tooltip, Chip, Link } from "@mui/material"
 import Grid from "components/Grid";
 import { GridRowParams, GridSortModel } from "@mui/x-data-grid"
-import { ODataGridColDef } from "o-data-grid";
+import { ODataColumnVisibilityModel, ODataGridColDef } from "o-data-grid";
 import ODataGrid from "components/ODataGrid";
 
 import SwipeableView from "react-swipeable-views"
@@ -53,7 +53,6 @@ const columns: ODataGridColDef[] = [
   {
     field: "Company/Name",
     headerName: "Company",
-    hide: { xs: true, md: false },
     flex: 2,
     renderCell: (params) => (
       <Link
@@ -73,14 +72,12 @@ const columns: ODataGridColDef[] = [
   },
   {
     field: "Salary",
-    hide: { xs: true, xl: false },
     filterField: "AvgYearlySalary",
     sortField: "AvgYearlySalary",
     flex: 1
   },
   {
-    field: "Status",
-    hide: true
+    field: "Status"
   },
   {
     field: "JobCategories",
@@ -92,7 +89,6 @@ const columns: ODataGridColDef[] = [
     },
     sortable: false,
     flex: 1,
-    hide: true,
     renderCell: (params) => params.row.JobCategories.map((c: any) => c["Category/Name"]).join(", ")
   },
   {
@@ -102,14 +98,12 @@ const columns: ODataGridColDef[] = [
     filterable: false,
     sortable: false,
     flex: 1,
-    hide: true,
     valueGetter: (params) => params.row[params.field] ? params.row[params.field] : "Added Manually"
   },
   {
     field: "Posted",
     select: "Posted,Seen",
     headerName: "Posted",
-    hide: { xs: true, sm: false },
     type: "date",
     flex: 1.25,
     renderCell: (params) => {
@@ -133,6 +127,17 @@ const columns: ODataGridColDef[] = [
     }
   },
 ];
+
+const columnVisibility: ODataColumnVisibilityModel = {
+  "Company/Name": { xs: false, md: true },
+  "Salary": { xs: false, xl: true },
+  "Status": false,
+  "JobCategories": false,
+  "Source/DisplayName": false,
+  "Posted": { xs: false, sm: true }
+};
+
+const alwaysSelect = ["Id"];
 
 export const Dashboard = () => {
   const [jobCounts, setJobCounts] = useState<JobCount>({ daily: -1, weekly: -1, monthly: -1 });
@@ -195,10 +200,12 @@ export const Dashboard = () => {
             <ODataGrid
               url="/api/odata/job"
               columns={columns}
-              getRowClassName={getClass}
-              idField="Id"
+              columnVisibilityModel={columnVisibility}
+              getRowId={(row) => row["Id"]}
+              alwaysSelect={alwaysSelect}
               defaultSortModel={defaultSort}
               $filter="Archived eq false"
+              getRowClassName={getClass}
             />
           </CardBody>
         </Card>

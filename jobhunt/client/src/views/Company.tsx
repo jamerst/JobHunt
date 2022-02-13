@@ -5,7 +5,7 @@ import { AccountBalance, Block, Delete, LinkedIn, Map, MoreHoriz, OpenInNew, Rat
 import makeStyles from "makeStyles";
 import Autocomplete from '@mui/material/Autocomplete';
 import { GridRowParams, GridSortModel } from "@mui/x-data-grid"
-import { ODataGridColDef } from "o-data-grid";
+import { ODataColumnVisibilityModel, ODataGridColDef } from "o-data-grid";
 import ODataGrid from "components/ODataGrid";
 
 import { useParams } from "react-router"
@@ -83,15 +83,13 @@ const columns: ODataGridColDef[] = [
   },
   {
     field: "Salary",
-    hide: { xs: true, xl: false },
     filterField: "AvgYearlySalary",
     sortField: "AvgYearlySalary",
     label: "Median Annual Salary",
     flex: 1
   },
   {
-    field: "Status",
-    hide: true
+    field: "Status"
   },
   {
     field: "JobCategories",
@@ -103,7 +101,6 @@ const columns: ODataGridColDef[] = [
     },
     sortable: false,
     flex: 1,
-    hide: true,
     renderCell: (params) => params.row.JobCategories.map((c: any) => c["Category/Name"]).join(", ")
   },
   {
@@ -113,14 +110,12 @@ const columns: ODataGridColDef[] = [
     filterable: false,
     sortable: false,
     flex: 1,
-    hide: true,
     valueGetter: (params) => params.row[params.field] ? params.row[params.field] : "Added Manually"
   },
   {
     field: "Posted",
     select: "Posted,Seen",
     headerName: "Posted",
-    hide: { xs: true, sm: false },
     type: "date",
     flex: 1.25,
     renderCell: (params) => {
@@ -145,7 +140,17 @@ const columns: ODataGridColDef[] = [
   },
 ];
 
-const defaultSort:GridSortModel = [{ field: "Posted", sort: "desc" }]
+const columnVisibility: ODataColumnVisibilityModel = {
+  "Salary": { xs: false, xl: true },
+  "Status": false,
+  "Categories": false,
+  "Source/DisplayName": false,
+  "Posted": { xs: false, sm: true }
+};
+
+const defaultSort: GridSortModel = [{ field: "Posted", sort: "desc" }]
+
+const alwaysSelect = ["Id"];
 
 const useStyles = makeStyles()((theme) => ({
   unseen: {
@@ -600,11 +605,13 @@ const Company = () => {
               <ODataGrid
                 url={`/api/odata/job`}
                 columns={columns}
+                columnVisibilityModel={columnVisibility}
+                getRowId={(row) => row["Id"]}
+                alwaysSelect={alwaysSelect}
+                defaultSortModel={defaultSort}
                 $filter={`CompanyId eq ${id}`}
-                idField="Id"
                 disableFilterBuilder
                 getRowClassName={getClass}
-                defaultSortModel={defaultSort}
               />
             </Tab>
           </Tabs>

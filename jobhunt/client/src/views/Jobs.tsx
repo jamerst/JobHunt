@@ -7,7 +7,7 @@ import LocalizationProvider from "@mui/lab/LocalizationProvider";
 import { GridRowParams, GridSortModel } from "@mui/x-data-grid"
 import Autocomplete from '@mui/material/Autocomplete';
 import { Add, Visibility } from "@mui/icons-material";
-import { ODataGridColDef, QueryStringCollection } from "o-data-grid";
+import { ODataGridColDef, QueryStringCollection, ODataColumnVisibilityModel } from "o-data-grid";
 import ODataGrid from "components/ODataGrid";
 
 import makeStyles from "makeStyles";
@@ -59,7 +59,7 @@ const useStyles = makeStyles()((theme) => ({
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
 
-const alwaysFetch = ["Archived"];
+const alwaysSelect = ["Id", "Archived"];
 const columns: ODataGridColDef[] = [
   {
     field: "Title",
@@ -117,7 +117,6 @@ const columns: ODataGridColDef[] = [
   {
     field: "Company/Name",
     headerName: "Company",
-    hide: { xs: true, md: false },
     flex: 2,
     renderCell: (params) => (
       <Link
@@ -140,7 +139,6 @@ const columns: ODataGridColDef[] = [
   {
     field: "Salary",
     type: "number",
-    hide: { xs: true, lg: false },
     filterField: "AvgYearlySalary",
     sortField: "AvgYearlySalary",
     label: "Median Annual Salary",
@@ -154,7 +152,6 @@ const columns: ODataGridColDef[] = [
     type: "singleSelect",
     valueOptions: ["Not Applied", "Awaiting Response", "In Progress", "Rejected", "Dropped Out"],
     filterOperators: ["eq", "ne"],
-    hide: true,
     autocompleteGroup: "Job"
   },
   {
@@ -167,7 +164,6 @@ const columns: ODataGridColDef[] = [
     },
     sortable: false,
     flex: 1,
-    hide: { xs: true, xl: false },
     renderCustomFilter: (value, setValue) => (
       <Grid item container alignSelf="center" xs={12} md>
         <Categories
@@ -197,7 +193,6 @@ const columns: ODataGridColDef[] = [
     filterable: false,
     sortable: false,
     flex: 1,
-    hide: true,
     valueGetter: (params) => params.row[params.field] ? params.row[params.field] : "Added Manually",
     autocompleteGroup: "Job"
   },
@@ -205,7 +200,6 @@ const columns: ODataGridColDef[] = [
     field: "Posted",
     select: "Posted,Seen,Archived",
     headerName: "Posted",
-    hide: { xs: true, sm: false },
     type: "date",
     flex: .9,
     renderCell: (params) => {
@@ -287,6 +281,15 @@ const columns: ODataGridColDef[] = [
   }
 ];
 
+const columnVisibility: ODataColumnVisibilityModel = {
+  "Company/Name": { xs: false, md: true },
+  "Salary": { xs: false, lg: true },
+  "Status": false,
+  "JobCategories": { xs: false, xl: true },
+  "Source/DisplayName": false,
+  "Posted": { xs: false, sm: true },
+}
+
 const defaultSort: GridSortModel = [{ field: "Posted", sort: "desc" }];
 
 const Jobs: FunctionComponent = (props) => {
@@ -344,10 +347,11 @@ const Jobs: FunctionComponent = (props) => {
       <ODataGrid
         url="/api/odata/job"
         columns={columns}
-        getRowClassName={getClass}
-        idField="Id"
-        alwaysFetch={alwaysFetch}
+        columnVisibilityModel={columnVisibility}
+        getRowId={(row) => row["Id"]}
+        alwaysSelect={alwaysSelect}
         defaultSortModel={defaultSort}
+        getRowClassName={getClass}
         filterBuilderProps={{ localizationProviderProps: { dateAdapter: DateAdapter, locale: enGB }, autocompleteGroups: ["Job", "Company"] }}
         defaultPageSize={15}
       />

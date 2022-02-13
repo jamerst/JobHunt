@@ -7,7 +7,7 @@ import { Add, Visibility } from "@mui/icons-material";
 import { Helmet } from "react-helmet";
 import { useNavigate } from "react-router";
 import { Link as RouterLink } from "react-router-dom";
-import { ODataGridColDef, QueryStringCollection, numericOperators } from "o-data-grid";
+import { ODataGridColDef, QueryStringCollection, numericOperators, ODataColumnVisibilityModel } from "o-data-grid";
 import ODataGrid from "components/ODataGrid";
 
 import dayjs from "dayjs"
@@ -133,8 +133,7 @@ const columns: ODataGridColDef[] = [
         return "";
       }
     },
-    flex: .5,
-    hide: { xs: true, xl: false }
+    flex: .5
   },
   {
     field: "Jobs@odata.count",
@@ -144,8 +143,7 @@ const columns: ODataGridColDef[] = [
     filterOperators: numericOperators,
     headerName: "Jobs Posted",
     type: "number",
-    flex: .5,
-    hide: { xs: true, md: false }
+    flex: .5
   },
   {
     field: "LatestJob",
@@ -162,8 +160,7 @@ const columns: ODataGridColDef[] = [
         return "";
       }
     },
-    flex: .5,
-    hide: { xs: true, md: false }
+    flex: .5
   },
   {
     field: "LatestPageUpdate",
@@ -180,8 +177,7 @@ const columns: ODataGridColDef[] = [
       } else {
         return "";
       }
-    },
-    hide: { xs: true, xl: false }
+    }
   },
   {
     field: "CompanyCategories",
@@ -193,7 +189,6 @@ const columns: ODataGridColDef[] = [
     },
     sortable: false,
     flex: 1,
-    hide: { xs: true, xxl: false },
     renderCustomFilter: (value, setValue) => (
       <Grid item container alignSelf="center" xs={12} md>
         <Categories
@@ -248,7 +243,17 @@ const columns: ODataGridColDef[] = [
   }
 ];
 
+const columnVisibility: ODataColumnVisibilityModel = {
+  "AvgSalary": { xs: false, xl: true },
+  "Jobs@odata.count": { xs: false, md: true },
+  "LatestJob": { xs: false, md: true },
+  "LatestPageUpdate": { xs: false, xl: true },
+  "CompanyCategories": { xs: false, xxl: true },
+}
+
 const defaultSort: GridSortModel = [{ field: "Name", sort: "asc" }];
+
+const alwaysSelect = ["Id"];
 
 const Companies: FunctionComponent = (props) => {
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
@@ -281,8 +286,10 @@ const Companies: FunctionComponent = (props) => {
       <ODataGrid
         url="/api/odata/company"
         columns={columns}
+        columnVisibilityModel={columnVisibility}
+        getRowId={(row) => row["Id"]}
+        alwaysSelect={alwaysSelect}
         defaultSortModel={defaultSort}
-        idField="Id"
         filterBuilderProps={{ localizationProviderProps: { dateAdapter: DateAdapter, locale: enGB } }}
         defaultPageSize={15}
       />

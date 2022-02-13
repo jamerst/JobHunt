@@ -41,6 +41,15 @@ namespace JobHunt {
                 // .EnableSensitiveDataLogging()
             );
 
+            // services.AddCors(builder => {
+            //     builder.AddDefaultPolicy(policy =>
+            //         policy
+            //             .WithOrigins("http://localhost:8080")
+            //             .AllowAnyHeader()
+            //             .AllowAnyMethod()
+            //     );
+            // });
+
             services.AddControllers(options => {
                     options.Filters.Add(typeof(ExceptionLogger));
                 })
@@ -105,6 +114,8 @@ namespace JobHunt {
             app.UseSpaStaticFiles();
 
             app.UseRouting();
+
+            // app.UseCors();
 
             app.UseEndpoints(endpoints => {
                 endpoints.MapControllers();
