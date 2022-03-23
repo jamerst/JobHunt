@@ -48,7 +48,7 @@ namespace JobHunt.Workers {
                     }
 
                     _logger.LogInformation("SearchRefresh started");
-                    await DoRefresh(token);
+                    await DoRefreshAsync(token);
                     _logger.LogInformation("SearchRefresh completed");
                 } else {
                     _logger.LogInformation("SearchRefreshWorker stopping: no more occurrences");
@@ -58,7 +58,7 @@ namespace JobHunt.Workers {
             _logger.LogInformation("SearchRefreshWorker stopping");
         }
 
-        public async Task DoRefresh(CancellationToken token) {
+        public async Task DoRefreshAsync(CancellationToken token) {
             // needs multiple separate scopes to prevent threading issues with DbContext
             using (IServiceScope indeedScope = _provider.CreateScope())
             using (IServiceScope pageScope = _provider.CreateScope()) {
@@ -89,6 +89,6 @@ namespace JobHunt.Workers {
     }
 
     public interface ISearchRefreshWorker {
-        Task DoRefresh(CancellationToken token);
+        Task DoRefreshAsync(CancellationToken token);
     }
 }

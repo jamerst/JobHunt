@@ -35,7 +35,7 @@ namespace JobHunt.Controllers {
         [HttpGet]
         public async Task All() {
             CancellationToken token = new CancellationToken();
-            await _refreshWorker.DoRefresh(token);
+            await _refreshWorker.DoRefreshAsync(token);
         }
     }
 }

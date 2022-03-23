@@ -17,12 +17,8 @@ using JobHunt.DTO;
 using JobHunt.Models;
 
 namespace JobHunt.Services {
-    public class WatchedPageChangeService : IWatchedPageChangeService {
-        private readonly JobHuntContext _context;
-
-        public WatchedPageChangeService(JobHuntContext context) {
-            _context = context;
-        }
+    public class WatchedPageChangeService : BaseService<WatchedPageChange>, IWatchedPageChangeService {
+        public WatchedPageChangeService(JobHuntContext context) : base(context) {}
 
         public async Task<WatchedPageChange?> GetLatestChangeOrDefaultAsync(int watchedPageId) {
             return await _context.WatchedPageChanges
@@ -96,7 +92,7 @@ namespace JobHunt.Services {
         private const string _changeStyles = @"<style>[data-added=""true""]{outline: 2px solid #4CAF50;}[data-removed=""true""]{outline: 2px solid #F44336}[data-modified=""true""]{outline: 2px solid #FFD54F}</style>";
     }
 
-    public interface IWatchedPageChangeService {
+    public interface IWatchedPageChangeService : IBaseService<WatchedPageChange> {
         Task<WatchedPageChange?> GetLatestChangeOrDefaultAsync(int watchedPageId);
         Task<List<WatchedPageChangeDto>> FindAllChangesAsync(int watchedPageId);
         Task CreateAsync(WatchedPageChange change);

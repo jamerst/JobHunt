@@ -14,10 +14,14 @@ services:
       - ./:/app:Z
       - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro,Z
       - /etc/localtime:/etc/localtime:ro
+      - jobhunt-data:/jobhunt-data
     environment:
       Search__IndeedFetchSalary: "true"
+      # Search__Schedules__0: "* * * * *"
       Search__NominatimCountryCodes: "gb"
-      #   Search__Schedules__0: "* * * * *"
+      # Search__ScreenshotSchedule: "* * * * *"
+      Search__ScreenshotDirectory: "/jobhunt-data/page-screenshots"
+      Search__ScreenshotQuality: 80
       Serilog__WriteTo__0__Name: "Console"
       # Serilog__WriteTo__0__Name: "Elasticsearch"
       # Serilog__WriteTo__0__Args__nodeUris: "http://elasticsearch:9200"
@@ -42,6 +46,7 @@ services:
 
 volumes:
   postgres-data:
+  jobhunt-data:
 
 networks:
   jobhunt:

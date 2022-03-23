@@ -9,5 +9,6 @@ namespace JobHunt.Models {
         public WatchedPage WatchedPage { get; set; } = null!;
         public DateTime Created { get; set; }
         public string Html { get; set; } = null!;
+        public string? ScreenshotFileName { get; set; }
     }
 }

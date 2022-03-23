@@ -59,7 +59,7 @@ namespace JobHunt.Searching {
                     }
                 }
             } catch (HttpRequestException e) {
-                _logger.LogError(e, $"HTTP Request failed", page);
+                _logger.LogError(e, "HTTP Request failed for {page}", page);
                 await _wpService.UpdateStatusAsync(page.Id, statusMessage: "HTTP request error");
                 return;
             }
