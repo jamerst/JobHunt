@@ -137,8 +137,6 @@ namespace JobHunt.Searching {
                                 await _searchService.CreateSearchRunAsync(search.Id!, false, "Indeed API error", 0, 0, (int) sw.Elapsed.TotalSeconds);
                                 return;
                             }
-                            using (var stream = await httpResponse.Content.ReadAsStreamAsync()) {
-                            }
                         } else {
                             sw.Stop();
                             _logger.LogError("Indeed API request error {Uri} {Content}", httpResponse?.RequestMessage?.RequestUri?.ToString(), responseContent);

@@ -10,5 +10,6 @@ namespace JobHunt.Configuration {
         public string? ScreenshotSchedule { get; set; }
         public string ScreenshotDirectory { get; set; } = null!;
         public int ScreenshotQuality { get; set; }
+        public int ScreenshotPageLoadTimeout { get; set; }
     }
 }

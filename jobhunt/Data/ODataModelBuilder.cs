@@ -1,9 +1,8 @@
-using System.Linq;
 using Microsoft.OData.ModelBuilder;
 using Microsoft.OData.Edm;
 
+using JobHunt.Extensions;
 using JobHunt.Models;
-
 namespace JobHunt.Data {
     public static class ODataModelBuilder {
         public static IEdmModel Build() {
@@ -14,8 +13,7 @@ namespace JobHunt.Data {
             builder.EntitySet<Company>("Company");
 
             builder.EntitySet<Search>("search");
-            // Add composite DisplayName property to allow selecting
-            builder.StructuralTypes.First(t => t.ClrType == typeof(Search)).AddProperty(typeof(Search).GetProperty(nameof(Search.DisplayName)));
+            builder.AddUnmappedProperty<Search>(s => s.DisplayName);
 
             return builder.GetEdmModel();
         }

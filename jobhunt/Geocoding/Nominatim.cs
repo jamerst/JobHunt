@@ -1,7 +1,5 @@
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -16,10 +14,12 @@ namespace JobHunt.Geocoding {
     public class Nominatim : INominatim {
         private readonly SearchOptions _options;
         private readonly ILogger _logger;
+        private readonly HttpClient _client;
         private const string _searchUrl = "https://nominatim.openstreetmap.org/search";
-        public Nominatim(IOptions<SearchOptions> options, ILogger<Nominatim> logger) {
+        public Nominatim(IOptions<SearchOptions> options, ILogger<Nominatim> logger, HttpClient client) {
             _options = options.Value;
             _logger = logger;
+            _client = client;
         }
         public async Task<(double?, double?)> Geocode(string location) {
             Dictionary<string, string?> query = new Dictionary<string, string?>() {
@@ -30,16 +30,13 @@ namespace JobHunt.Geocoding {
             };
 
             NominatimResponse[]? response = null;
-            using (var client = new HttpClient()) {
-                client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("JobHunt", "1.0"));
-                using (var httpResponse = await client.GetAsync(QueryHelpers.AddQueryString(_searchUrl, query), HttpCompletionOption.ResponseHeadersRead)) {
-                    string responseContent = await httpResponse.Content.ReadAsStringAsync();
-                    if (httpResponse.IsSuccessStatusCode) {
-                        response = JsonSerializer.Deserialize<NominatimResponse[]>(responseContent);
-                    } else {
-                        _logger.LogError("Nominatim request failed {Response} {Content}", httpResponse, responseContent);
-                        return (null, null);
-                    }
+            using (var httpResponse = await _client.GetAsync(QueryHelpers.AddQueryString(_searchUrl, query), HttpCompletionOption.ResponseHeadersRead)) {
+                string responseContent = await httpResponse.Content.ReadAsStringAsync();
+                if (httpResponse.IsSuccessStatusCode) {
+                    response = JsonSerializer.Deserialize<NominatimResponse[]>(responseContent);
+                } else {
+                    _logger.LogError("Nominatim request failed {Response} {Content}", httpResponse, responseContent);
+                    return (null, null);
                 }
             }
 

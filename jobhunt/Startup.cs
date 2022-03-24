@@ -1,4 +1,5 @@
 using System;
+using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
@@ -83,6 +84,8 @@ namespace JobHunt {
                 );
             services.AddHttpClient<IIndeedAPI, IndeedAPI>().AddPolicyHandler(retryPolicy);
 
+            services.AddHttpClient<INominatim, Nominatim>((_, client) => client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("JobHunt", "1.0")));
+
             services.AddTransient<IAlertService, AlertService>();
             services.AddTransient<ICategoryService, CategoryService>();
             services.AddTransient<ICompanyService, CompanyService>();
@@ -96,6 +99,7 @@ namespace JobHunt {
 
             services.AddTransient<INominatim, Nominatim>();
 
+            services.AddTransient<IPageScreenshotWorker, PageScreenshotWorker>();
             services.AddTransient<ISearchRefreshWorker, SearchRefreshWorker>();
         }
 

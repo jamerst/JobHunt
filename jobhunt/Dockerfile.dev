@@ -1,12 +1,15 @@
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build-env
 WORKDIR /app
-RUN dotnet tool install -g dotnet-ef
-ENV PATH "$PATH:/root/.dotnet/tools"
 
+# install node and npm
 RUN curl -sL https://deb.nodesource.com/setup_16.x |  bash -
 RUN apt-get update
-RUN apt-get install -y --no-install-recommends nodejs unzip libfreetype6 libfontconfig1 ca-certificates procps pandoc
+RUN apt-get install -y --no-install-recommends nodejs unzip libfreetype6 libfontconfig1 ca-certificates procps pandoc firefox-esr
+
+# install pnpm
 RUN npm install -g pnpm
+
+# install Visual Studio debugger
 RUN curl -sSL https://aka.ms/getvsdbgsh | /bin/sh /dev/stdin -v latest -l /vsdbg
 
 # Copy csproj and restore as distinct layers

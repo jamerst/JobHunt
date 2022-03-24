@@ -18,6 +18,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:6.0
 WORKDIR /app
 RUN apt-get update
 RUN curl -sL https://deb.nodesource.com/setup_16.x |  bash -
-RUN apt-get install -y nodejs unzip libfreetype6 libfontconfig1 ca-certificates pandoc
+RUN apt-get install -y nodejs unzip libfreetype6 libfontconfig1 ca-certificates pandoc firefox-esr
 COPY --from=build-env /app/out .
 ENTRYPOINT ["dotnet", "JobHunt.dll"]

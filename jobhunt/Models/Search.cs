@@ -25,7 +25,7 @@ namespace JobHunt.Models {
             return $"{Query} jobs in {Location} on {Provider}";
         }
 
-        [NotMapped]
+        // [NotMapped]
         public string DisplayName => ToString();
     }
 }

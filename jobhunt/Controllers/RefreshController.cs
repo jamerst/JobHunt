@@ -14,10 +14,12 @@ namespace JobHunt.Controllers {
         private readonly IIndeedAPI _indeed;
         private readonly IPageWatcher _pageWatcher;
         private readonly ISearchRefreshWorker _refreshWorker;
-        public RefreshController(IIndeedAPI indeed, IPageWatcher pageWatcher, ISearchRefreshWorker refreshWorker) {
+        private readonly IPageScreenshotWorker _screenshotWorker;
+        public RefreshController(IIndeedAPI indeed, IPageWatcher pageWatcher, ISearchRefreshWorker refreshWorker, IPageScreenshotWorker screenshotWorker) {
             _indeed = indeed;
             _pageWatcher = pageWatcher;
             _refreshWorker = refreshWorker;
+            _screenshotWorker = screenshotWorker;
         }
 
         [HttpGet]
@@ -36,6 +38,13 @@ namespace JobHunt.Controllers {
         public async Task All() {
             CancellationToken token = new CancellationToken();
             await _refreshWorker.DoRefreshAsync(token);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Screenshot() {
+            CancellationToken token = new CancellationToken();
+            int numScreenshots = await _screenshotWorker.TakeScreenshotsAsync(token);
+            return new JsonResult(numScreenshots);
         }
     }
 }

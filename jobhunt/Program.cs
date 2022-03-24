@@ -53,6 +53,7 @@ namespace JobHunt {
                 })
                 .ConfigureServices(services => {
                     services.AddHostedService<SearchRefreshWorker>();
+                    services.AddHostedService<PageScreenshotWorker>();
                 });
     }
 }
