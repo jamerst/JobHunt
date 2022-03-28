@@ -70,7 +70,9 @@ namespace JobHunt {
             services.AddSpaStaticFiles(configuration => {
                 configuration.RootPath = "client/build";
             });
-            services.Configure<SearchOptions>(Configuration.GetSection(SearchOptions.Position));
+
+            services.Configure<ScreenshotOptions>(Configuration.GetSection(ScreenshotOptions.Section));
+            services.Configure<SearchOptions>(Configuration.GetSection(SearchOptions.Section));
 
             services.AddHttpClient();
 

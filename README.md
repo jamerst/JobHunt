@@ -25,6 +25,8 @@ You must provide your own Indeed Publisher ID by setting the value of `Search__I
 #### Scheduling
 Edit the `Search__Schedules` variables to customise the schedule on which results will be fetched and watched pages checked. These use the standard Cron syntax. By default the refresh will run at 9am, 12pm, and 6pm every day. You may encounter issues with rate limiting or IP blacklisting if you set the schedule to be too frequent.
 
+You should set the value of the `TZ` environment variable to make the schedule use your local time zone.
+
 #### Logging
 Logging with JobHunt is provided by Serilog, which means it can support logging to multiple locations. By default JobHunt simply writes logs to the console, however it also supports logging to an ElasticSearch instance. To enable this simply uncomment the alternative Serilog configuration.
 

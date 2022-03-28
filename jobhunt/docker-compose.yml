@@ -16,18 +16,20 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - jobhunt-data:/jobhunt-data
     environment:
+      # PageWatcher__ScreenshotSchedule: "* * * * *"
+      Screenshots_Directory: "/jobhunt-data/page-screenshots"
+      Screenshots_QualityPercent: 80
+      Screenshots_WidthPixels: 1920
+      Screenshots_PageLoadTimeoutSeconds: 10
       Search__IndeedFetchSalary: "true"
       # Search__Schedules__0: "* * * * *"
       Search__NominatimCountryCodes: "gb"
-      # Search__ScreenshotSchedule: "* * * * *"
-      Search__ScreenshotDirectory: "/jobhunt-data/page-screenshots"
-      Search__ScreenshotQuality: 80
-      Search__ScreenshotPageLoadTimeout: 10
       Serilog__WriteTo__0__Name: "Console"
       # Serilog__WriteTo__0__Name: "Elasticsearch"
       # Serilog__WriteTo__0__Args__nodeUris: "http://elasticsearch:9200"
       # Serilog__WriteTo__0__Args__indexFormat: "jobhunt-serilog-{0:yyyy.MM}"
       WDS_SOCKET_PORT: "5000"
+      TZ: "Europe/London"
     networks:
       - jobhunt
       - docker_logging

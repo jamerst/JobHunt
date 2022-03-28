@@ -26,10 +26,10 @@ using JobHunt.Services;
 namespace JobHunt.Workers {
     public class PageScreenshotWorker : IHostedService, IPageScreenshotWorker {
         private readonly IServiceProvider _provider;
-        private readonly SearchOptions _options;
+        private readonly ScreenshotOptions _options;
         private readonly ILogger _logger;
 
-        public PageScreenshotWorker(IServiceProvider provider, IOptions<SearchOptions> options, ILogger<PageScreenshotWorker> logger) {
+        public PageScreenshotWorker(IServiceProvider provider, IOptions<ScreenshotOptions> options, ILogger<PageScreenshotWorker> logger) {
             _provider = provider;
             _options = options.Value;
             _logger = logger;
@@ -37,12 +37,12 @@ namespace JobHunt.Workers {
 
         public async Task StartAsync(CancellationToken token) {
             _logger.LogInformation("PageScreenshotWorker started");
-            if (string.IsNullOrEmpty(_options.ScreenshotSchedule)) {
+            if (string.IsNullOrEmpty(_options.Schedule)) {
                 _logger.LogWarning("No screenshot schedule provided. Stopping.");
                 return;
             }
 
-            CronExpression expression = CronExpression.Parse(_options.ScreenshotSchedule);
+            CronExpression expression = CronExpression.Parse(_options.Schedule);
             while (!token.IsCancellationRequested) {
                 DateTimeOffset? next = expression.GetNextOccurrence(DateTimeOffset.Now, TimeZoneInfo.Local, true);
 
@@ -83,7 +83,7 @@ namespace JobHunt.Workers {
                             var options = new FirefoxOptions();
                             options.AddArgument("-headless");
                             driver = new FirefoxDriver(options);
-                            driver.Manage().Window.Size = new System.Drawing.Size(1920, 1080);
+                            driver.Manage().Window.Size = new System.Drawing.Size(_options.WidthPixels, _options.WidthPixels / 16 * 9);
                         } catch (WebDriverException ex) {
                             _logger.LogError(ex, "FirefoxDriver setup failed");
                             return 0;
@@ -96,37 +96,41 @@ namespace JobHunt.Workers {
 
                             // go to page
                             driver.Navigate().GoToUrl(page.WatchedPage.Url);
-                            // scroll all the way down to ensure lazy images are loaded
-                            driver.ExecuteScript("window.scrollTo(0, document.body.scrollHeight);");
 
-                            // var heightResult = driver.ExecuteScript("return document.body.scrollHeight");
-                            // if (int.TryParse(heightResult as string, out int pageHeight)) {
-                            //     driver.Manage().Window.Size = new System.Drawing.Size(1920, pageHeight);
-                            // }
+                            // wait for images to load
+                            try {
+                                WebDriverWait imageWait = new WebDriverWait(driver, TimeSpan.FromSeconds(_options.PageLoadTimeoutSeconds));
+                                imageWait.Until(d => {
+                                    return d.FindElements(By.TagName("img")).All(e => {
+                                        var driver = (FirefoxDriver) d;
+                                        var result = driver.ExecuteScript("return arguments[0].complete", e);
 
-                            WebDriverWait imageWait = new WebDriverWait(driver, TimeSpan.FromSeconds(_options.ScreenshotPageLoadTimeout));
-                            imageWait.Until(d => {
-                                d.FindElements(By.TagName("img")).All(e => {
-                                    var result = ((FirefoxDriver) d).ExecuteScript("return arguments[0].complete", e);
+                                        bool completed = result is bool b && b;
 
-                                    return bool.TryParse(result as string, out bool completed) && completed;
+                                        if (!completed) {
+                                            // scroll element into view to force loading in case it uses lazy loading
+                                            driver.ExecuteScript("arguments[0].scrollIntoView()", e);
+                                        }
+
+                                        return completed;
+                                    });
                                 });
-
-                                return "";
-                            });
+                            } catch (WebDriverTimeoutException ex) {
+                                _logger.LogWarning(ex, "Timed out waiting for images to load on {url}", page.WatchedPage.Url);
+                            }
 
                             var screenshot = driver.GetFullPageScreenshot();
 
-                            if (!Directory.Exists(_options.ScreenshotDirectory)) {
-                                Directory.CreateDirectory(_options.ScreenshotDirectory);
+                            if (!Directory.Exists(_options.Directory)) {
+                                Directory.CreateDirectory(_options.Directory);
                             }
 
                             page.ScreenshotFileName = Path.GetRandomFileName();
-                            string savePath = Path.Combine(_options.ScreenshotDirectory, page.ScreenshotFileName);
+                            string savePath = Path.Combine(_options.Directory, page.ScreenshotFileName);
 
                             using (var img = SKBitmap.Decode(screenshot.AsByteArray)) {
                                 using (var output = File.OpenWrite(savePath))
-                                    img.Encode(SKEncodedImageFormat.Webp, _options.ScreenshotQuality).SaveTo(output);
+                                    img.Encode(SKEncodedImageFormat.Webp, _options.QualityPercent).SaveTo(output);
                             }
                         }
 
