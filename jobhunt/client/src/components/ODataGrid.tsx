@@ -3,7 +3,7 @@ import { ODataGrid as DefaultDataGrid, ODataGridProps } from "o-data-grid"
 import { SearchOff } from "@mui/icons-material";
 
 import makeStyles from "makeStyles";
-import { GridOverlay, GridRowParams } from "@mui/x-data-grid";
+import { GridOverlay } from "@mui/x-data-grid";
 import { LinearProgress, Typography } from "@mui/material";
 
 const pageSizes = [10, 15, 20, 50];

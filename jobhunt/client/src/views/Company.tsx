@@ -50,6 +50,7 @@ type CompanyName = {
 }
 
 type WatchedPage = {
+  id?: number,
   url: string,
   cssSelector?: string,
   cssBlacklist?: string,
@@ -583,6 +584,7 @@ const Company = () => {
                       <TableCell>Last Scraped</TableCell>
                       <TableCell>Last Updated</TableCell>
                       <TableCell>Status</TableCell>
+                      <TableCell></TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -592,6 +594,7 @@ const Company = () => {
                         <TableCell>{p.lastScraped ? dayjs(p.lastScraped).fromNow() : "Never"}</TableCell>
                         <TableCell>{p.lastUpdated ? dayjs(p.lastUpdated).toDate().toLocaleString() : "Never"}</TableCell>
                         <TableCell>{p.enabled ? p.statusMessage : "Disabled"}</TableCell>
+                        <TableCell align="right">{p.id && (<Button component={RouterLink} to={`/page-changes/${p.id}`} color="secondary" variant="contained" size="small">View Changes</Button>)}</TableCell>
                       </TableRow>
                     )}
                     {companyData.watchedPages.length === 0 ? <TableRow><TableCell colSpan={4} align="center"><em>No pages being watched</em></TableCell></TableRow> : null}

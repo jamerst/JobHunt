@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -10,7 +11,9 @@ using AngleSharp.Diffing;
 using AngleSharp.Diffing.Core;
 using AngleSharp.Diffing.Strategies;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
+using JobHunt.Configuration;
 using JobHunt.Data;
 using JobHunt.Diffing;
 using JobHunt.DTO;
@@ -18,7 +21,11 @@ using JobHunt.Models;
 
 namespace JobHunt.Services {
     public class WatchedPageChangeService : BaseService<WatchedPageChange>, IWatchedPageChangeService {
-        public WatchedPageChangeService(JobHuntContext context) : base(context) {}
+        private readonly ScreenshotOptions _options;
+
+        public WatchedPageChangeService(JobHuntContext context, IOptions<ScreenshotOptions> options) : base(context) {
+            _options = options.Value;
+        }
 
         public async Task<WatchedPageChange?> GetLatestChangeOrDefaultAsync(int watchedPageId) {
             return await _context.WatchedPageChanges
@@ -43,6 +50,21 @@ namespace JobHunt.Services {
             await _context.SaveChangesAsync();
         }
 
+        public async Task<Stream?> GetScreenshotAsync(int changeId) {
+            WatchedPageChange? change = await _context.WatchedPageChanges.FirstOrDefaultAsync(c => c.Id == changeId);
+
+            if (change == default || string.IsNullOrEmpty(change.ScreenshotFileName)) {
+                return null;
+            }
+
+            string filePath = Path.Combine(_options.Directory, change.ScreenshotFileName);
+            if (!File.Exists(filePath)) {
+                return null;
+            }
+
+            return new FileStream(Path.Combine(_options.Directory, change.ScreenshotFileName), FileMode.Open, FileAccess.Read);
+        }
+
         public async Task<(string?, string?)> GetDiffHtmlAsync(int changeId) {
             WatchedPageChange? change = await _context.WatchedPageChanges
                 .Include(c => c.WatchedPage)
@@ -62,6 +84,9 @@ namespace JobHunt.Services {
             var context = BrowsingContext.New();
             var current = await context.OpenAsync(r => r.Content(change.Html));
             var previous = await context.OpenAsync(r => r.Content(previousChange.Html));
+
+            current.ReplaceRelativeUrlsWithAbsolute(change.WatchedPage.Url);
+            previous.ReplaceRelativeUrlsWithAbsolute(change.WatchedPage.Url);
 
             var diffStrategy = new DiffingStrategyPipeline();
             diffStrategy.AddDefaultOptions();
@@ -96,6 +121,7 @@ namespace JobHunt.Services {
         Task<WatchedPageChange?> GetLatestChangeOrDefaultAsync(int watchedPageId);
         Task<List<WatchedPageChangeDto>> FindAllChangesAsync(int watchedPageId);
         Task CreateAsync(WatchedPageChange change);
+        Task<Stream?> GetScreenshotAsync(int changeId);
         Task<(string?, string?)> GetDiffHtmlAsync(int changeId);
     }
 }

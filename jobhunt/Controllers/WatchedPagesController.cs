@@ -1,5 +1,6 @@
+using System.Net;
 using System.Net.Http;
-using System.Threading;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
@@ -35,6 +36,39 @@ namespace JobHunt.Controllers {
                 Previous = prev,
                 Current = current
             });
+        }
+
+        [HttpGet]
+        [Route("{id}")]
+        public async Task<IActionResult> PreviousHtml([FromRoute] int id) {
+            (string? prev, _) = await _wpcService.GetDiffHtmlAsync(id);
+
+            return new ContentResult() {
+                Content = prev,
+                ContentType = "text/html"
+            };
+        }
+
+        [HttpGet]
+        [Route("{id}")]
+        public async Task<IActionResult> Html([FromRoute] int id) {
+            (_, string? current) = await _wpcService.GetDiffHtmlAsync(id);
+
+            return new ContentResult() {
+                Content = current,
+                ContentType = "text/html"
+            };
+        }
+
+        [HttpGet]
+        [Route("{id}")]
+        public async Task<IActionResult> Screenshot([FromRoute] int id) {
+            var stream = await _wpcService.GetScreenshotAsync(id);
+            if (stream != default) {
+                return new FileStreamResult(stream, "image/webp");
+            } else {
+                return new NotFoundResult();
+            }
         }
     }
 }

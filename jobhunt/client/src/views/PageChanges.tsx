@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react"
 import { useParams } from "react-router";
-import { Paper, Typography } from "@mui/material";
-import { Timeline, timelineClasses, TimelineConnector, TimelineContent, timelineContentClasses, TimelineDot, timelineDotClasses, TimelineItem, TimelineSeparator } from "@mui/lab";
+import { Link, Paper, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import { Timeline, TimelineConnector, TimelineContent, timelineContentClasses, TimelineDot, timelineDotClasses, TimelineItem, TimelineSeparator } from "@mui/lab";
 import dayjs from "dayjs";
 
 import Grid from "components/Grid";
 import makeStyles from "makeStyles";
-import { Article } from "@mui/icons-material";
+import { Helmet } from "react-helmet";
 
 type WatchedPageResponse = {
   watchedPage: WatchedPage,
@@ -25,17 +25,6 @@ type WatchedPage = {
 type WatchedPageChange = {
   id: number,
   created: string
-}
-
-type DisplayChange = {
-  id: number,
-  last: boolean,
-  date: string
-}
-
-type DiffResponse = {
-  previous?: string,
-  current: string
 }
 
 const useStyles = makeStyles()((theme) => ({
@@ -64,6 +53,10 @@ const useStyles = makeStyles()((theme) => ({
       height: "100%",
       border: "none"
     }
+  },
+  screenshot: {
+    width: "100%",
+    padding: theme.spacing(1)
   }
 }));
 
@@ -71,7 +64,7 @@ const PageChanges = () => {
   const [watchedPage, setWatchedPage] = useState<WatchedPageResponse | undefined>();
   const [current, setCurrent] = useState(0);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [currentDiff, setCurrentDiff] = useState<DiffResponse | undefined>();
+  const [view, setView] = useState("image");
 
   const { id } = useParams();
   const { classes } = useStyles();
@@ -96,21 +89,6 @@ const PageChanges = () => {
     fetchPage();
   }, [id]);
 
-  useEffect(() => {
-    if (current === 0) {
-      return;
-    }
-
-    const fetchDiff = async () => {
-      const response = await fetch(`/api/watchedpages/diff/${current}`);
-      if (response.ok) {
-        setCurrentDiff(await response.json() as DiffResponse);
-      }
-    }
-
-    fetchDiff();
-  }, [current]);
-
   const changes = useMemo(() => !watchedPage?.changes ? [] : (watchedPage.changes ?? []).map((c, i) => {
     const hasPrevious = i < watchedPage.changes.length - 1;
     const date = dayjs(c.created);
@@ -130,9 +108,13 @@ const PageChanges = () => {
     }
   }), [watchedPage]);
 
-  const handleChange = useCallback((id: number, index: number) => {
+  const handleTimelineChange = useCallback((id: number, index: number) => {
     setCurrent(id);
     setCurrentIndex(index);
+  }, []);
+
+  const handleViewChange = useCallback((event: React.MouseEvent<HTMLElement>, newView: string) => {
+    setView(newView);
   }, []);
 
   if (!watchedPage) {
@@ -140,40 +122,60 @@ const PageChanges = () => {
   }
 
   return (
-    <Grid container spacing={2} className={classes.root}>
-      <Grid item xs={12} lg={2} xl={1}>
-        <Timeline>
-          {changes.map((c, i) => (
-            <TimelineItem className={classes.timelineItem}>
-              <TimelineSeparator>
-                <TimelineDot color={c.id === current ? "secondary" : "grey"} onClick={() => handleChange(c.id, i)} />
-                {c?.hasPrevious && (<TimelineConnector />)}
-              </TimelineSeparator>
-              <TimelineContent onClick={() => handleChange(c.id, i)}>{c.date}</TimelineContent>
-            </TimelineItem>
-          ))}
-        </Timeline>
+    <Grid container direction="column" className={classes.root}>
+      <Helmet>
+        <title>Changes to {watchedPage.watchedPage.url} | JobHunt</title>
+      </Helmet>
+      <Grid item>
+        <Typography variant="h6" marginBottom={1}><Link href={watchedPage.watchedPage.url} target="_blank">{watchedPage.watchedPage.url}</Link></Typography>
       </Grid>
-      {
-        currentDiff?.previous && (
-          <Grid item container direction="column" xs={12} lg>
-            <Typography variant="h6">{currentIndex < watchedPage.changes.length - 1 ? dayjs(watchedPage.changes[currentIndex + 1].created).format("DD/MM/YYYY HH:mm") : ""}</Typography>
-            <Paper className={classes.iframePaper}>
-              <iframe srcDoc={currentDiff.previous} />
-            </Paper>
-          </Grid>
-        )
-      }
-      {
-        currentDiff && (
-          <Grid item container direction="column" xs={12} lg>
-            <Typography variant="h6">{dayjs(watchedPage.changes[currentIndex].created).format("DD/MM/YYYY HH:mm")}</Typography>
-            <Paper className={classes.iframePaper}>
-              <iframe srcDoc={currentDiff.current} />
-            </Paper>
-          </Grid>
-        )
-      }
+      <Grid item container spacing={2} className={classes.root}>
+        <Grid item xs={12} lg={2} xl={1}>
+          <ToggleButtonGroup
+            value={view}
+            exclusive
+            onChange={handleViewChange}
+            aria-label="View Mode"
+            size="small"
+          >
+            <ToggleButton value="image" aria-label="Screenshot View">Screenshot</ToggleButton>
+            <ToggleButton value="html" aria-label="Difference View">Diff</ToggleButton>
+          </ToggleButtonGroup>
+          <Timeline>
+            {changes.map((c, i) => (
+              <TimelineItem className={classes.timelineItem} key={`watchedpagechange-${c.id}`}>
+                <TimelineSeparator>
+                  <TimelineDot color={c.id === current ? "secondary" : "grey"} onClick={() => handleTimelineChange(c.id, i)} />
+                  {c?.hasPrevious && (<TimelineConnector />)}
+                </TimelineSeparator>
+                <TimelineContent onClick={() => handleTimelineChange(c.id, i)}>{c.date}</TimelineContent>
+              </TimelineItem>
+            ))}
+          </Timeline>
+        </Grid>
+        {
+          currentIndex < watchedPage.changes.length - 1 && (
+            <Grid item container direction="column" xs={12} lg>
+              <Typography variant="h6">{dayjs(watchedPage.changes[currentIndex + 1].created).format("DD/MM/YYYY HH:mm")}</Typography>
+              <Paper className={classes.iframePaper}>
+                {view === "html" && (<iframe src={`/api/watchedpages/previoushtml/${current}`} title="Before" />)}
+                {view === "image" && (<img src={`/api/watchedpages/screenshot/${watchedPage.changes[currentIndex + 1].id}`} className={classes.screenshot} alt="Before"/>)}
+              </Paper>
+            </Grid>
+          )
+        }
+        {
+          current && (
+            <Grid item container direction="column" xs={12} lg>
+              <Typography variant="h6">{dayjs(watchedPage.changes[currentIndex].created).format("DD/MM/YYYY HH:mm")}</Typography>
+              <Paper className={classes.iframePaper}>
+                {view === "html" && (<iframe src={`/api/watchedpages/html/${current}`} sandbox="allow-same-origin allow-script" title="After" />)}
+                {view === "image" && (<img src={`/api/watchedpages/screenshot/${watchedPage.changes[currentIndex].id}`} className={classes.screenshot} alt="After"/>)}
+              </Paper>
+            </Grid>
+          )
+        }
+      </Grid>
     </Grid>
   )
 };

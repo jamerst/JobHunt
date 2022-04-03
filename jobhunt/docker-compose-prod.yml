@@ -12,11 +12,11 @@ services:
       - jobhunt-data:/jobhunt-data
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      Screenshots_Schedule: "*/15 * * * *"
-      Screenshots_Directory: "/jobhunt-data/page-screenshots"
-      Screenshots_WidthPixels: 1920
-      Screenshots_QualityPercent: 80
-      Screenshots_PageLoadTimeoutSeconds: 10
+      Screenshots__Schedule: "*/15 * * * *"
+      Screenshots__Directory: "/jobhunt-data/page-screenshots"
+      Screenshots__WidthPixels: 1920
+      Screenshots__QualityPercent: 80
+      Screenshots__PageLoadTimeoutSeconds: 10
       Search__IndeedPublisherId: YOUR_PUBLISHER_ID
       Search__IndeedFetchSalary: "true"
       Search__GlassdoorPartnerId: YOUR_PARTNER_ID

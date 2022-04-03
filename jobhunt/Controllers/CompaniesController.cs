@@ -53,6 +53,7 @@ namespace JobHunt.Controllers {
                     LinkedIn = company.LinkedIn,
                     Endole = company.Endole,
                     WatchedPages = company.WatchedPages.Select(wp => new {
+                        Id = wp.Id,
                         Url = wp.Url,
                         CssSelector = wp.CssSelector,
                         CssBlacklist = wp.CssBlacklist,
