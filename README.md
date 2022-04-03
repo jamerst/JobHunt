@@ -4,6 +4,7 @@ JobHunt is a self-hosted web-app for easier job hunting. It allows jobs from mul
 ## Features
 - Scheduled result fetching
 - Page watching - get an alert when a webpage is updated
+- Page change tracking - view the change history of a watched page
 - Job categorisation
 - Blacklist employers (_looking at you Noir Consulting with your constant fake ads_)
 - Track application status and record notes (using Markdown syntax)
@@ -22,10 +23,19 @@ Before running some configuration is required. All the configuration options are
 
 #### Indeed Publisher ID
 You must provide your own Indeed Publisher ID by setting the value of `Search__IndeedPublisherId`. Unfortunately the API used is deprecated, and you can no longer obtain a publisher ID. Thankfully there are **many** publisher IDs left in the source code of other projects here on GitHub. I'll leave it to you to find one.
+
 #### Scheduling
 Edit the `Search__Schedules` variables to customise the schedule on which results will be fetched and watched pages checked. These use the standard Cron syntax. By default the refresh will run at 9am, 12pm, and 6pm every day. You may encounter issues with rate limiting or IP blacklisting if you set the schedule to be too frequent.
 
 You should set the value of the `TZ` environment variable to make the schedule use your local time zone.
+
+#### Screenshots
+The page screenshot feature also has some configuration options:
+- `Screenshots__Schedule` - the schedule for taking screenshots of any new page changes. Like the search schedules this uses the standard Cron syntax. Defaults to every 15 minutes.
+- `Screenshots__Directory` - the directory to save the screenshots in within the container. You shouldn't need to change this, but if you do ensure that it remains in the `/jobhunt-data/` directory otherwise they won't be stored persistently.
+- `Screenshots__QualityPercent` - the percentage quality to save screenshots at
+- `Screenshots__WidthPixels` - the width of the screenshot in pixels. The height is determined by the page content.
+- `Screenshots__PageLoadTimeoutSeconds` - JobHunt will wait for all images on the page to load before taking a screenshot. This option controls the maximum time to wait for before timing out.
 
 #### Logging
 Logging with JobHunt is provided by Serilog, which means it can support logging to multiple locations. By default JobHunt simply writes logs to the console, however it also supports logging to an ElasticSearch instance. To enable this simply uncomment the alternative Serilog configuration.

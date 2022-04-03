@@ -16,7 +16,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - jobhunt-data:/jobhunt-data
     environment:
-      # PageWatcher__ScreenshotSchedule: "* * * * *"
+      # Screenshots__Schedule: "* * * * *"
       Screenshots__Directory: "/jobhunt-data/page-screenshots"
       Screenshots__QualityPercent: 80
       Screenshots__WidthPixels: 1920
