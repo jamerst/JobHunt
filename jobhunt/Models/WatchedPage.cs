@@ -16,6 +16,7 @@ namespace JobHunt.Models {
         public DateTime? LastUpdated { get; set; }
         public string? StatusMessage { get; set; }
         public override bool Enabled { get; set; } = true;
+        public override bool RequiresJS { get; set; }
         public List<WatchedPageChange> Changes { get; set; } = null!;
     }
 }

@@ -24,7 +24,7 @@ using JobHunt.Configuration;
 using JobHunt.Services;
 
 namespace JobHunt.Workers {
-    public class PageScreenshotWorker : IHostedService, IPageScreenshotWorker {
+    public class PageScreenshotWorker : BackgroundService, IPageScreenshotWorker {
         private readonly IServiceProvider _provider;
         private readonly ScreenshotOptions _options;
         private readonly ILogger _logger;
@@ -35,7 +35,7 @@ namespace JobHunt.Workers {
             _logger = logger;
         }
 
-        public async Task StartAsync(CancellationToken token) {
+        protected override async Task ExecuteAsync(CancellationToken token) {
             _logger.LogInformation("PageScreenshotWorker started");
             if (string.IsNullOrEmpty(_options.Schedule)) {
                 _logger.LogWarning("No screenshot schedule provided. Stopping.");
@@ -89,49 +89,53 @@ namespace JobHunt.Workers {
                             return 0;
                         }
 
-                        foreach (var page in pages) {
-                            if (token.IsCancellationRequested) {
-                                break;
-                            }
+                        try {
+                            foreach (var page in pages) {
+                                if (token.IsCancellationRequested) {
+                                    break;
+                                }
 
-                            // go to page
-                            driver.Navigate().GoToUrl(page.WatchedPage.Url);
+                                // go to page
+                                driver.Navigate().GoToUrl(page.WatchedPage.Url);
 
-                            // wait for images to load
-                            try {
-                                WebDriverWait imageWait = new WebDriverWait(driver, TimeSpan.FromSeconds(_options.PageLoadTimeoutSeconds));
-                                imageWait.Until(d => {
-                                    return d.FindElements(By.TagName("img")).All(e => {
-                                        var driver = (FirefoxDriver) d;
-                                        var result = driver.ExecuteScript("return arguments[0].complete", e);
+                                // wait for images to load
+                                try {
+                                    WebDriverWait imageWait = new WebDriverWait(driver, TimeSpan.FromSeconds(_options.PageLoadTimeoutSeconds));
+                                    imageWait.Until(d => {
+                                        return d.FindElements(By.TagName("img")).All(e => {
+                                            var driver = (FirefoxDriver) d;
+                                            var result = driver.ExecuteScript("return arguments[0].complete", e);
 
-                                        bool completed = result is bool b && b;
+                                            bool completed = result is bool b && b;
 
-                                        if (!completed) {
-                                            // scroll element into view to force loading in case it uses lazy loading
-                                            driver.ExecuteScript("arguments[0].scrollIntoView()", e);
-                                        }
+                                            if (!completed) {
+                                                // scroll element into view to force loading in case it uses lazy loading
+                                                driver.ExecuteScript("arguments[0].scrollIntoView()", e);
+                                            }
 
-                                        return completed;
+                                            return completed;
+                                        });
                                     });
-                                });
-                            } catch (WebDriverTimeoutException ex) {
-                                _logger.LogWarning(ex, "Timed out waiting for images to load on {url}", page.WatchedPage.Url);
+                                } catch (WebDriverTimeoutException ex) {
+                                    _logger.LogWarning(ex, "Timed out waiting for images to load on {url}", page.WatchedPage.Url);
+                                }
+
+                                var screenshot = driver.GetFullPageScreenshot();
+
+                                if (!Directory.Exists(_options.Directory)) {
+                                    Directory.CreateDirectory(_options.Directory);
+                                }
+
+                                page.ScreenshotFileName = Path.GetRandomFileName();
+                                string savePath = Path.Combine(_options.Directory, page.ScreenshotFileName);
+
+                                using (var img = SKBitmap.Decode(screenshot.AsByteArray)) {
+                                    using (var output = File.OpenWrite(savePath))
+                                        img.Encode(SKEncodedImageFormat.Webp, _options.QualityPercent).SaveTo(output);
+                                }
                             }
-
-                            var screenshot = driver.GetFullPageScreenshot();
-
-                            if (!Directory.Exists(_options.Directory)) {
-                                Directory.CreateDirectory(_options.Directory);
-                            }
-
-                            page.ScreenshotFileName = Path.GetRandomFileName();
-                            string savePath = Path.Combine(_options.Directory, page.ScreenshotFileName);
-
-                            using (var img = SKBitmap.Decode(screenshot.AsByteArray)) {
-                                using (var output = File.OpenWrite(savePath))
-                                    img.Encode(SKEncodedImageFormat.Webp, _options.QualityPercent).SaveTo(output);
-                            }
+                        } finally {
+                            driver.Dispose();
                         }
 
                         await wpcService.SaveChangesAsync();
@@ -144,10 +148,6 @@ namespace JobHunt.Workers {
                     return 0;
                 }
             }
-        }
-
-        public Task StopAsync(CancellationToken token) {
-            return Task.CompletedTask;
         }
     }
 

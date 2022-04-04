@@ -5,6 +5,7 @@ namespace JobHunt.DTO {
         public abstract string? CssSelector { get; set; }
         public abstract string? CssBlacklist { get; set; }
         public abstract bool Enabled { get; set; }
+        public abstract bool RequiresJS { get; set; }
 
         public override bool Equals(object? obj)
         {
@@ -13,7 +14,11 @@ namespace JobHunt.DTO {
                 return false;
             }
 
-            return this.Url == wp.Url && this.CssSelector == wp.CssSelector && this.CssBlacklist == wp.CssBlacklist && this.Enabled == wp.Enabled;
+            return this.Url == wp.Url
+                && this.CssSelector == wp.CssSelector
+                && this.CssBlacklist == wp.CssBlacklist
+                && this.Enabled == wp.Enabled
+                && this.RequiresJS == wp.RequiresJS;
         }
 
         public override int GetHashCode()

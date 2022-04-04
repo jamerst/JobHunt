@@ -203,7 +203,7 @@ const columns: ODataGridColDef[] = [
     type: "date",
     flex: .9,
     renderCell: (params) => {
-      let date = dayjs(params.value as string);
+      let date = dayjs.utc(params.value as string);
       let dateComponent;
       let chip;
 
@@ -215,7 +215,7 @@ const columns: ODataGridColDef[] = [
         chip = (<Chip label="Archived" />);
       }
 
-      if (date.isBefore(dayjs().subtract(14, "day"), "day")) {
+      if (date.isBefore(dayjs.utc().subtract(14, "day"), "day")) {
         dateComponent = (<Fragment>{date.format("DD/MM/YYYY HH:mm")}</Fragment>);
       } else {
         dateComponent = (

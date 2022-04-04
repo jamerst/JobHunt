@@ -19,7 +19,8 @@ type WatchedPage = {
   lastScraped?: string,
   lastUpdated?: string,
   statusMessage?: string,
-  enabled: boolean
+  enabled: boolean,
+  requiresJS: boolean
 }
 
 type WatchedPageChange = {
@@ -91,11 +92,11 @@ const PageChanges = () => {
 
   const changes = useMemo(() => !watchedPage?.changes ? [] : (watchedPage.changes ?? []).map((c, i) => {
     const hasPrevious = i < watchedPage.changes.length - 1;
-    const date = dayjs(c.created);
+    const date = dayjs.utc(c.created);
 
     let format = "DD/MM/YYYY HH:mm";
     let sameDate = false;
-    if (hasPrevious && dayjs(watchedPage.changes[i + 1].created).isSame(date, "day")) {
+    if (hasPrevious && dayjs.utc(watchedPage.changes[i + 1].created).isSame(date, "day")) {
       sameDate = true;
       format = "DD/MM/YYYY";
     }
@@ -156,9 +157,9 @@ const PageChanges = () => {
         {
           currentIndex < watchedPage.changes.length - 1 && (
             <Grid item container direction="column" xs={12} lg>
-              <Typography variant="h6">{dayjs(watchedPage.changes[currentIndex + 1].created).format("DD/MM/YYYY HH:mm")}</Typography>
+              <Typography variant="h6">{dayjs.utc(watchedPage.changes[currentIndex + 1].created).format("DD/MM/YYYY HH:mm")}</Typography>
               <Paper className={classes.iframePaper}>
-                {view === "html" && (<iframe src={`/api/watchedpages/previoushtml/${current}`} title="Before" />)}
+                {view === "html" && (<iframe src={`/api/watchedpages/previoushtml/${current}`} sandbox={watchedPage.watchedPage.requiresJS ? "" : undefined} title="Before" />)}
                 {view === "image" && (<img src={`/api/watchedpages/screenshot/${watchedPage.changes[currentIndex + 1].id}`} className={classes.screenshot} alt="Before"/>)}
               </Paper>
             </Grid>
@@ -167,9 +168,9 @@ const PageChanges = () => {
         {
           current && (
             <Grid item container direction="column" xs={12} lg>
-              <Typography variant="h6">{dayjs(watchedPage.changes[currentIndex].created).format("DD/MM/YYYY HH:mm")}</Typography>
+              <Typography variant="h6">{dayjs.utc(watchedPage.changes[currentIndex].created).format("DD/MM/YYYY HH:mm")}</Typography>
               <Paper className={classes.iframePaper}>
-                {view === "html" && (<iframe src={`/api/watchedpages/html/${current}`} sandbox="allow-same-origin allow-script" title="After" />)}
+                {view === "html" && (<iframe src={`/api/watchedpages/html/${current}`} sandbox={watchedPage.watchedPage.requiresJS ? "" : undefined} title="After" />)}
                 {view === "image" && (<img src={`/api/watchedpages/screenshot/${watchedPage.changes[currentIndex].id}`} className={classes.screenshot} alt="After"/>)}
               </Paper>
             </Grid>

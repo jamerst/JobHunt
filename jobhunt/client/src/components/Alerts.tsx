@@ -114,7 +114,7 @@ const Alerts = (props: AlertProps) => {
       const response = await fetch("/api/alerts");
       if (response.ok) {
         const data = await response.json() as Alert[];
-        data.forEach(a => a.created = dayjs(a.created));
+        data.forEach(a => a.created = dayjs.utc(a.created));
         setAlerts(data);
         if (props.setAlertCount) {
           props.setAlertCount(data.filter(a => !a.read).length);
@@ -168,14 +168,14 @@ const Alerts = (props: AlertProps) => {
                     {a.read ? null : <div className={classes.unread}></div>}
                     <Typography>{a.title}</Typography>
                     <Typography variant="body2">{a.message}</Typography>
-                    <Typography variant="caption">{a.created.isBefore(dayjs().subtract(1, "day"), "day") ? a.created.format("DD/MM/YYYY HH:mm") : a.created.fromNow() }</Typography>
+                    <Typography variant="caption">{a.created.isBefore(dayjs.utc().subtract(1, "day"), "day") ? a.created.format("DD/MM/YYYY HH:mm") : a.created.fromNow() }</Typography>
                   </Link>
                 ) : (
                   <Fragment>
                     {a.read ? null : <div className={classes.unread}></div>}
                     <Typography>{a.title}</Typography>
                     <Typography variant="body2">{a.message}</Typography>
-                    <Typography variant="caption">{a.created.isBefore(dayjs().subtract(1, "day"), "day") ? a.created.format("DD/MM/YYYY HH:mm") : a.created.fromNow() }</Typography>
+                    <Typography variant="caption">{a.created.isBefore(dayjs.utc().subtract(1, "day"), "day") ? a.created.format("DD/MM/YYYY HH:mm") : a.created.fromNow() }</Typography>
                   </Fragment>
                 )}
               </ListItem>

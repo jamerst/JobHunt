@@ -50,7 +50,9 @@ namespace JobHunt.Services {
         public async Task MarkAllAsReadAsync() {
             List<Alert> alerts = await _context.Alerts.Where(a => !a.Read).ToListAsync();
 
-            alerts.ForEach(a => a.Read = true);
+            foreach (var a in alerts) {
+                a.Read = true;
+            }
 
             await _context.SaveChangesAsync();
         }

@@ -37,14 +37,14 @@ namespace JobHunt.Diffing {
         public static void ReplaceRelativeUrlsWithAbsolute(this IDocument doc, string url) {
             foreach (var elem in doc.QuerySelectorAll("img, script")) {
                 var src = elem.GetAttribute("src");
-                if (!string.IsNullOrEmpty(src) && !src.StartsWith("http")) {
+                if (src != null && !src.StartsWith("http")) {
                     elem.SetAttribute("src", new Uri(new Uri(url), src).AbsoluteUri);
                 }
             }
 
             foreach (var elem in doc.QuerySelectorAll("a, link")) {
                 var href = elem.GetAttribute("href");
-                if (!string.IsNullOrEmpty(href) && !href.StartsWith("http")) {
+                if (href != null && !href.StartsWith("http")) {
                     elem.SetAttribute("href", new Uri(new Uri(url), href).AbsoluteUri);
                 }
             }

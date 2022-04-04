@@ -57,7 +57,8 @@ type WatchedPage = {
   lastScraped?: string,
   lastUpdated?: string,
   statusMessage?: string,
-  enabled: boolean
+  enabled: boolean,
+  requiresJS: boolean
 }
 
 const UpdateArray = <T, >(array: T[], index: number, update: (current: T) => T) => {
@@ -120,8 +121,8 @@ const columns: ODataGridColDef[] = [
     type: "date",
     flex: 1.25,
     renderCell: (params) => {
-      let date = dayjs(params.value as string);
-      if (date.isBefore(dayjs().subtract(14, "day"), "day")) {
+      let date = dayjs.utc(params.value as string);
+      if (date.isBefore(dayjs.utc().subtract(14, "day"), "day")) {
         return (<Fragment>{date.format("DD/MM/YYYY HH:mm")}</Fragment>);
       } else {
         let newTag = params.row.Seen ? null : (<Chip label="New" color="secondary" />);
@@ -174,7 +175,7 @@ const Company = () => {
   const [alternateNames, setAlternateNames] = useState<string>("");
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [editing, setEditing] = useState<boolean>(false);
-  const [newWatchedPage, setNewWatchedPage] = useState<WatchedPage>({ url: "", enabled: true });
+  const [newWatchedPage, setNewWatchedPage] = useState<WatchedPage>({ url: "", enabled: true, requiresJS: false });
   const [allCompanies, setAllCompanies] = useState<CompanyName[]>([]);
   const [mergeCompany, setMergeCompany] = useState<CompanyName | null>(null);
   const [mergeOpen, setMergeOpen] = useState<boolean>(false);
@@ -470,6 +471,7 @@ const Company = () => {
                           <TableCell>URL</TableCell>
                           <TableCell>CSS Selector</TableCell>
                           <TableCell>CSS Blacklist</TableCell>
+                          <TableCell>Requires JavaScript</TableCell>
                           <TableCell>Enabled</TableCell>
                           <TableCell>Actions</TableCell>
                         </TableRow>
@@ -480,7 +482,7 @@ const Company = () => {
                             <TableCell>
                               <TextField
                                 value={d.url}
-                                onChange={(e) => setCompanyData({...companyData, watchedPages: UpdateArray(companyData.watchedPages, i, (p) => { return {...p, url: e.target.value}})})}
+                                onChange={(e) => setCompanyData({...companyData, watchedPages: UpdateArray(companyData.watchedPages, i, (p) => ({...p, url: e.target.value}))})}
                                 variant="outlined"
                                 label="URL"
                                 size="small"
@@ -490,7 +492,7 @@ const Company = () => {
                             <TableCell>
                               <TextField
                                 value={d.cssSelector ?? ""}
-                                onChange={(e) => setCompanyData({...companyData, watchedPages: UpdateArray(companyData.watchedPages, i, (p) => { return {...p, cssSelector: e.target.value}})})}
+                                onChange={(e) => setCompanyData({...companyData, watchedPages: UpdateArray(companyData.watchedPages, i, (p) => ({...p, cssSelector: e.target.value}))})}
                                 variant="outlined"
                                 label="CSS Selector"
                                 size="small"
@@ -500,17 +502,31 @@ const Company = () => {
                             <TableCell>
                               <TextField
                                 value={d.cssBlacklist ?? ""}
-                                onChange={(e) => setCompanyData({...companyData, watchedPages: UpdateArray(companyData.watchedPages, i, (p) => { return {...p, cssBlacklist: e.target.value}})})}
+                                onChange={(e) => setCompanyData({...companyData, watchedPages: UpdateArray(companyData.watchedPages, i, (p) => ({...p, cssBlacklist: e.target.value}))})}
                                 variant="outlined"
                                 label="CSS Blacklist"
                                 size="small"
                                 fullWidth
                               />
                             </TableCell>
+                            <TableCell>
+                              <FormControl variant="outlined" fullWidth size="small">
+                                <InputLabel id={`js-select-label-${i}`}>Requires JavaScript</InputLabel>
+                                <Select
+                                  value={d.requiresJS ? 1 : 0}
+                                  onChange={(e) => setCompanyData({...companyData, watchedPages: UpdateArray(companyData.watchedPages, i, (p) => ({...p, requiresJS: e.target.value ? true : false}))})}
+                                  labelId={`js-select-label-${i}`}
+                                  label="Requires JavaScript"
+                                >
+                                  <MenuItem value={1}>Yes</MenuItem>
+                                  <MenuItem value={0}>No</MenuItem>
+                                </Select>
+                              </FormControl>
+                            </TableCell>
                             <TableCell align="center">
                               <Switch
                                 checked={d.enabled}
-                                onChange={(e) => setCompanyData({...companyData, watchedPages: UpdateArray(companyData.watchedPages, i, (p) => { return {...p, enabled: e.target.checked}})})}
+                                onChange={(e) => setCompanyData({...companyData, watchedPages: UpdateArray(companyData.watchedPages, i, (p) => ({...p, enabled: e.target.checked}))})}
                                 color="primary"
                               />
                             </TableCell>
@@ -558,6 +574,20 @@ const Company = () => {
                               fullWidth
                             />
                           </TableCell>
+                          <TableCell>
+                              <FormControl variant="outlined" fullWidth size="small">
+                                <InputLabel id="new-js-select-label">Requires JavaScript</InputLabel>
+                                <Select
+                                  value={newWatchedPage.requiresJS ? 1 : 0}
+                                  onChange={(e) => setNewWatchedPage({ ...newWatchedPage, requiresJS: e.target.value ? true : false })}
+                                  labelId="new-js-select-label"
+                                  label="Requires JavaScript"
+                                >
+                                  <MenuItem value={1}>Yes</MenuItem>
+                                  <MenuItem value={0}>No</MenuItem>
+                                </Select>
+                              </FormControl>
+                            </TableCell>
                           <TableCell align="center">
                             <Switch disabled checked={true}/>
                           </TableCell>
@@ -565,7 +595,7 @@ const Company = () => {
                             <Button
                               variant="contained"
                               color="primary"
-                              onClick={() => { setCompanyData({...companyData, watchedPages: [...companyData.watchedPages, newWatchedPage]}); setNewWatchedPage({ url: "", enabled: true }) }}
+                              onClick={() => { setCompanyData({...companyData, watchedPages: [...companyData.watchedPages, newWatchedPage]}); setNewWatchedPage({ url: "", enabled: true, requiresJS: false }) }}
                             >
                               Add
                             </Button>
@@ -591,10 +621,10 @@ const Company = () => {
                     {companyData.watchedPages.map(p =>
                       <TableRow key={p.url}>
                         <TableCell><Link href={p.url} target="_blank" rel="noreferrer">{p.url}</Link></TableCell>
-                        <TableCell>{p.lastScraped ? dayjs(p.lastScraped).fromNow() : "Never"}</TableCell>
-                        <TableCell>{p.lastUpdated ? dayjs(p.lastUpdated).toDate().toLocaleString() : "Never"}</TableCell>
+                        <TableCell>{p.lastScraped ? dayjs.utc(p.lastScraped).fromNow() : "Never"}</TableCell>
+                        <TableCell>{p.lastUpdated ? dayjs.utc(p.lastUpdated).toDate().toLocaleString() : "Never"}</TableCell>
                         <TableCell>{p.enabled ? p.statusMessage : "Disabled"}</TableCell>
-                        <TableCell align="right">{p.id && (<Button component={RouterLink} to={`/page-changes/${p.id}`} color="secondary" variant="contained" size="small">View Changes</Button>)}</TableCell>
+                        <TableCell align="right">{p.id && (<Button component={RouterLink} to={`/page-changes/${p.id}`} color="secondary" variant="contained" size="small" disabled={!p.lastUpdated}>View Changes</Button>)}</TableCell>
                       </TableRow>
                     )}
                     {companyData.watchedPages.length === 0 ? <TableRow><TableCell colSpan={4} align="center"><em>No pages being watched</em></TableCell></TableRow> : null}

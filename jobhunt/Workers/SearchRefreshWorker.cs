@@ -17,7 +17,7 @@ using JobHunt.Searching;
 using JobHunt.Services;
 
 namespace JobHunt.Workers {
-    public class SearchRefreshWorker : IHostedService, ISearchRefreshWorker {
+    public class SearchRefreshWorker : BackgroundService, ISearchRefreshWorker {
         private readonly IServiceProvider _provider;
         private readonly SearchOptions _options;
         private readonly ILogger _logger;
@@ -28,7 +28,7 @@ namespace JobHunt.Workers {
             _logger = logger;
         }
 
-        public async Task StartAsync(CancellationToken token) {
+        protected override async Task ExecuteAsync(CancellationToken token) {
             _logger.LogInformation("SearchRefreshWorker started");
             if (_options.Schedules == null) {
                 _logger.LogWarning("No search refresh schedule provided. Stopping.");
@@ -81,10 +81,6 @@ namespace JobHunt.Workers {
 
                 await Task.WhenAll(tasks);
             }
-        }
-
-        public Task StopAsync(CancellationToken token) {
-            return Task.CompletedTask;
         }
     }
 

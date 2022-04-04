@@ -197,6 +197,11 @@ namespace JobHunt.Searching {
                             if (salaryResponse != null && salaryResponse.ExpectedSalary != null) {
                                 salary = salaryResponse.FormattedSalary;
                                 avgYearlySalary = salaryResponse.ExpectedSalary.GetYearlyAverage();
+
+                                if (string.IsNullOrEmpty(salary) && avgYearlySalary.HasValue) {
+                                    salary = $"{avgYearlySalary:c} a year";
+                                }
+
                                 salaryFailCount = 0;
                             }
                         }

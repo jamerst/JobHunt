@@ -5,6 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
+      shm_size: '1gb'
     ports:
       - "5000:5000"
       - "5001:5001"
@@ -24,6 +25,7 @@ services:
       Search__IndeedFetchSalary: "true"
       # Search__Schedules__0: "* * * * *"
       Search__NominatimCountryCodes: "gb"
+      Search__PageLoadWaitSeconds: 5
       Serilog__WriteTo__0__Name: "Console"
       # Serilog__WriteTo__0__Name: "Elasticsearch"
       # Serilog__WriteTo__0__Args__nodeUris: "http://elasticsearch:9200"

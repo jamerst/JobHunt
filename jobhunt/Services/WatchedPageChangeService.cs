@@ -77,15 +77,18 @@ namespace JobHunt.Services {
                 .Where(c => c.WatchedPageId == change.WatchedPageId && c.Id != change.Id && c.Created <= change.Created)
                 .OrderByDescending(c => c.Created)
                 .FirstOrDefaultAsync();
-            if (previousChange == default) {
-                return (null, change.Html);
-            }
 
             var context = BrowsingContext.New();
             var current = await context.OpenAsync(r => r.Content(change.Html));
+            current.ReplaceRelativeUrlsWithAbsolute(change.WatchedPage.Url);
+
+            if (previousChange == default) {
+
+                return (null, current.ToHtml());
+            }
+
             var previous = await context.OpenAsync(r => r.Content(previousChange.Html));
 
-            current.ReplaceRelativeUrlsWithAbsolute(change.WatchedPage.Url);
             previous.ReplaceRelativeUrlsWithAbsolute(change.WatchedPage.Url);
 
             var diffStrategy = new DiffingStrategyPipeline();

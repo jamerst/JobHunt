@@ -123,15 +123,16 @@ namespace JobHunt.Services {
             company.WatchedPages.RemoveAll(wp1 => !sentPages.Any(wp2 => wp1.Url == wp2.Url));
 
             // update any pages which already exist
-            company.WatchedPages.ForEach(wp => {
+            foreach (var wp in company.WatchedPages) {
                 WatchedPageBase? page = sentPages.FirstOrDefault(sp => sp.Url == wp.Url && sp != wp);
                 if (page != null) {
                     pagesModified = true;
                     wp.CssSelector = page.CssSelector;
                     wp.CssBlacklist = page.CssBlacklist;
                     wp.Enabled = page.Enabled;
+                    wp.RequiresJS = page.RequiresJS;
                 }
-            });
+            }
 
             // add new pages
             company.WatchedPages.AddRange(sentPages
@@ -139,7 +140,9 @@ namespace JobHunt.Services {
                 .Select(wp => new WatchedPage {
                     Url = wp.Url,
                     CssSelector = wp.CssSelector,
-                    CssBlacklist = wp.CssBlacklist
+                    CssBlacklist = wp.CssBlacklist,
+                    RequiresJS = wp.RequiresJS,
+                    Enabled = wp.Enabled
                 })
             );
 
@@ -309,27 +312,27 @@ namespace JobHunt.Services {
                 return false;
             }
 
-            src.AlternateNames.ForEach(an => {
+            foreach (var an in src.AlternateNames) {
                 if (!dest.AlternateNames.Any(anD => anD.Name == an.Name)) {
                     an.CompanyId = dest.Id;
                 }
-            });
+            }
 
-            src.CompanyCategories.ForEach(cc => {
+            foreach (var cc in src.CompanyCategories) {
                 if (!dest.CompanyCategories.Any(ccD => ccD.CategoryId == cc.CategoryId)) {
                     dest.CompanyCategories.Add(new CompanyCategory { CategoryId = cc.CategoryId});
                 }
-            });
+            }
 
-            src.Jobs.ForEach(j => {
+            foreach (var j in src.Jobs) {
                 j.CompanyId = dest.Id;
-            });
+            }
 
-            src.WatchedPages.ForEach(wp => {
+            foreach (var wp in src.WatchedPages) {
                 if (!dest.WatchedPages.Any(wpD => wpD.Url == wp.Url)) {
                     wp.CompanyId = dest.Id;
                 }
-            });
+            }
 
             if (src.Name != dest.Name) {
                 dest.AlternateNames.Add(new CompanyName { Name = src.Name});

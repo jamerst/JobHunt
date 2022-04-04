@@ -107,8 +107,8 @@ const columns: ODataGridColDef[] = [
     type: "date",
     flex: 1.25,
     renderCell: (params) => {
-      let date = dayjs(params.value as string);
-      if (date.isBefore(dayjs().subtract(14, "day"), "day")) {
+      let date = dayjs.utc(params.value as string);
+      if (date.isBefore(dayjs.utc().subtract(14, "day"), "day")) {
         return (<Fragment>{date.format("DD/MM/YYYY HH:mm")}</Fragment>);
       } else {
         let newTag = params.row.Seen ? null : (<Chip label="New" color="secondary" />);

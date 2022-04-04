@@ -227,7 +227,7 @@ const Search = () => {
                   <TableBody>
                     {search.runs.map(r => (
                       <TableRow key={`sr-${r.id}`}>
-                        <TableCell>{dayjs(r.time).format("DD/MM/YYYY HH:mm")}</TableCell>
+                        <TableCell>{dayjs.utc(r.time).format("DD/MM/YYYY HH:mm")}</TableCell>
                         <TableCell>{r.newJobs}</TableCell>
                         <TableCell>{r.newCompanies}</TableCell>
                         <TableCell>{r.timeTaken >= 60 ? `${Math.floor(r.timeTaken / 60)}m ${r.timeTaken % 60}s` : `${r.timeTaken}s` }</TableCell>

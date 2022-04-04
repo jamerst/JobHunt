@@ -51,8 +51,8 @@ const columns: ODataGridColDef[] = [
         return <Fragment>Never</Fragment>;
       }
 
-      let date = dayjs(params.value as string);
-      if (date.isBefore(dayjs().subtract(1, "day"), "day")) {
+      let date = dayjs.utc(params.value as string);
+      if (date.isBefore(dayjs.utc().subtract(1, "day"), "day")) {
         return (<Fragment>{date.format("DD/MM/YYYY HH:mm")}</Fragment>);
       } else {
         let failedTag = params.row.LastFetchSuccess ? null : (<Chip label="Failed" color="error" />);

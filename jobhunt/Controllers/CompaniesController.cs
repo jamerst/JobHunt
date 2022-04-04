@@ -60,7 +60,8 @@ namespace JobHunt.Controllers {
                         LastScraped = wp.LastScraped,
                         LastUpdated = wp.LastUpdated,
                         StatusMessage = wp.StatusMessage,
-                        Enabled = wp.Enabled
+                        Enabled = wp.Enabled,
+                        RequiresJS = wp.RequiresJS
                     }),
                     Categories = company.CompanyCategories.Select(cc => new {
                         Id = cc.CategoryId,
