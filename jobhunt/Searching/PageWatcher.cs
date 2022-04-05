@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,10 +10,7 @@ using Microsoft.Extensions.Options;
 
 using AngleSharp.Diffing;
 using OpenQA.Selenium;
-using OpenQA.Selenium.Support.UI;
 using OpenQA.Selenium.Firefox;
-using WebDriverManager;
-using WebDriverManager.DriverConfigs.Impl;
 
 using JobHunt.Configuration;
 using JobHunt.Diffing;
@@ -194,8 +189,6 @@ namespace JobHunt.Searching {
 
         private void SetUpWebDriver() {
             try {
-                new DriverManager().SetUpDriver(new FirefoxConfig());
-
                 var options = new FirefoxOptions();
                 options.AddArgument("-headless");
 

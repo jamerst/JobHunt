@@ -48,7 +48,11 @@ namespace JobHunt.Workers {
                     }
 
                     _logger.LogInformation("SearchRefresh started");
-                    await DoRefreshAsync(token);
+                    try {
+                        await DoRefreshAsync(token);
+                    } catch (Exception ex) {
+                        _logger.LogError(ex, "Uncaught SearchRefreshWorker exception");
+                    }
                     _logger.LogInformation("SearchRefresh completed");
                 } else {
                     _logger.LogInformation("SearchRefreshWorker stopping: no more occurrences");

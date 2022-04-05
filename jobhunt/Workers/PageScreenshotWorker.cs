@@ -16,8 +16,6 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.Support.UI;
 using SkiaSharp;
-using WebDriverManager;
-using WebDriverManager.DriverConfigs.Impl;
 
 using JobHunt.Models;
 using JobHunt.Configuration;
@@ -54,10 +52,15 @@ namespace JobHunt.Workers {
                         _logger.LogInformation("PageScreenshotWorker stopping: task cancelled");
                     }
 
-                    int numScreenshots = await TakeScreenshotsAsync(token);
-                    if (numScreenshots > 0) {
-                        _logger.LogInformation("PageScreenshotWorker completed: took {numScreenshots} screenshots", numScreenshots);
+                    try {
+                        int numScreenshots = await TakeScreenshotsAsync(token);
+                        if (numScreenshots > 0) {
+                            _logger.LogInformation("PageScreenshotWorker completed: took {numScreenshots} screenshots", numScreenshots);
+                        }
+                    } catch (Exception ex) {
+                        _logger.LogError(ex, "Uncaught PageScreenshotWorker exception");
                     }
+
                 }
                 else {
                     _logger.LogInformation("PageScreenshotWorker stopping: no more occurrences");
@@ -79,7 +82,6 @@ namespace JobHunt.Workers {
                     if (pages.Any()) {
                         FirefoxDriver driver;
                         try {
-                            new DriverManager().SetUpDriver(new FirefoxConfig());
                             var options = new FirefoxOptions();
                             options.AddArgument("-headless");
                             driver = new FirefoxDriver(options);

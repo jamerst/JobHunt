@@ -4,7 +4,7 @@ WORKDIR /app
 # install node and npm
 RUN curl -sL https://deb.nodesource.com/setup_16.x |  bash -
 RUN apt-get update
-RUN apt-get install -y --no-install-recommends nodejs unzip libfreetype6 libfontconfig1 ca-certificates procps pandoc firefox-esr
+RUN apt-get install -y --no-install-recommends nodejs unzip libfreetype6 libfontconfig1 ca-certificates procps pandoc firefox-esr curl jq
 
 # install pnpm
 RUN npm install -g pnpm
@@ -15,5 +15,9 @@ RUN curl -sSL https://aka.ms/getvsdbgsh | /bin/sh /dev/stdin -v latest -l /vsdbg
 # Copy csproj and restore as distinct layers
 COPY *.csproj ./
 RUN dotnet restore
+
+# download and install geckodriver
+COPY install-geckodriver.sh ./
+RUN ./install-geckodriver.sh
 
 ENTRYPOINT dotnet watch run --urls=https://+:5000
