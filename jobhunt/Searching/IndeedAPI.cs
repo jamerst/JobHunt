@@ -198,8 +198,11 @@ namespace JobHunt.Searching {
                                 salary = salaryResponse.FormattedSalary;
                                 avgYearlySalary = salaryResponse.ExpectedSalary.GetYearlyAverage();
 
-                                if (string.IsNullOrEmpty(salary) && avgYearlySalary.HasValue) {
-                                    salary = $"{avgYearlySalary:c} a year";
+                                if (string.IsNullOrEmpty(salary) && !string.IsNullOrEmpty(salaryResponse.ExpectedSalary.Range)) {
+                                    salary = salaryResponse.ExpectedSalary.Range;
+                                }
+                                else if (string.IsNullOrEmpty(salary) && avgYearlySalary.HasValue) {
+                                    salary = $"{avgYearlySalary:C0} a year";
                                 }
 
                                 salaryFailCount = 0;

@@ -47,6 +47,7 @@ This is configured based on your ElasticSearch instance also being dockerised an
 - `Search__GlassdoorPartnerId` and `Search__GlassdoorPartnerKey` - currently unused (I may add Glassdoor searching in the future, but from my experience Indeed is better)
 - `Search__NominatimCountryCodes` - country to return results from when geocoding locations. Set to your own country to get the most accurate results.
 - `Search__PageLoadWaitSeconds` - number of seconds to wait before capturing page source HTML for watched pages which require JavaScript support. This allows Single Page Applications without server-side rendering to initialise so that the actual page content can be compared.
+- `CultureName` - set the culture used for the application. This affects the currency symbol used when adding the formatted salary for a job if Indeed doesn't provide one. For a list of languages/countries and their codes can be found [here](https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-lcid/a9eac961-e77d-41a6-90a5-ce1a8b0cdb9c).
 
 
 ### Running JobHunt
