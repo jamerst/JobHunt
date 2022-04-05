@@ -45,15 +45,15 @@ namespace JobHunt.Services {
                 .ToListAsync();
         }
 
-        public async Task<List<WatchedPage>> GetUnfetchedAsync(int companyId) {
+        public async Task<List<WatchedPage>> GetActiveUnfetchedAsync(int companyId) {
             return await _context.WatchedPages
-                .Where(wp => wp.CompanyId == companyId && !wp.Changes.Any())
+                .Where(wp => wp.CompanyId == companyId && wp.Enabled && !wp.Changes.Any())
                 .ToListAsync();
         }
 
-        public async Task<List<WatchedPage>> GetByCompanyAsync(int companyId) {
+        public async Task<List<WatchedPage>> GetActiveByCompanyAsync(int companyId) {
             return await _context.WatchedPages
-                .Where(wp => wp.CompanyId == companyId)
+                .Where(wp => wp.CompanyId == companyId && wp.Enabled)
                 .ToListAsync();
         }
     }
@@ -62,7 +62,7 @@ namespace JobHunt.Services {
         Task<WatchedPage?> FindByIdAsync(int id);
         Task UpdateStatusAsync(int id, bool changed = false, string? statusMessage = null);
         Task<List<WatchedPage>> GetAllActiveAsync();
-        Task<List<WatchedPage>> GetUnfetchedAsync(int companyId);
-        Task<List<WatchedPage>> GetByCompanyAsync(int companyId);
+        Task<List<WatchedPage>> GetActiveUnfetchedAsync(int companyId);
+        Task<List<WatchedPage>> GetActiveByCompanyAsync(int companyId);
     }
 }

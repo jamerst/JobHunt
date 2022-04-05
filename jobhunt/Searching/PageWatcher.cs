@@ -164,7 +164,7 @@ namespace JobHunt.Searching {
         }
 
         public async Task GetInitialAsync(int companyId, CancellationToken token) {
-            List<WatchedPage> pages = await _wpService.GetUnfetchedAsync(companyId);
+            List<WatchedPage> pages = await _wpService.GetActiveUnfetchedAsync(companyId);
 
             foreach(WatchedPage page in pages) {
                 if (token.IsCancellationRequested) {
@@ -176,7 +176,7 @@ namespace JobHunt.Searching {
         }
 
         public async Task RefreshCompanyAsync(int companyId, CancellationToken token) {
-            List<WatchedPage> pages = await _wpService.GetByCompanyAsync(companyId);
+            List<WatchedPage> pages = await _wpService.GetActiveByCompanyAsync(companyId);
 
             foreach(WatchedPage page in pages) {
                 if (token.IsCancellationRequested) {
