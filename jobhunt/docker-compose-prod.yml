@@ -31,6 +31,7 @@ services:
       # Serilog__WriteTo__0__Args__nodeUris: "http://elasticsearch:9200"
       # Serilog__WriteTo__0__Args__indexFormat: "jobhunt-serilog-{0:yyyy.MM}"
       TZ: "Europe/London"
+      CultureName: "en-GB"
     networks:
       - jobhunt
       - docker_logging
