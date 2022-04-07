@@ -25,11 +25,13 @@ namespace JobHunt.Workers {
     public class PageScreenshotWorker : BackgroundService, IPageScreenshotWorker {
         private readonly IServiceProvider _provider;
         private readonly ScreenshotOptions _options;
+        private readonly SearchOptions _searchOptions;
         private readonly ILogger _logger;
 
-        public PageScreenshotWorker(IServiceProvider provider, IOptions<ScreenshotOptions> options, ILogger<PageScreenshotWorker> logger) {
+        public PageScreenshotWorker(IServiceProvider provider, IOptions<ScreenshotOptions> options, IOptions<SearchOptions> searchOptions, ILogger<PageScreenshotWorker> logger) {
             _provider = provider;
             _options = options.Value;
+            _searchOptions = searchOptions.Value;
             _logger = logger;
         }
 
@@ -99,6 +101,11 @@ namespace JobHunt.Workers {
 
                                 // go to page
                                 driver.Navigate().GoToUrl(page.WatchedPage.Url);
+
+                                if (page.WatchedPage.RequiresJS) {
+                                    // wait for page to load and SPA to initialise
+                                    await Task.Delay(TimeSpan.FromSeconds(_searchOptions.PageLoadWaitSeconds));
+                                }
 
                                 // wait for images to load
                                 try {

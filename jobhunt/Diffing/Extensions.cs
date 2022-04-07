@@ -13,6 +13,14 @@ namespace JobHunt.Diffing {
 
             return builder;
         }
+
+        public static IDiffingStrategyCollection AddAttributeWhitelistComparer(this IDiffingStrategyCollection builder, params string[] allowedAttributes) {
+            AttributeWhitelistComparer comparer = new AttributeWhitelistComparer(allowedAttributes);
+
+            builder.AddComparer(comparer.Compare, StrategyType.Specialized);
+
+            return builder;
+        }
     }
 
     public static class DiffExtensions {

@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -194,16 +195,8 @@ namespace JobHunt.Searching {
                                 }
                             }
 
-                            if (salaryResponse != null && salaryResponse.ExpectedSalary != null) {
-                                salary = salaryResponse.FormattedSalary;
-                                avgYearlySalary = salaryResponse.ExpectedSalary.GetYearlyAverage();
-
-                                if (string.IsNullOrEmpty(salary) && !string.IsNullOrEmpty(salaryResponse.ExpectedSalary.Range)) {
-                                    salary = salaryResponse.ExpectedSalary.Range;
-                                }
-                                else if (string.IsNullOrEmpty(salary) && avgYearlySalary.HasValue) {
-                                    salary = $"{avgYearlySalary:C0} a year";
-                                }
+                            if (salaryResponse != null) {
+                                (salary, avgYearlySalary) = salaryResponse.GetSalary();
 
                                 salaryFailCount = 0;
                             }
@@ -383,7 +376,100 @@ namespace JobHunt.Searching {
             public IndeedSalary? ExpectedSalary { get; set; }
             [JsonPropertyName("ssT")]
             public string? FormattedSalary { get; set; }
+
+            public (string?, int?) GetSalary() {
+                bool formattedHasUnit = true;
+                string? formatted = FormattedSalary;
+                double? average = ExpectedSalary?.Average;
+                int? yearly = null;
+
+                if (ExpectedSalary != null) {
+                    if (!string.IsNullOrEmpty(ExpectedSalary?.Range)) {
+                        var match = _rangeRegex.Match(ExpectedSalary.Range);
+                        if (match.Success) {
+                            if (double.TryParse(match.Groups["lower"].Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double lower)) {
+                                if (match.Groups.ContainsKey("upper")
+                                    && double.TryParse(match.Groups["upper"].Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double upper)) {
+                                    if (lower == 0) {
+                                        if (string.IsNullOrEmpty(formatted)) {
+                                            formatted = $"Up to {upper:C0}";
+                                            formattedHasUnit = false;
+                                        }
+
+                                        // override value if salary is "Up to £x"
+                                        // Indeed takes the lower bound of such salaries as £0, so the average is skewed significantly
+                                        average = upper;
+                                    }
+                                    else if (upper == -1) {
+                                        if (string.IsNullOrEmpty(formatted)) {
+                                            formatted = $"From {upper:C0}";
+                                            formattedHasUnit = false;
+                                        }
+
+                                        // override value if salary is "From £x"
+                                        // Indeed takes the upper bound of such salaries as £-1, which makes no sense, so just use the lower bound
+                                        average = lower;
+                                    } else {
+                                        if (string.IsNullOrEmpty(formatted)) {
+                                            formatted = ExpectedSalary.Range;
+                                            formattedHasUnit = false;
+                                        }
+
+                                        if (!average.HasValue) {
+                                            average = (upper + lower) / 2;
+                                        }
+                                    }
+                                } else {
+                                    if (string.IsNullOrEmpty(formatted)) {
+                                        formatted = ExpectedSalary.Range;
+                                        formattedHasUnit = false;
+                                    }
+
+                                    if (!average.HasValue) {
+                                        average = lower;
+                                    }
+                                }
+                            }
+                        } else if (string.IsNullOrEmpty(formatted)) {
+                            formatted = ExpectedSalary.Range;
+                            formattedHasUnit = false;
+                        }
+                    }
+
+                    string unit = "";
+                    switch (ExpectedSalary?.Type) {
+                        case IndeedSalaryTypes.Yearly:
+                            unit = " a year";
+                            yearly = (int?) average;
+                            break;
+                        case IndeedSalaryTypes.Monthly:
+                            unit = " a month";
+                            yearly = (int?) (average * 12);
+                            break;
+                        case IndeedSalaryTypes.Weekly:
+                            unit = " a week";
+                            yearly = (int?) (average * 48);
+                            break;
+                        case IndeedSalaryTypes.Daily:
+                            unit = " a day";
+                            yearly = (int?) (average * 48 * 5);
+                            break;
+                        case IndeedSalaryTypes.Hourly:
+                            unit = " an hour";
+                            yearly = (int?) (average * 48 * 5 * 8);
+                            break;
+                    }
+
+                    if (!formattedHasUnit) {
+                        formatted = formatted += unit;
+                    }
+                }
+
+                return (formatted, yearly);
+            }
         }
+
+        private static readonly Regex _rangeRegex = new Regex(@"[^\d]*(?<lower>[\d,]+)(?: - [^\d]*(?<upper>[\d,-]+))*");
 
         private class IndeedSalary {
             [JsonPropertyName("sAvg")]
@@ -392,23 +478,6 @@ namespace JobHunt.Searching {
             public string? Range { get; set; }
             [JsonPropertyName("sT")]
             public string? Type { get; set; }
-            public int? GetYearlyAverage() {
-                switch (Type) {
-                    case IndeedSalaryTypes.Yearly:
-                        return (int) Average;
-                    case IndeedSalaryTypes.Monthly:
-                        return (int) (Average * 12);
-                    case IndeedSalaryTypes.Weekly:
-                        return (int) (Average * 48);
-                    case IndeedSalaryTypes.Daily:
-                        return (int) (Average * 48 * 5);
-                    case IndeedSalaryTypes.Hourly:
-                        return (int) (Average * 48 * 5 * 8);
-                    case null:
-                    default:
-                        return null;
-                }
-            }
         }
 
         private class IndeedSalaryTypes {

@@ -140,7 +140,8 @@ namespace JobHunt.Searching {
                 .WithTest(response)
                 .WithOptions(options => options
                     .AddDefaultOptions()
-                    .AddCssWhitelistBlacklistFilter(page.CssSelector, page.CssBlacklist))
+                    .AddCssWhitelistBlacklistFilter(page.CssSelector, page.CssBlacklist)
+                    .AddAttributeWhitelistComparer("href", "src"))
                 .Build();
 
             if (diffs.Any()) {
