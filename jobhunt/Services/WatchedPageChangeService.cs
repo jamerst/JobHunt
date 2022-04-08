@@ -92,26 +92,7 @@ namespace JobHunt.Services {
             previous.ReplaceRelativeUrlsWithAbsolute(change.WatchedPage.Url);
 
             var diffStrategy = new DiffingStrategyPipeline();
-            // diffStrategy.AddDefaultOptions();
-            // diffStrategy.IgnoreComments();
-            // diffStrategy.AddSearchingNodeMatcher();
-            // diffStrategy.AddElementComparer();
-            // diffStrategy.AddTextComparer(AngleSharp.Diffing.Strategies.TextNodeStrategies.WhitespaceOption.Normalize, false);
-            diffStrategy.IgnoreDiffAttributes();
-            diffStrategy.IgnoreComments();
-            diffStrategy.AddSearchingNodeMatcher();
-            diffStrategy.AddCssSelectorMatcher();
-            diffStrategy.AddAttributeNameMatcher();
-            diffStrategy.AddElementComparer();
-            diffStrategy.AddIgnoreElementSupport();
-            diffStrategy.AddStyleSheetComparer();
-            diffStrategy.AddTextComparer(AngleSharp.Diffing.Strategies.TextNodeStrategies.WhitespaceOption.Normalize, ignoreCase: false);
-            // diffStrategy.AddAttributeComparer();
-            // diffStrategy.AddClassAttributeComparer();
-            // diffStrategy.AddBooleanAttributeComparer(AngleSharp.Diffing.Strategies.AttributeStrategies.BooleanAttributeComparision.Strict);
-            // diffStrategy.AddStyleAttributeComparer();
-            diffStrategy.AddAttributeWhitelistComparer("href", "src");
-            diffStrategy.AddCssWhitelistBlacklistFilter(change.WatchedPage.CssSelector, change.WatchedPage.CssBlacklist);
+            diffStrategy.AddDefaultJobHuntOptions(change.WatchedPage.CssSelector, change.WatchedPage.CssBlacklist);
 
             var comparer = new HtmlDiffer(diffStrategy);
             var diffs = comparer.Compare(

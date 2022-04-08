@@ -3,6 +3,7 @@ import { useParams } from "react-router";
 import { Link, Paper, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { Timeline, TimelineConnector, TimelineContent, timelineContentClasses, TimelineDot, timelineDotClasses, TimelineItem, TimelineSeparator } from "@mui/lab";
 import dayjs from "dayjs";
+import { Link as RouterLink } from "react-router-dom"
 
 import Grid from "components/Grid";
 import makeStyles from "makeStyles";
@@ -20,7 +21,13 @@ type WatchedPage = {
   lastUpdated?: string,
   statusMessage?: string,
   enabled: boolean,
-  requiresJS: boolean
+  requiresJS: boolean,
+  company: Company
+}
+
+type Company = {
+  id: number,
+  name: string
 }
 
 type WatchedPageChange = {
@@ -95,18 +102,10 @@ const PageChanges = () => {
     const hasPrevious = i < watchedPage.changes.length - 1;
     const date = dayjs.utc(c.created);
 
-    let format = "DD/MM/YYYY HH:mm";
-    let sameDate = false;
-    if (hasPrevious && dayjs.utc(watchedPage.changes[i + 1].created).isSame(date, "day")) {
-      sameDate = true;
-      format = "DD/MM/YYYY";
-    }
-
     return {
       id: c.id,
-      date: date.format(format),
-      hasPrevious: hasPrevious,
-      sameDate: sameDate
+      date: date.format("DD/MM/YYYY HH:mm"),
+      hasPrevious: hasPrevious
     }
   }), [watchedPage]);
 
@@ -129,7 +128,9 @@ const PageChanges = () => {
         <title>Changes to {watchedPage.watchedPage.url} | JobHunt</title>
       </Helmet>
       <Grid item>
-        <Typography variant="h6" marginBottom={1}><Link href={watchedPage.watchedPage.url} target="_blank">{watchedPage.watchedPage.url}</Link></Typography>
+        <Typography variant="h6" marginBottom={1}>
+          <Link component={RouterLink} to={`/company/${watchedPage.watchedPage.company.id}`} target="_blank">{watchedPage.watchedPage.company.name}</Link> - <Link href={watchedPage.watchedPage.url} target="_blank">{watchedPage.watchedPage.url}</Link>
+        </Typography>
       </Grid>
       <Grid item container spacing={2} className={classes.root}>
         <Grid item xs={12} lg={2} xl={1}>

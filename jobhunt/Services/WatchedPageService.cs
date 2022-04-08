@@ -16,7 +16,9 @@ namespace JobHunt.Services {
         }
 
         public async Task<WatchedPage?> FindByIdAsync(int id) {
-            return await _context.WatchedPages.FirstOrDefaultAsync(p => p.Id == id);
+            return await _context.WatchedPages
+                .Include(p => p.Company)
+                .FirstOrDefaultAsync(p => p.Id == id);
         }
 
         public async Task UpdateStatusAsync(int id, bool changed = false, string? statusMessage = null) {

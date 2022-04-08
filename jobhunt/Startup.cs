@@ -1,16 +1,15 @@
 using System;
 using System.Globalization;
 using System.Net.Http.Headers;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.AspNetCore.OData;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 using Polly;
 using Polly.Extensions.Http;
@@ -65,6 +64,9 @@ namespace JobHunt {
                         .OrderBy()
                         .SkipToken()
                         .SetMaxTop(500);
+                })
+                .AddJsonOptions(options => {
+                    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
                 });
 
             // In production, the React files will be served from this directory

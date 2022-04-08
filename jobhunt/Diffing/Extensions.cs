@@ -1,8 +1,10 @@
 using System;
 
 using AngleSharp.Dom;
+using AngleSharp.Diffing;
 using AngleSharp.Diffing.Core;
 using AngleSharp.Diffing.Strategies;
+using AngleSharp.Diffing.Strategies.TextNodeStrategies;
 
 namespace JobHunt.Diffing {
     public static class DiffingStrategyCollectionExtensions {
@@ -14,10 +16,24 @@ namespace JobHunt.Diffing {
             return builder;
         }
 
-        public static IDiffingStrategyCollection AddAttributeWhitelistComparer(this IDiffingStrategyCollection builder, params string[] allowedAttributes) {
-            AttributeWhitelistComparer comparer = new AttributeWhitelistComparer(allowedAttributes);
+        public static IDiffingStrategyCollection AddAttributeWhitelistFilter(this IDiffingStrategyCollection builder, params string[] allowedAttributes) {
+            AttributeWhitelistFilter filter = new AttributeWhitelistFilter(allowedAttributes);
 
-            builder.AddComparer(comparer.Compare, StrategyType.Specialized);
+            builder.AddFilter(filter.Filter);
+
+            return builder;
+        }
+
+        public static IDiffingStrategyCollection AddDefaultJobHuntOptions(this IDiffingStrategyCollection builder, string? cssWhitelist, string? cssBlacklist) {
+            builder.IgnoreComments();
+            builder.AddSearchingNodeMatcher();
+            builder.AddAttributeNameMatcher();
+            builder.AddElementComparer();
+            builder.AddTextComparer(WhitespaceOption.Normalize, ignoreCase: false);
+            builder.AddAttributeComparer();
+
+            builder.AddCssWhitelistBlacklistFilter(cssWhitelist, cssBlacklist);
+            builder.AddAttributeWhitelistFilter("href", "src", "srcset");
 
             return builder;
         }
