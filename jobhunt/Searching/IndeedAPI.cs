@@ -469,7 +469,7 @@ namespace JobHunt.Searching {
             }
         }
 
-        private static readonly Regex _rangeRegex = new Regex(@"[^\d]*(?<lower>[\d,]+)(?: - [^\d]*(?<upper>[\d,-]+))*");
+        private static readonly Regex _rangeRegex = new Regex(@"[^\d]*(?<lower>[\d,]+)(?: - [^\d-]*(?<upper>[\d,-]+))*");
 
         private class IndeedSalary {
             [JsonPropertyName("sAvg")]

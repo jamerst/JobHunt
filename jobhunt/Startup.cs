@@ -6,10 +6,12 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.AspNetCore.OData;
+using Microsoft.AspNetCore.OData.Query.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
 
 using Polly;
 using Polly.Extensions.Http;
@@ -20,6 +22,7 @@ using JobHunt.Data;
 using JobHunt.Extensions;
 using JobHunt.Filters;
 using JobHunt.Geocoding;
+using JobHunt.Utils;
 using JobHunt.Searching;
 using JobHunt.Services;
 using JobHunt.Workers;
@@ -56,8 +59,22 @@ namespace JobHunt {
                 })
                 .AddOData(options => {
                     options.TimeZone = TimeZoneInfo.Utc;
-                    options.AddRouteComponents("api/odata", ODataModelBuilder.Build())
-                        .Filter()
+                    options.AddRouteComponents(
+                        "api/odata",
+                        ODataModelBuilder.Build(),
+                        // add custom binders for GeoDistance function
+                        s => s.AddDbContext<JobHuntContext>(options =>
+                                options.UseNpgsql(
+                                    Configuration.GetConnectionString("DefaultConnection"),
+                                    o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
+                                )
+                            )
+                            .AddScoped<IFilterBinder, CustomFilterBinder>()
+                            .AddScoped<IOrderByBinder, CustomOrderByBinder>()
+                            .AddScoped<ISelectExpandBinder, CustomSelectExpandBinder>()
+                    );
+
+                    options.Filter()
                         .Select()
                         .Expand()
                         .Count()
@@ -68,6 +85,8 @@ namespace JobHunt {
                 .AddJsonOptions(options => {
                     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
                 });
+
+            CustomUriFunctionUtils.AddCustomUriFunction(typeof(JobHuntContext).GetMethod(nameof(JobHuntContext.GeoDistance))!);
 
             // In production, the React files will be served from this directory
             services.AddSpaStaticFiles(configuration => {
