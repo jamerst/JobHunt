@@ -1,49 +1,26 @@
-using System;
 using System.Globalization;
-using System.Net.Http.Headers;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
-using Microsoft.AspNetCore.OData;
-using Microsoft.AspNetCore.OData.Query.Expressions;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-
-using Polly;
-using Polly.Extensions.Http;
-using Serilog;
-
-using JobHunt.Configuration;
 using JobHunt.Data;
+using JobHunt.Data.OData;
 using JobHunt.Extensions;
 using JobHunt.Filters;
-using JobHunt.Geocoding;
-using JobHunt.Utils;
-using JobHunt.Searching;
-using JobHunt.Services;
-using JobHunt.Workers;
 namespace JobHunt {
     public class Startup {
         public Startup(IConfiguration configuration) {
-            Configuration = configuration;
+            _configuration = configuration;
         }
 
-        public IConfiguration Configuration { get; }
+        public IConfiguration _configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services) {
-
-            services.AddDbContext<JobHuntContext>(options =>
-                options.UseNpgsql(
-                    Configuration.GetConnectionString("DefaultConnection"),
-                    o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
-                )
-                // .EnableSensitiveDataLogging()
-            );
 
             // services.AddCors(builder => {
             //     builder.AddDefaultPolicy(policy =>
@@ -54,82 +31,28 @@ namespace JobHunt {
             //     );
             // });
 
-            services.AddControllers(options => {
+            services
+                .AddControllers(options => {
                     options.Filters.Add(typeof(ExceptionLogger));
                 })
-                .AddOData(options => {
-                    options.TimeZone = TimeZoneInfo.Utc;
-                    options.AddRouteComponents(
-                        "api/odata",
-                        ODataModelBuilder.Build(),
-                        // add custom binders for GeoDistance function
-                        s => s.AddDbContext<JobHuntContext>(options =>
-                                options.UseNpgsql(
-                                    Configuration.GetConnectionString("DefaultConnection"),
-                                    o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
-                                )
-                            )
-                            .AddScoped<IFilterBinder, CustomFilterBinder>()
-                            .AddScoped<IOrderByBinder, CustomOrderByBinder>()
-                            .AddScoped<ISelectExpandBinder, CustomSelectExpandBinder>()
-                    );
-
-                    options.Filter()
-                        .Select()
-                        .Expand()
-                        .Count()
-                        .OrderBy()
-                        .SkipToken()
-                        .SetMaxTop(500);
-                })
+                .AddJobHuntOData(_configuration)
                 .AddJsonOptions(options => {
                     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
                 });
-
-            CustomUriFunctionUtils.AddCustomUriFunction(typeof(JobHuntContext).GetMethod(nameof(JobHuntContext.GeoDistance))!);
 
             // In production, the React files will be served from this directory
             services.AddSpaStaticFiles(configuration => {
                 configuration.RootPath = "client/build";
             });
 
-            services.Configure<ScreenshotOptions>(Configuration.GetSection(ScreenshotOptions.Section));
-            services.Configure<SearchOptions>(Configuration.GetSection(SearchOptions.Section));
-
-            services.AddHttpClient();
-
-            // retry requests on fail for Indeed requests - getting increased request failures recently
-            var retryPolicy = HttpPolicyExtensions
-                .HandleTransientHttpError()
-                .WaitAndRetryAsync(
-                    5,
-                    attempt => TimeSpan.FromSeconds(attempt),
-                    (result, _, count, _) => Log.Logger.Warning($"HTTP Request failed, retrying for {count.ToOrdinalString()} time", result.Exception)
-                );
-            services.AddHttpClient<IIndeedAPI, IndeedAPI>().AddPolicyHandler(retryPolicy);
-
-            services.AddHttpClient<INominatim, Nominatim>((_, client) => client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("JobHunt", "1.0")));
-
-            services.AddTransient<IAlertService, AlertService>();
-            services.AddTransient<ICategoryService, CategoryService>();
-            services.AddTransient<ICompanyService, CompanyService>();
-            services.AddTransient<IJobService, JobService>();
-            services.AddTransient<ISearchService, SearchService>();
-            services.AddTransient<IWatchedPageService, WatchedPageService>();
-            services.AddTransient<IWatchedPageChangeService, WatchedPageChangeService>();
-
-            services.AddTransient<IIndeedAPI, IndeedAPI>();
-            services.AddTransient<IPageWatcher, PageWatcher>();
-
-            services.AddTransient<INominatim, Nominatim>();
-
-            services.AddTransient<IPageScreenshotWorker, PageScreenshotWorker>();
-            services.AddTransient<ISearchRefreshWorker, SearchRefreshWorker>();
+            services.AddJobHuntCoreServices(_configuration);
+            services.AddJobHuntSearching();
+            services.AddJobHuntWorkers();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
-            var cultureInfo = new CultureInfo(Configuration.GetValue<string>("CultureName"));
+            var cultureInfo = new CultureInfo(_configuration.GetValue<string>("CultureName"));
             CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
             CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 

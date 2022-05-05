@@ -14,10 +14,10 @@ using JobHunt.Models;
 namespace JobHunt.Services {
     public class JobService : IJobService {
         private readonly JobHuntContext _context;
-        private readonly INominatim _nominatim;
-        public JobService(JobHuntContext context, INominatim nominatim) {
+        private readonly IGeocoder _geocoder;
+        public JobService(JobHuntContext context, IGeocoder geocoder) {
             _context = context;
-            _nominatim = nominatim;
+            _geocoder = geocoder;
         }
 
         public async Task<Job?> GetByIdAsync(int id) {
@@ -184,7 +184,7 @@ namespace JobHunt.Services {
 
             if (!string.IsNullOrEmpty(details.Location)) {
                 job.Location = details.Location;
-                (double? lat, double? lng) = await _nominatim.Geocode(details.Location);
+                (double? lat, double? lng) = await _geocoder.GeocodeAsync(details.Location);
 
                 if (lat.HasValue && lng.HasValue) {
                     job.Latitude = lat;
@@ -236,7 +236,7 @@ namespace JobHunt.Services {
 
             double? lat = null, lng = null;
             if (!string.IsNullOrEmpty(filter.Location) && filter.Distance.HasValue) {
-                (lat, lng) = await _nominatim.Geocode(filter.Location);
+                (lat, lng) = await _geocoder.GeocodeAsync(filter.Location);
 
                 if (lat.HasValue && lng.HasValue) {
                     query = query.Where(j =>
@@ -321,22 +321,6 @@ namespace JobHunt.Services {
         public DbSet<Job> GetSet() {
             return _context.Jobs;
         }
-
-        public async Task<IQueryable<Job>> GetFilteredSet(string location, int distance) {
-            double? lat = null, lng = null;
-
-            (lat, lng) = await _nominatim.Geocode(location);
-            if (lat.HasValue && lng.HasValue) {
-                return _context.Jobs
-                .Where(j =>
-                    j.Latitude.HasValue
-                    && j.Longitude.HasValue
-                    && _context.GeoDistance(lat.Value, lng.Value, j.Latitude.Value, j.Longitude.Value) <= distance
-                );
-            } else {
-                return GetSet();
-            }
-        }
     }
 
     public interface IJobService {
@@ -355,6 +339,5 @@ namespace JobHunt.Services {
         Task<IEnumerable<Category>> GetJobCategoriesAsync();
         Task<bool> UpdateStatusAsync(int id, string status);
         DbSet<Job> GetSet();
-        Task<IQueryable<Job>> GetFilteredSet(string location, int distance);
     }
 }

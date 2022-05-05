@@ -102,15 +102,9 @@ const columns: ODataGridColDef[] = [
         </Grid>
       </Grid>
     ),
-    getCustomQueryString: (_, v) => {
+    getCustomFilterString: (_, v) => {
       const filter = v as LocationFilter;
-      let result: QueryStringCollection = {};
-      if (filter.location) {
-        result["location"] = filter.location!;
-        result["distance"] = (filter.distance ?? 15).toString();
-      }
-
-      return result;
+      return `Latitude ne null and Longitude ne null and geocode('${filter.location?.replace("'", "''")}', Latitude, Longitude) le ${filter.distance ?? 15}`;
     },
     autocompleteGroup: "Job"
   },

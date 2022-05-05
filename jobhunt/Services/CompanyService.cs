@@ -17,12 +17,12 @@ using JobHunt.Searching;
 namespace JobHunt.Services {
     public class CompanyService : ICompanyService {
         private readonly JobHuntContext _context;
-        private readonly INominatim _nominatim;
+        private readonly IGeocoder _geocoder;
         private readonly IPageWatcher _pageWatcher;
 
-        public CompanyService(JobHuntContext context, INominatim nominatim, IPageWatcher pageWatcher) {
+        public CompanyService(JobHuntContext context, IGeocoder geocoder, IPageWatcher pageWatcher) {
             _context = context;
-            _nominatim = nominatim;
+            _geocoder = geocoder;
             _pageWatcher = pageWatcher;
         }
 
@@ -184,7 +184,7 @@ namespace JobHunt.Services {
             company.Endole = details.Endole;
             company.Recruiter = details.Recruiter;
 
-            (double? lat, double? lng) = await _nominatim.Geocode(details.Location);
+            (double? lat, double? lng) = await _geocoder.GeocodeAsync(details.Location);
             company.Latitude = lat;
             company.Longitude = lng;
 
@@ -207,7 +207,7 @@ namespace JobHunt.Services {
             }
             double? lat = null, lng = null;
             if (!string.IsNullOrEmpty(filter.Location) && filter.Distance.HasValue) {
-                (lat, lng) = await _nominatim.Geocode(filter.Location);
+                (lat, lng) = await _geocoder.GeocodeAsync(filter.Location);
 
                 if (lat.HasValue && lng.HasValue) {
                     query = query.Where(c =>
@@ -356,7 +356,7 @@ namespace JobHunt.Services {
         public async Task<IQueryable<Company>> GetFilteredSet(string location, int distance) {
             double? lat = null, lng = null;
 
-            (lat, lng) = await _nominatim.Geocode(location);
+            (lat, lng) = await _geocoder.GeocodeAsync(location);
             if (lat.HasValue && lng.HasValue) {
                 return _context.Companies.Where(j =>
                     j.Latitude.HasValue
