@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.OData;
 using Microsoft.AspNetCore.OData.Query.Expressions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Caching.Memory;
 
 using JobHunt.Data;
 using JobHunt.Data.OData;

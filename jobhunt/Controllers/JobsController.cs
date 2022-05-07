@@ -19,7 +19,7 @@ namespace JobHunt.Controllers {
             _jobService = jobService;
         }
 
-        [EnableQuery]
+        [EnableQuery(MaxAnyAllExpressionDepth = 5)]
         [ODataAttributeRouting]
         [HttpGet("~/api/odata/job")]
         public IActionResult OData() {
@@ -132,16 +132,6 @@ namespace JobHunt.Controllers {
         [HttpGet]
         public async Task<IActionResult> Counts() {
             return new JsonResult(await _jobService.GetJobCountsAsync(DateTime.UtcNow));
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Search([FromQuery] Filter filter, [FromQuery] int page, [FromQuery] int size, [FromQuery] bool count = false) {
-            (var results, int? total) = await _jobService.SearchPagedAsync(filter, page, size, count);
-
-            return new JsonResult(new {
-                total = total,
-                results = results
-            });
         }
 
         [HttpGet]

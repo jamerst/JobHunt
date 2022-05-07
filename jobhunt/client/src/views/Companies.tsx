@@ -7,7 +7,7 @@ import { Add, Visibility } from "@mui/icons-material";
 import { Helmet } from "react-helmet";
 import { useNavigate } from "react-router";
 import { Link as RouterLink } from "react-router-dom";
-import { ODataGridColDef, QueryStringCollection, numericOperators, ODataColumnVisibilityModel } from "o-data-grid";
+import { ODataGridColDef, numericOperators, ODataColumnVisibilityModel, escapeODataString } from "o-data-grid";
 import ODataGrid from "components/ODataGrid";
 
 import dayjs from "dayjs"
@@ -108,8 +108,15 @@ const columns: ODataGridColDef[] = [
     ),
     getCustomFilterString: (_, v) => {
       const filter = v as LocationFilter;
-      return `Latitude ne null and Longitude ne null and geocode('${filter.location?.replace("'", "''")}', Latitude, Longitude) le ${filter.distance ?? 15}`;
+      return {
+        filter: `Latitude ne null and Longitude ne null and Distance le ${filter.distance ?? 15}`,
+        compute: {
+          compute: `geocode('${escapeODataString(filter.location ?? "")}', Latitude, Longitude) as Distance`,
+          select: ["Distance"]
+        }
+      };
     },
+    valueGetter: (params) => `${params.row.Location}${params.row.Distance ? ` (${params.row.Distance.toFixed(1)}mi away)` : ""}`,
   },
   {
     // This field has to be calculated clientside - $apply doesn't appear to work for collections
@@ -234,7 +241,32 @@ const columns: ODataGridColDef[] = [
     field: "Notes",
     filterOnly: true,
     filterOperators: ["contains"]
-  }
+  },
+  {
+    field: "JobCategories",
+    filterOnly: true,
+    label: "Job Categories",
+    renderCustomFilter: (value, setValue) => (
+      <Grid item container alignSelf="center" xs={12} md>
+        <Categories
+          fetchUrl="/api/jobs/categories"
+          categories={value ? value as Category[] : []}
+          onCategoryAdd={(cats) => setValue(cats)}
+          onCategoryRemove={(cats) => setValue(cats)}
+          openByDefault
+        >
+          <Grid item>
+            <Typography variant="body1">Is one of:</Typography>
+          </Grid>
+        </Categories>
+      </Grid>
+    ),
+    getCustomFilterString: (_, value) =>
+      value && (value as Category[]).length > 0 ?
+        `Jobs/any(j:j/JobCategories/any(x:x/CategoryId in (${(value as Category[]).map(c => c.id).join(", ")})))`
+        : "",
+    autocompleteGroup: "Jobs"
+  },
 ];
 
 const columnVisibility: ODataColumnVisibilityModel = {

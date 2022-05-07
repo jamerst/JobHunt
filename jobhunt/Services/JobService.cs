@@ -184,12 +184,10 @@ namespace JobHunt.Services {
 
             if (!string.IsNullOrEmpty(details.Location)) {
                 job.Location = details.Location;
-                (double? lat, double? lng) = await _geocoder.GeocodeAsync(details.Location);
 
-                if (lat.HasValue && lng.HasValue) {
-                    job.Latitude = lat;
-                    job.Longitude = lng;
-                }
+                Coordinate? coord = await _geocoder.GeocodeAsync(details.Location);
+                job.Latitude = coord?.Latitude;
+                job.Longitude = coord?.Longitude;
             }
 
             job.Title = details.Title;
@@ -225,73 +223,6 @@ namespace JobHunt.Services {
                 job.Archived = !(toggle && job.Archived);
                 await _context.SaveChangesAsync();
             }
-        }
-
-        public async Task<(IEnumerable<JobResultDto>, int?)> SearchPagedAsync(Filter filter, int pageNum, int pageSize, bool count) {
-            var query = _context.Jobs.AsNoTracking();
-
-            if (!string.IsNullOrEmpty(filter.Term)) {
-                query = query.Where(j => j.Title.ToLower().Contains(filter.Term.ToLower()));
-            }
-
-            double? lat = null, lng = null;
-            if (!string.IsNullOrEmpty(filter.Location) && filter.Distance.HasValue) {
-                (lat, lng) = await _geocoder.GeocodeAsync(filter.Location);
-
-                if (lat.HasValue && lng.HasValue) {
-                    query = query.Where(j =>
-                        j.Latitude.HasValue
-                        && j.Longitude.HasValue
-                        && _context.GeoDistance(lat.Value, lng.Value, j.Latitude.Value, j.Longitude.Value) <= filter.Distance
-                    );
-                }
-            }
-
-            if (filter.Posted.HasValue) {
-                query = query.Where(j => j.Posted >= filter.Posted.Value);
-            }
-
-            if (filter.Categories != null && filter.Categories.Count > 0) {
-                query = query.Where(j => j.JobCategories.Any(jc => filter.Categories.Contains(jc.CategoryId)));
-            }
-
-            if (filter.Status != null) {
-                query = query.Where(j => j.Status == filter.Status);
-            }
-
-            if (filter.ShowArchived.HasValue) {
-                query = query.Where(j => j.Archived == filter.ShowArchived || j.Archived == false);
-            } else {
-                query = query.Where(j => j.Archived == false);
-            }
-
-            if (filter.Recruiter.HasValue) {
-                query = query.Where(j => (j.Company != null && j.Company.Recruiter == filter.Recruiter.Value));
-            }
-
-            int? total = null;
-            if (count) {
-                total = await query.CountAsync();
-            }
-
-            IEnumerable<JobResultDto> results = query
-                .Include(j => j.Company)
-                .Select(j => new JobResultDto {
-                    Id = j.Id,
-                    Title = j.Title,
-                    Location = j.Location,
-                    CompanyId = j.CompanyId,
-                    CompanyName = j.Company != null ? j.Company.Name : null,
-                    Posted = j.Posted,
-                    Seen = j.Seen,
-                    Archived = j.Archived,
-                    Distance = lat.HasValue && lng.HasValue ? _context.GeoDistance(lat.Value, lng.Value, j.Latitude!.Value, j.Longitude!.Value) : null
-                })
-                .OrderByDescending(j => j.Posted)
-                .Skip(pageNum * pageSize)
-                .Take(pageSize);
-
-            return (results, total);
         }
 
         public async Task<IEnumerable<Category>> GetJobCategoriesAsync() {
@@ -335,7 +266,6 @@ namespace JobHunt.Services {
         Task<bool> UpdateAsync(int id, JobDto details);
         Task<int?> CreateAsync(NewJobDto details);
         Task MarkAsArchivedAsync(int id, bool toggle);
-        Task<(IEnumerable<JobResultDto>, int?)> SearchPagedAsync(Filter filter, int pageNum, int pageSize, bool count);
         Task<IEnumerable<Category>> GetJobCategoriesAsync();
         Task<bool> UpdateStatusAsync(int id, string status);
         DbSet<Job> GetSet();

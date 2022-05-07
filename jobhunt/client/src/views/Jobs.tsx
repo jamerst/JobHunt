@@ -7,7 +7,7 @@ import LocalizationProvider from "@mui/lab/LocalizationProvider";
 import { GridRowParams, GridSortModel } from "@mui/x-data-grid"
 import Autocomplete from '@mui/material/Autocomplete';
 import { Add, Visibility } from "@mui/icons-material";
-import { ODataGridColDef, QueryStringCollection, ODataColumnVisibilityModel } from "o-data-grid";
+import { ODataGridColDef, ODataColumnVisibilityModel, escapeODataString } from "o-data-grid";
 import ODataGrid from "components/ODataGrid";
 
 import makeStyles from "makeStyles";
@@ -104,8 +104,15 @@ const columns: ODataGridColDef[] = [
     ),
     getCustomFilterString: (_, v) => {
       const filter = v as LocationFilter;
-      return `Latitude ne null and Longitude ne null and geocode('${filter.location?.replace("'", "''")}', Latitude, Longitude) le ${filter.distance ?? 15}`;
+      return {
+        filter: `Latitude ne null and Longitude ne null and Distance le ${filter.distance ?? 15}`,
+        compute: {
+          compute: `geocode('${escapeODataString(filter.location ?? "")}', Latitude, Longitude) as Distance`,
+          select: ["Distance"]
+        }
+      };
     },
+    valueGetter: (params) => `${params.row.Location}${params.row.Distance ? ` (${params.row.Distance.toFixed(1)}mi away)` : ""}`,
     autocompleteGroup: "Job"
   },
   {

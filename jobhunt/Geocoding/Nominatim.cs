@@ -29,13 +29,10 @@ namespace JobHunt.Geocoding {
             _cache = cache;
         }
 
-        public async Task<(double?, double?)> GeocodeAsync(string location) {
-
-            if (_cache.TryGetValue<(double?, double?)>($"Nominatim.GeocodeAsync_{location.ToLower()}", out var result)) {
+        public async Task<Coordinate?> GeocodeAsync(string location) {
+            if (_cache.TryGetValue<Coordinate?>($"Nominatim.GeocodeAsync_{location.ToLower()}", out var result)) {
                 return result;
             } else {
-                double? lat, lng;
-
                 Dictionary<string, string?> query = new Dictionary<string, string?>() {
                     { "q", location },
                     { "countrycodes", _options.NominatimCountryCodes },
@@ -53,25 +50,25 @@ namespace JobHunt.Geocoding {
                         response = JsonSerializer.Deserialize<List<NominatimResponse>>(responseContent);
                     } else {
                         _logger.LogError("Nominatim request failed. Received HTTP {StatusCode} with body {Content}", (int)httpResponse.StatusCode, responseContent);
-                        return (null, null);
+                        return null;
                     }
                 }
 
                 if (response == null) {
                     _logger.LogError("Nominatim request deserialisation failed");
-                    return (null, null);
+                    return null;
                 }
 
-                if (double.TryParse(response.FirstOrDefault()?.Latitude, out double _lat) && double.TryParse(response.FirstOrDefault()?.Longitude, out double _lng)) {
-                    lat = _lat;
-                    lng = _lng;
-                } else {
-                    lat = null;
-                    lng = null;
+                Coordinate? coord = null;
+                if (double.TryParse(response.FirstOrDefault()?.Latitude, out double lat) && double.TryParse(response.FirstOrDefault()?.Longitude, out double lng)) {
+                    coord = new Coordinate {
+                        Latitude = lat,
+                        Longitude = lng
+                    };
                 }
 
-                _cache.Set($"Nominatim.GeocodeAsync_{location.ToLower()}", (lat, lng));
-                return (lat, lng);
+                _cache.Set($"Nominatim.GeocodeAsync_{location.ToLower()}", coord);
+                return coord;
             }
         }
 

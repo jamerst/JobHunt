@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using Microsoft.AspNetCore.OData.Query.Expressions;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.OData.UriParser;
 
 using JobHunt.Extensions;
@@ -50,7 +49,7 @@ namespace JobHunt.Data.OData {
             }
         }
 
-        private readonly IEnumerable<string> _boundFunctionNames = new[] { GeocodeMethodName, GeoDistanceMethodName };
+        private static readonly IEnumerable<string> _boundFunctionNames = new[] { GeocodeMethodName, GeoDistanceMethodName };
         public bool IsFunctionBound(string name) => _boundFunctionNames.Contains(name);
 
         private const string GeoDistanceMethodName = "geodistance";
@@ -61,12 +60,12 @@ namespace JobHunt.Data.OData {
 
         private const string GeocodeMethodName = "geocode";
         private Expression BindGeocode(string location, IEnumerable<Expression> arguments, JobHuntContext dbContext, IGeocoder geocoder, bool isOrderBy) {
-            (double? lat, double? lng) = geocoder.GeocodeAsync(location).Result;
+            Coordinate? coord = geocoder.GeocodeAsync(location).Result;
 
-            if (lat.HasValue && lng.HasValue) {
+            if (coord.HasValue) {
                 List<Expression> args = new List<Expression>(4) {
-                    Expression.Constant(lat.Value),
-                    Expression.Constant(lng.Value)
+                    Expression.Constant(coord.Value.Latitude),
+                    Expression.Constant(coord.Value.Longitude)
                 };
                 args.AddRange(arguments);
 

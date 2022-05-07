@@ -167,7 +167,7 @@ const Categories: FunctionComponent<CategoriesProps> = ({ children, categories, 
         <Grid item>
           <Autocomplete
             options={allCategories.filter(c1 => !categories.some(c2 => c2.id === c1.id))}
-            getOptionLabel={(option) => option?.displayName ?? option?.name ?? ""}
+            getOptionLabel={(option) => (option as Category)?.displayName ?? (option as Category)?.name ?? ""}
             renderInput={(params) => {
               const { InputLabelProps, InputProps, ...rest } = params;
               return <InputBase

@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -21,15 +20,11 @@ namespace JobHunt.Controllers {
             _jobService = jobService;
         }
 
-        [EnableQuery]
+        [EnableQuery(MaxAnyAllExpressionDepth = 5)]
         [ODataAttributeRouting]
         [HttpGet("~/api/odata/company")]
-        public async Task<IActionResult> OData([FromQuery] string? location = null, [FromQuery] int? distance = null) {
-            if (!string.IsNullOrEmpty(location) && distance.HasValue) {
-                return Ok(await _companyService.GetFilteredSet(location, distance.Value));
-            } else {
-                return Ok(_companyService.GetSet());
-            }
+        public IActionResult OData() {
+            return Ok(_companyService.GetSet());
         }
 
         [HttpGet]
@@ -129,16 +124,6 @@ namespace JobHunt.Controllers {
             } else {
                 return BadRequest();
             }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Search([FromQuery] Filter filter, [FromQuery] int page, [FromQuery] int size, [FromQuery] bool count = false) {
-            (var results, int? total) = await _companyService.SearchPagedAsync(filter, page, size, count);
-
-            return new JsonResult(new {
-                total = total,
-                results = results
-            });
         }
 
         [HttpGet]
