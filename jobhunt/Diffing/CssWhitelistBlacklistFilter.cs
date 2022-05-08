@@ -15,8 +15,12 @@ namespace JobHunt.Diffing {
             if (currentDecision.IsExclude()) return currentDecision;
 
             if (source.Node.NodeType == NodeType.Element && source.Node is IElement elem) {
-                if (!string.IsNullOrEmpty(CssWhitelist) && !elem.Matches(CssWhitelist)) {
-                    return FilterDecision.Keep;
+                if (!string.IsNullOrEmpty(CssWhitelist)) {
+                    if (elem.Matches(CssWhitelist)) {
+                        return FilterDecision.Keep;
+                    } else {
+                        return FilterDecision.Exclude;
+                    }
                 }
 
                 if (!string.IsNullOrEmpty(CssBlacklist) && elem.Matches(CssBlacklist)) {
