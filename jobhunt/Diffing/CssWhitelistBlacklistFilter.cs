@@ -1,7 +1,7 @@
 using AngleSharp.Dom;
 using AngleSharp.Diffing.Core;
 
-namespace JobHunt.Diffing {
+namespace JobHunt.AngleSharp {
     public class CssWhitelistBlacklistFilter {
         public string? CssWhitelist { get; set; }
         public string? CssBlacklist { get; set; }
@@ -24,6 +24,10 @@ namespace JobHunt.Diffing {
                 }
 
                 if (!string.IsNullOrEmpty(CssBlacklist) && elem.Matches(CssBlacklist)) {
+                    return FilterDecision.Exclude;
+                }
+
+                if (elem.TagName == TagNames.Script || elem.TagName == TagNames.Link) {
                     return FilterDecision.Exclude;
                 }
             }

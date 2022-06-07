@@ -8,12 +8,11 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-using AngleSharp.Diffing;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
 
+using JobHunt.AngleSharp;
 using JobHunt.Configuration;
-using JobHunt.Diffing;
 using JobHunt.Extensions;
 using JobHunt.Models;
 using JobHunt.Services;
@@ -52,7 +51,7 @@ namespace JobHunt.Searching {
                 try {
                     await _refreshAsync(page, token, false);
                 } catch (Exception e) {
-                    _logger.LogError(e, "Uncaught PageWatcher exception {WatchedPage}", page);
+                    _logger.LogError(e, "Uncaught PageWatcher exception {@WatchedPage}", page);
                 }
             }
 
@@ -76,7 +75,7 @@ namespace JobHunt.Searching {
                         }
                     }
                 } catch (HttpRequestException e) {
-                    _logger.LogError(e, "HTTP Request failed for {page}", page);
+                    _logger.LogError(e, "HTTP Request failed for {url}", page.Url);
                     await _wpService.UpdateStatusAsync(page.Id, statusMessage: "HTTP request error");
                     return;
                 }
@@ -99,7 +98,7 @@ namespace JobHunt.Searching {
                         return;
                     }
                 } catch (HttpRequestException e) {
-                    _logger.LogError(e, "HTTP Request failed for {page}", page);
+                    _logger.LogError(e, "HTTP Request failed for {url}", page.Url);
                     await _wpService.UpdateStatusAsync(page.Id, statusMessage: "HTTP request error");
                     return;
                 }
@@ -134,13 +133,7 @@ namespace JobHunt.Searching {
             }
 
             bool changed = false;
-
-            var diffs = DiffBuilder
-                .Compare(previous.Html)
-                .WithTest(response)
-                .WithOptions(options => options
-                    .AddDefaultJobHuntOptions(page.CssSelector, page.CssBlacklist))
-                .Build();
+            var diffs = await JobHuntComparer.CompareAsync(previous.Html, response, page.CssSelector, page.CssBlacklist);
 
             if (diffs.Any()) {
                 changed = true;

@@ -402,7 +402,7 @@ namespace JobHunt.Searching {
                                     }
                                     else if (upper == -1) {
                                         if (string.IsNullOrEmpty(formatted)) {
-                                            formatted = $"From {upper:C0}";
+                                            formatted = $"From {lower:C0}";
                                             formattedHasUnit = false;
                                         }
 

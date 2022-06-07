@@ -1,6 +1,7 @@
-using System.Threading.Tasks;
+using System;
 using System.Net;
 using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace JobHunt.Extensions {
     public static class HttpClientExtensions  {
@@ -23,6 +24,13 @@ namespace JobHunt.Extensions {
     public static class HttpStatusCodeExtensions {
         public static bool IsSuccessStatusCode(this HttpStatusCode code) {
             return (int) code >= 200 && (int) code <= 299;
+        }
+    }
+
+    public static class UriExtensions {
+        public static bool IsRelativeHttpUri(this Uri uri, string uriString) {
+            // check if URI starts with // as this is actually an absolute URI, but C# doesn't recognise them
+            return !uri.IsAbsoluteUri && !uriString.StartsWith("//");
         }
     }
 }

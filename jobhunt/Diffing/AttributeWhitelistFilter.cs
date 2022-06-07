@@ -6,7 +6,7 @@ using System.Linq;
 using AngleSharp.Dom;
 using AngleSharp.Diffing.Core;
 
-namespace JobHunt.Diffing {
+namespace JobHunt.AngleSharp {
     public class AttributeWhitelistFilter {
         public IEnumerable<string> Whitelist { get; set; }
         private readonly StringComparer _comparer = StringComparer.Create(CultureInfo.InvariantCulture, true);

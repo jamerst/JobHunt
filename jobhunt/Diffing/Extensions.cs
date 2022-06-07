@@ -6,10 +6,20 @@ using AngleSharp.Diffing.Core;
 using AngleSharp.Diffing.Strategies;
 using AngleSharp.Diffing.Strategies.TextNodeStrategies;
 
-namespace JobHunt.Diffing {
+using JobHunt.Extensions;
+
+namespace JobHunt.AngleSharp {
     public static class DiffingStrategyCollectionExtensions {
         public static IDiffingStrategyCollection AddCssWhitelistBlacklistFilter(this IDiffingStrategyCollection builder, string? cssWhitelist, string? cssBlacklist) {
-            CssWhitelistBlacklistFilter filter = new CssWhitelistBlacklistFilter(cssWhitelist, cssBlacklist);
+            var filter = new CssWhitelistBlacklistFilter(cssWhitelist, cssBlacklist);
+
+            builder.AddFilter(filter.Filter);
+
+            return builder;
+        }
+
+        public static IDiffingStrategyCollection AddTagBlacklistFilter(this IDiffingStrategyCollection builder, params string[] blacklist) {
+            var filter = new TagBlacklistFilter(blacklist);
 
             builder.AddFilter(filter.Filter);
 
@@ -17,7 +27,7 @@ namespace JobHunt.Diffing {
         }
 
         public static IDiffingStrategyCollection AddAttributeWhitelistFilter(this IDiffingStrategyCollection builder, params string[] allowedAttributes) {
-            AttributeWhitelistFilter filter = new AttributeWhitelistFilter(allowedAttributes);
+            var filter = new AttributeWhitelistFilter(allowedAttributes);
 
             builder.AddFilter(filter.Filter);
 
@@ -32,8 +42,9 @@ namespace JobHunt.Diffing {
             builder.AddTextComparer(WhitespaceOption.Normalize, ignoreCase: false);
             builder.AddAttributeComparer();
 
+            builder.AddTagBlacklistFilter(TagNames.Script, TagNames.Link);
             builder.AddCssWhitelistBlacklistFilter(cssWhitelist, cssBlacklist);
-            builder.AddAttributeWhitelistFilter("href", "src", "srcset");
+            builder.AddAttributeWhitelistFilter(AttributeNames.Href, AttributeNames.Src, AttributeNames.SrcSet);
 
             return builder;
         }
@@ -61,15 +72,19 @@ namespace JobHunt.Diffing {
         public static void ReplaceRelativeUrlsWithAbsolute(this IDocument doc, string url) {
             foreach (var elem in doc.QuerySelectorAll("img, script")) {
                 var src = elem.GetAttribute("src");
-                if (src != null && !src.StartsWith("http")) {
-                    elem.SetAttribute("src", new Uri(new Uri(url), src).AbsoluteUri);
+                if (src != null && Uri.TryCreate(src, UriKind.RelativeOrAbsolute, out Uri? srcUri)) {
+                    if (srcUri.IsRelativeHttpUri(src)) {
+                        elem.SetAttribute("src", new Uri(new Uri(url), srcUri).AbsoluteUri);
+                    }
                 }
             }
 
             foreach (var elem in doc.QuerySelectorAll("a, link")) {
                 var href = elem.GetAttribute("href");
-                if (href != null && !href.StartsWith("http")) {
-                    elem.SetAttribute("href", new Uri(new Uri(url), href).AbsoluteUri);
+                if (href != null && Uri.TryCreate(href, UriKind.RelativeOrAbsolute, out Uri? hrefUri)) {
+                    if (hrefUri.IsRelativeHttpUri(href)) {
+                        elem.SetAttribute("href", new Uri(new Uri(url), hrefUri).AbsoluteUri);
+                    }
                 }
             }
         }

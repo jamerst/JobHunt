@@ -7,15 +7,13 @@ using System.Threading.Tasks;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Parser;
-using AngleSharp.Diffing;
 using AngleSharp.Diffing.Core;
-using AngleSharp.Diffing.Strategies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
+using JobHunt.AngleSharp;
 using JobHunt.Configuration;
 using JobHunt.Data;
-using JobHunt.Diffing;
 using JobHunt.DTO;
 using JobHunt.Models;
 
@@ -79,6 +77,7 @@ namespace JobHunt.Services {
                 .FirstOrDefaultAsync();
 
             var context = BrowsingContext.New();
+
             var current = await context.OpenAsync(r => r.Content(change.Html));
             current.ReplaceRelativeUrlsWithAbsolute(change.WatchedPage.Url);
 
@@ -88,17 +87,9 @@ namespace JobHunt.Services {
             }
 
             var previous = await context.OpenAsync(r => r.Content(previousChange.Html));
-
             previous.ReplaceRelativeUrlsWithAbsolute(change.WatchedPage.Url);
 
-            var diffStrategy = new DiffingStrategyPipeline();
-            diffStrategy.AddDefaultJobHuntOptions(change.WatchedPage.CssSelector, change.WatchedPage.CssBlacklist);
-
-            var comparer = new HtmlDiffer(diffStrategy);
-            var diffs = comparer.Compare(
-                previous.Body ?? throw new InvalidOperationException("Body of previous was null"),
-                current.Body ?? throw new InvalidOperationException("Body of current was null")
-            );
+            var diffs = JobHuntComparer.Compare(previous, current, change.WatchedPage.CssSelector, change.WatchedPage.CssBlacklist);
 
             foreach (var diff in diffs) {
                 if (diff.Target == DiffTarget.Element) {
