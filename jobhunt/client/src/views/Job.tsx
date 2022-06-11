@@ -211,7 +211,7 @@ const Job = () => {
                 </Grid>
               </Box>
             ) : null}
-            <Typography variant="subtitle1">Posted {dayjs.utc(jobData.posted).format("DD/MM/YYYY HH:mm")}</Typography>
+            <Typography variant="subtitle1">Posted {dayjs.utc(jobData.posted).local().format("DD/MM/YYYY HH:mm")}</Typography>
             <Typography variant="subtitle2">{jobData.sourceName ? `From "${jobData.sourceName}"` : "Created manually"}</Typography>
             <Box mt={1}>
               <Categories

@@ -104,7 +104,7 @@ const PageChanges = () => {
 
     return {
       id: c.id,
-      date: date.format("DD/MM/YYYY HH:mm"),
+      date: date.local().format("DD/MM/YYYY HH:mm"),
       hasPrevious: hasPrevious
     }
   }), [watchedPage]);
@@ -159,7 +159,7 @@ const PageChanges = () => {
         {
           currentIndex < watchedPage.changes.length - 1 && (
             <Grid item container direction="column" xs={12} lg>
-              <Typography variant="h6">{dayjs.utc(watchedPage.changes[currentIndex + 1].created).format("DD/MM/YYYY HH:mm")}</Typography>
+              <Typography variant="h6">{dayjs.utc(watchedPage.changes[currentIndex + 1].created).local().format("DD/MM/YYYY HH:mm")}</Typography>
               <Paper className={classes.iframePaper}>
                 {view === "html" && (<iframe src={`/api/watchedpages/previoushtml/${current}`} sandbox={watchedPage.watchedPage.requiresJS ? "" : undefined} title="Before" />)}
                 {view === "image" && (<img src={`/api/watchedpages/screenshot/${watchedPage.changes[currentIndex + 1].id}`} className={classes.screenshot} alt="Before"/>)}
@@ -170,7 +170,7 @@ const PageChanges = () => {
         {
           current && (
             <Grid item container direction="column" xs={12} lg>
-              <Typography variant="h6">{dayjs.utc(watchedPage.changes[currentIndex].created).format("DD/MM/YYYY HH:mm")}</Typography>
+              <Typography variant="h6">{dayjs.utc(watchedPage.changes[currentIndex].created).local().format("DD/MM/YYYY HH:mm")}</Typography>
               <Paper className={classes.iframePaper}>
                 {view === "html" && (<iframe src={`/api/watchedpages/html/${current}`} sandbox={watchedPage.watchedPage.requiresJS ? "" : undefined} title="After" />)}
                 {view === "image" && (<img src={`/api/watchedpages/screenshot/${watchedPage.changes[currentIndex].id}`} className={classes.screenshot} alt="After"/>)}

@@ -156,7 +156,7 @@ const columns: ODataGridColDef[] = [
     renderCell: (params) => {
       const jobs = params.row["Jobs"] as JobResult[];
       if (jobs && jobs.length > 0) {
-        return dayjs.utc(jobs[0].Posted).format("DD/MM/YYYY HH:mm");
+        return dayjs.utc(jobs[0].Posted).local().format("DD/MM/YYYY HH:mm");
       } else {
         return "";
       }
@@ -174,7 +174,7 @@ const columns: ODataGridColDef[] = [
     renderCell: (params) => {
       const pages = params.row["WatchedPages"] as ({ LastUpdated: string })[];
       if (pages && pages.length > 0) {
-        return dayjs.utc(pages[0].LastUpdated).format("DD/MM/YYYY HH:mm");
+        return dayjs.utc(pages[0].LastUpdated).local().format("DD/MM/YYYY HH:mm");
       } else {
         return "";
       }

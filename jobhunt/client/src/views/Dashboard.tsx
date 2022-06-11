@@ -115,7 +115,7 @@ const columns: ODataGridColDef[] = [
         return (
           <Grid container justifyContent="space-between" alignItems="center">
             <Tooltip
-              title={<Typography variant="body2">{date.format("DD/MM/YYYY HH:mm")}</Typography>}
+              title={<Typography variant="body2">{date.local().format("DD/MM/YYYY HH:mm")}</Typography>}
               placement="right"
             >
               <span>{date.fromNow()}</span>

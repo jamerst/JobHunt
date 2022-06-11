@@ -129,7 +129,7 @@ const columns: ODataGridColDef[] = [
         return (
           <Grid container justifyContent="space-between" alignItems="center">
             <Tooltip
-              title={<Typography variant="body2">{date.format("DD/MM/YYYY HH:mm")}</Typography>}
+              title={<Typography variant="body2">{date.local().format("DD/MM/YYYY HH:mm")}</Typography>}
               placement="right"
             >
               <span>{date.fromNow()}</span>
@@ -622,7 +622,7 @@ const Company = () => {
                       <TableRow key={p.url}>
                         <TableCell><Link href={p.url} target="_blank" rel="noreferrer">{p.url}</Link></TableCell>
                         <TableCell>{p.lastScraped ? dayjs.utc(p.lastScraped).fromNow() : "Never"}</TableCell>
-                        <TableCell>{p.lastUpdated ? dayjs.utc(p.lastUpdated).toDate().toLocaleString() : "Never"}</TableCell>
+                        <TableCell>{p.lastUpdated ? dayjs.utc(p.lastUpdated).local().toDate().toLocaleString() : "Never"}</TableCell>
                         <TableCell>{p.enabled ? p.statusMessage : "Disabled"}</TableCell>
                         <TableCell align="right">{p.id && (<Button component={RouterLink} to={`/page-changes/${p.id}`} color="secondary" variant="contained" size="small" disabled={!p.lastUpdated}>View Changes</Button>)}</TableCell>
                       </TableRow>

@@ -217,11 +217,11 @@ const columns: ODataGridColDef[] = [
       }
 
       if (date.isBefore(dayjs.utc().subtract(14, "day"), "day")) {
-        dateComponent = (<Fragment>{date.format("DD/MM/YYYY HH:mm")}</Fragment>);
+        dateComponent = (<Fragment>{date.local().format("DD/MM/YYYY HH:mm")}</Fragment>);
       } else {
         dateComponent = (
           <Tooltip
-            title={<Typography variant="body2">{date.format("DD/MM/YYYY HH:mm")}</Typography>}
+            title={<Typography variant="body2">{date.local().format("DD/MM/YYYY HH:mm")}</Typography>}
             placement="right"
           >
             <span>{date.fromNow()}</span>
