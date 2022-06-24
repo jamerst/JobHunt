@@ -1,59 +1,87 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using System.Globalization;
+using System.Text.Json.Serialization;
+
+using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 
 using Serilog;
 using Serilog.Exceptions;
 
+using JobHunt.Filters;
 using JobHunt.Workers;
 
-namespace JobHunt {
-    public class Program {
-        public static int Main(string[] args) {
-            // Serilog.Debugging.SelfLog.Enable(Console.Error);
+var builder = WebApplication.CreateBuilder();
 
-            var configuration = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json")
-                .AddEnvironmentVariables()
-                .Build();
+builder.Host.UseSerilog((ctx, lc) => lc
+    .Enrich.WithExceptionDetails()
+    .Enrich.FromLogContext()
+    .ReadFrom.Configuration(ctx.Configuration)
+);
 
-            Log.Logger = new LoggerConfiguration()
-                .Enrich.WithExceptionDetails()
-                .Enrich.FromLogContext()
-                .ReadFrom.Configuration(configuration)
-                .CreateLogger();
+builder.WebHost.UseKestrel(options => options.ListenAnyIP(5000));
 
-            try {
-                Log.Information("Starting web host");
-                CreateHostBuilder(args).Build().Run();
-            } catch (Exception ex) {
-                Log.Fatal(ex, "Host terminated unexpectedly");
-                return 1;
-            } finally {
-                Log.CloseAndFlush();
-            }
+var cultureInfo = new CultureInfo(builder.Configuration.GetValue<string>("CultureName"));
+CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
-            return 0;
-        }
+builder.Host.ConfigureServices(services =>
+{
+    services.AddHostedService<SearchRefreshWorker>();
+    services.AddHostedService<PageScreenshotWorker>();
+});
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .UseSerilog()
-                .ConfigureWebHostDefaults(webBuilder => {
-                    webBuilder.UseKestrel(options => {
-                        options.ListenAnyIP(5000);
-                    });
-                    webBuilder.UseStartup<Startup>();
-                })
-                .ConfigureServices(services => {
-                    services.AddHostedService<SearchRefreshWorker>();
-                    services.AddHostedService<PageScreenshotWorker>();
-                });
+builder.Services
+    .AddControllers(options => options.Filters.Add(typeof(ExceptionLogger)))
+    .AddJobHuntOData(builder.Configuration)
+    .AddJsonOptions(options => options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+
+builder.Services.AddSpaStaticFiles(configuration => configuration.RootPath = "client/build");
+
+builder.Services.AddJobHuntCoreServices(builder.Configuration);
+builder.Services.AddJobHuntSearching();
+builder.Services.AddJobHuntWorkers();
+
+try
+{
+    Log.Information("Starting web host");
+
+    var app = builder.Build();
+
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseDeveloperExceptionPage();
     }
+    else
+    {
+        app.UseExceptionHandler("/Error");
+    }
+
+    app.UseStaticFiles();
+    app.UseSpaStaticFiles();
+
+    app.UseRouting();
+
+    app.UseEndpoints(endpoints => endpoints.MapControllers());
+
+    app.UseSpa(spa =>
+    {
+        spa.Options.SourcePath = "client";
+
+        if (app.Environment.IsDevelopment())
+        {
+            spa.UseReactDevelopmentServer("start");
+        }
+    });
+
+    app.Run();
 }
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Host terminated unexpectedly");
+    return 1;
+}
+finally
+{
+    Log.CloseAndFlush();
+}
+
+return 0;
