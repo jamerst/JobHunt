@@ -1,29 +1,18 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Routing.Attributes;
 
 namespace JobHunt.Controllers;
 [ApiController]
 [Route("api/[controller]/[action]")]
-public class SearchController : ControllerBase
+public class SearchesController : ControllerBase
 {
     private readonly ISearchService _searchService;
-    public SearchController(ISearchService searchService)
+    public SearchesController(ISearchService searchService)
     {
         _searchService = searchService;
     }
 
-    // route is not named consistently because any OData endpoint which ends with "search" doesn't work
-    [EnableQuery]
-    [ODataAttributeRouting]
-    [HttpGet("~/api/odata/search")]
-    public IActionResult OData()
-    {
-        return Ok(_searchService.GetSet());
-    }
-
     [HttpGet]
-    [Route("~/api/search/{id}")]
+    [Route("~/api/searches/{id}")]
     public async Task<IActionResult> Get([FromRoute] int id)
     {
         var result = await _searchService.GetByIdAsync(id);
@@ -61,7 +50,7 @@ public class SearchController : ControllerBase
         }
     }
 
-    [HttpGet("~/api/search")]
+    [HttpGet("~/api/searches")]
     public async Task<IActionResult> GetAll([FromQuery] int page, [FromQuery] int size, [FromQuery] bool count = false)
     {
         (var results, int? total) = await _searchService.GetPagedAsync(page, size, count);
@@ -80,7 +69,7 @@ public class SearchController : ControllerBase
     }
 
     [HttpPatch]
-    [Route("~/api/search/{id}")]
+    [Route("~/api/searches/{id}")]
     public async Task<IActionResult> Update([FromRoute] int id, [FromBody] SearchDto details)
     {
         (bool result, string msg) = await _searchService.UpdateAsync(details);
@@ -96,7 +85,7 @@ public class SearchController : ControllerBase
     }
 
     [HttpDelete]
-    [Route("~/api/search/{id}")]
+    [Route("~/api/searches/{id}")]
     public async Task<IActionResult> Delete([FromRoute] int id)
     {
         if (await _searchService.RemoveAsync(id))

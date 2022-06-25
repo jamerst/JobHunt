@@ -11,6 +11,14 @@ public static class MvcBuilderExtensions
     {
         builder.AddOData(options =>
         {
+            options.Filter()
+                .Select()
+                .Expand()
+                .Count()
+                .OrderBy()
+                .SkipToken()
+                .SetMaxTop(500);
+
             options.TimeZone = TimeZoneInfo.Utc;
             options.AddRouteComponents(
                 "api/odata",
@@ -21,48 +29,12 @@ public static class MvcBuilderExtensions
                     .AddScoped<IFilterBinder, CustomFilterBinder>()
                     .AddScoped<IOrderByBinder, CustomOrderByBinder>()
                     .AddScoped<ISelectExpandBinder, CustomSelectExpandBinder>()
-            ).Conventions.Add(new MyConvention());
-
-            options.Filter()
-                .Select()
-                .Expand()
-                .Count()
-                .OrderBy()
-                .SkipToken()
-                .SetMaxTop(500);
+            );
         });
 
         CustomUriFunctionUtils.AddCustomUriFunction(typeof(JobHuntContext).GetMethod(nameof(JobHuntContext.GeoDistance))!);
         CustomUriFunctionUtils.AddCustomUriFunction("geocode", typeof(double?), typeof(string), typeof(double), typeof(double));
 
         return builder;
-    }
-
-    public class MyConvention : IODataControllerActionConvention
-    {
-        /// <summary>
-        /// Order value.
-        /// </summary>
-        public int Order => -100;
-
-        /// <summary>
-        /// Apply to action,.
-        /// </summary>
-        /// <param name="context">Http context.</param>
-        /// <returns>true/false</returns>
-        public bool AppliesToAction(ODataControllerActionContext context)
-        {
-            return true; // apply to all controller
-        }
-
-        /// <summary>
-        /// Apply to controller
-        /// </summary>
-        /// <param name="context">Http context.</param>
-        /// <returns>true/false</returns>
-        public bool AppliesToController(ODataControllerActionContext context)
-        {
-            return false; // continue for all others
-        }
     }
 }

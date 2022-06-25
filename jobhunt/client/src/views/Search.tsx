@@ -52,18 +52,18 @@ const Search = () => {
   const [edited, setEdited] = useState<boolean>(false);
 
   const fetchData = useCallback(async () => {
-    const response = await fetch(`/api/search/${id}`);
+    const response = await fetch(`/api/searches/${id}`);
     if (response.ok) {
       const data = await response.json();
       setSearch(data as SearchResponse);
       setOrigSearch(data as SearchResponse);
     } else {
-      console.error(`API request failed: GET /api/search/${id}, HTTP ${response.status}`);
+      console.error(`API request failed: GET /api/searches/${id}, HTTP ${response.status}`);
     }
   }, [id]);
 
   const saveChanges = useCallback(async () => {
-    const response = await fetch(`/api/search/${id}`, {
+    const response = await fetch(`/api/searches/${id}`, {
       method: "PATCH",
       body: JSON.stringify(search),
       headers: { "Content-Type": "application/json" }
@@ -72,18 +72,18 @@ const Search = () => {
     if (response.ok) {
       setOrigSearch(search);
     } else {
-      console.error(`API request failed: PATCH /api/search/${id}, HTTP ${response.status}`);
+      console.error(`API request failed: PATCH /api/searches/${id}, HTTP ${response.status}`);
       setSearch(origSearch);
     }
     setEdited(false);
   }, [search, origSearch, id]);
 
   const remove = useCallback(async () => {
-    const response = await fetch(`/api/search/${id}`, { method: "DELETE" });
+    const response = await fetch(`/api/searches/${id}`, { method: "DELETE" });
     if (response.ok) {
       navigate("/searches");
     } else {
-      console.error(`API request failed: DELETE /api/search/${id}, HTTP ${response.status}`);
+      console.error(`API request failed: DELETE /api/searches/${id}, HTTP ${response.status}`);
     }
   }, [id, navigate])
 

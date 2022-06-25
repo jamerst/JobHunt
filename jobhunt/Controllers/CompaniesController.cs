@@ -1,8 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.OData.Deltas;
-using Microsoft.AspNetCore.OData.Formatter;
-using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Routing.Attributes;
 
 namespace JobHunt.Controllers;
 [ApiController]
@@ -16,14 +12,6 @@ public class CompaniesController : ControllerBase
         _companyService = companyService;
         _jobService = jobService;
     }
-
-    // [EnableQuery(MaxAnyAllExpressionDepth = 5)]
-    // [ODataAttributeRouting]
-    // [HttpGet("~/api/odata/company")]
-    // public IActionResult OData()
-    // {
-    //     return Ok(_companyService.GetSet());
-    // }
 
     [HttpGet]
     [Route("~/api/companies/{id}")]

@@ -1,21 +1,17 @@
 using System.Globalization;
 using System.Text.Json.Serialization;
 
+using Microsoft.AspNetCore.OData;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 
 using Serilog;
-using Serilog.Exceptions;
 
 using JobHunt.Filters;
 using JobHunt.Workers;
 
 var builder = WebApplication.CreateBuilder();
 
-builder.Host.UseSerilog((ctx, lc) => lc
-    .Enrich.WithExceptionDetails()
-    .Enrich.FromLogContext()
-    .ReadFrom.Configuration(ctx.Configuration)
-);
+builder.Host.UseJobHuntSerilog();
 
 builder.WebHost.UseKestrel(options => options.ListenAnyIP(5000));
 
@@ -32,12 +28,17 @@ builder.Host.ConfigureServices(services =>
 builder.Services
     .AddControllers(options => options.Filters.Add(typeof(ExceptionLogger)))
     .AddJobHuntOData(builder.Configuration)
-    .AddJsonOptions(options => options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
 
 builder.Services.AddSpaStaticFiles(configuration => configuration.RootPath = "client/build");
 
 builder.Services.AddJobHuntCoreServices(builder.Configuration);
-builder.Services.AddJobHuntSearching();
+builder.Services.AddIndeedApiSearchProvider();
+builder.Services.AddPageWatcher();
 builder.Services.AddJobHuntWorkers();
 
 try
@@ -49,6 +50,7 @@ try
     if (app.Environment.IsDevelopment())
     {
         app.UseDeveloperExceptionPage();
+        app.UseODataRouteDebug();
     }
     else
     {

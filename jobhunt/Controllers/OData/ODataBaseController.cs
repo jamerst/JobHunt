@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.AspNetCore.OData.Deltas;
 using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Results;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 
 using JobHunt.Services.BaseServices;
@@ -18,27 +19,23 @@ public abstract class ODataBaseController<T> : ODataController where T : class, 
     }
 
     [HttpGet]
-    [EnableQuery]
-    public IActionResult Get()
+    [EnableQuery(MaxAnyAllExpressionDepth = 5)]
+    public virtual IActionResult Get()
     {
         return Ok(_service.Set);
     }
 
-    // [HttpGet]
-    // [EnableQuery]
-    // public async Task<IActionResult> Get([FromODataUri]int id)
-    // {
-    //     var entity = await _service.FindByIdAsync(id);
-    //     if (entity == default)
-    //     {
-    //         return NotFound($"");
-    //     }
-
-    //     return Ok(entity);
-    // }
+    [HttpGet]
+    [EnableQuery(MaxAnyAllExpressionDepth = 5)]
+    public virtual SingleResult<T> Get([FromODataUri] int key) // parameter must be named "key" otherwise it doesn't work
+    {
+        // returning a SingleResult allows features such as $expand to work
+        // they don't work otherwise because calling FirstOrDefaultAsync triggers the DB call so .Include can't be called
+        return SingleResult.Create(_service.Set.Where(x => x.Id == key));
+    }
 
     [HttpPost]
-    public async Task<IActionResult> Post([FromBody]T entity)
+    public virtual async Task<IActionResult> Post([FromBody] T entity)
     {
         _service.Set.Add(entity);
 
@@ -48,39 +45,39 @@ public abstract class ODataBaseController<T> : ODataController where T : class, 
     }
 
     [HttpPut]
-    public async Task<IActionResult> Put(int id, [FromBody]Delta<T> delta)
+    public virtual async Task<IActionResult> Put(int key, [FromBody] Delta<T> delta)
     {
-        var result = await _service.PutAsync(id, delta);
+        var result = await _service.PutAsync(key, delta);
 
         if (result == default)
         {
-            return NotFound($"{nameof(T)} with Id={id} not found");
+            return NotFound($"{nameof(T)} with Id={key} not found");
         }
 
         return Updated(result);
     }
 
     [HttpPatch]
-    public async Task<IActionResult> Patch(int id, [FromBody]Delta<T> delta)
+    public virtual async Task<IActionResult> Patch(int key, [FromBody] Delta<T> delta)
     {
-        var result = await _service.PatchAsync(id, delta);
+        var result = await _service.PatchAsync(key, delta);
 
         if (result == default)
         {
-            return NotFound($"{nameof(T)} with Id={id} not found");
+            return NotFound($"{nameof(T)} with Id={key} not found");
         }
 
         return Updated(result);
     }
 
     [HttpDelete]
-    public async Task<IActionResult> Delete(int id)
+    public virtual async Task<IActionResult> Delete(int key)
     {
-        var entity = await _service.FindByIdAsync(id);
+        var entity = await _service.FindByIdAsync(key);
 
         if (entity == default)
         {
-            return NotFound($"{nameof(T)} with Id={id} not found");
+            return NotFound($"{nameof(T)} with Id={key} not found");
         }
 
         _service.Set.Remove(entity);

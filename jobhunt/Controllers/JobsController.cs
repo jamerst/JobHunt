@@ -1,6 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Routing.Attributes;
 
 namespace JobHunt.Controllers
 {
@@ -12,14 +10,6 @@ namespace JobHunt.Controllers
         public JobsController(IJobService jobService)
         {
             _jobService = jobService;
-        }
-
-        [EnableQuery(MaxAnyAllExpressionDepth = 5)]
-        [ODataAttributeRouting]
-        [HttpGet("~/api/odata/job")]
-        public IActionResult OData()
-        {
-            return Ok(_jobService.GetSet());
         }
 
         [HttpGet]

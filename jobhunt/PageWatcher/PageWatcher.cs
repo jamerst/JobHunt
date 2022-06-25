@@ -3,7 +3,7 @@ using OpenQA.Selenium.Firefox;
 
 using JobHunt.AngleSharp;
 
-namespace JobHunt.Searching;
+namespace JobHunt.PageWatcher;
 public class PageWatcher : IPageWatcher
 {
     private readonly IAlertService _alertService;
@@ -14,7 +14,14 @@ public class PageWatcher : IPageWatcher
     private readonly SearchOptions _options;
     private FirefoxDriver? _driver;
 
-    public PageWatcher(IAlertService alertService, IWatchedPageService wpService, IWatchedPageChangeService wpcService, HttpClient client, ILogger<PageWatcher> logger, IOptions<SearchOptions> options)
+    public PageWatcher(
+        IAlertService alertService,
+        IWatchedPageService wpService,
+        IWatchedPageChangeService wpcService,
+        HttpClient client,
+        ILogger<PageWatcher> logger,
+        IOptions<SearchOptions> options
+    )
     {
         _alertService = alertService;
         _wpService = wpService;

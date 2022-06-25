@@ -2,15 +2,14 @@ using Microsoft.EntityFrameworkCore;
 
 using JobHunt.Converters;
 using JobHunt.Geocoding;
+using JobHunt.Services.BaseServices;
 
 namespace JobHunt.Services;
-public class JobService : IJobService
+public class JobService : ODataBaseService<Job>, IJobService
 {
-    private readonly JobHuntContext _context;
     private readonly IGeocoder _geocoder;
-    public JobService(JobHuntContext context, IGeocoder geocoder)
+    public JobService(JobHuntContext context, IGeocoder geocoder) : base(context)
     {
-        _context = context;
         _geocoder = geocoder;
     }
 
@@ -286,13 +285,13 @@ public class JobService : IJobService
     }
 }
 
-public interface IJobService
+public interface IJobService : IODataBaseService<Job>
 {
     Task<Job?> GetByIdAsync(int id);
     Task<bool> AnyWithSourceIdAsync(string provider, string id);
     Task CreateAllAsync(IEnumerable<Job> jobs);
     Task<(IEnumerable<Job>, int?)> GetLatestPagedAsync(int pageNum, int pageSize, bool count);
-    Task<(IEnumerable<Job>, int?)> GetLatestPagedByCompanyAsync(int compantId, int pageNum, int pageSize, bool count);
+    Task<(IEnumerable<Job>, int?)> GetLatestPagedByCompanyAsync(int companyId, int pageNum, int pageSize, bool count);
     Task<JobCount> GetJobCountsAsync(DateTime Date);
     Task MarkAsSeenAsync(int id);
     Task<IEnumerable<Category>?> UpdateCategoriesAsync(int id, CategoryDto[] categories);

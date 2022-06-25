@@ -17,9 +17,9 @@ import { IndeedSupportedCountries } from "utils/constants";
 import { ODataColumnVisibilityModel, ODataGrid, ODataGridColDef } from "o-data-grid";
 
 const toggleEnabled = async (id: string) => {
-  const response = await fetch(`/api/search/enable/${id}`, { method: "PATCH" });
+  const response = await fetch(`/api/searches/enable/${id}`, { method: "PATCH" });
   if (!response.ok) {
-    console.error(`API request failed: /api/search/enable/${id}, HTTP ${response.status}`);
+    console.error(`API request failed: /api/searches/enable/${id}, HTTP ${response.status}`);
   }
 }
 
@@ -94,7 +94,7 @@ const Searches: FunctionComponent = (props) => {
   const navigate = useNavigate();
 
   const create = useCallback(async () => {
-    const response = await fetch("/api/search/create", {
+    const response = await fetch("/api/searches/create", {
       method: "POST",
       body: JSON.stringify(newSearch),
       headers: { "Content-Type": "application/json" }
@@ -104,7 +104,7 @@ const Searches: FunctionComponent = (props) => {
       const data = await response.json();
       navigate(`/search/${data}`);
     } else {
-      console.error(`API request failed: POST /api/search/create, HTTP ${response.status}`);
+      console.error(`API request failed: POST /api/searches/create, HTTP ${response.status}`);
     }
   }, [newSearch, navigate]);
 
@@ -119,7 +119,7 @@ const Searches: FunctionComponent = (props) => {
         </CardHeader>
         <CardBody>
           <ODataGrid
-            url="/api/odata/search"
+            url="/api/odata/Search"
             columns={columns}
             columnVisibilityModel={columnVisibility}
             getRowId={(row) => row["Id"]}

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 
-using JobHunt.Searching;
+using JobHunt.PageWatcher;
+using JobHunt.Searching.Indeed;
 using JobHunt.Workers;
 
 namespace JobHunt.Controllers;
@@ -8,11 +9,11 @@ namespace JobHunt.Controllers;
 [Route("api/[controller]/[action]")]
 public class RefreshController : ControllerBase
 {
-    private readonly IIndeedAPI _indeed;
+    private readonly IIndeedApiSearchProvider _indeed;
     private readonly IPageWatcher _pageWatcher;
     private readonly ISearchRefreshWorker _refreshWorker;
     private readonly IPageScreenshotWorker _screenshotWorker;
-    public RefreshController(IIndeedAPI indeed, IPageWatcher pageWatcher, ISearchRefreshWorker refreshWorker, IPageScreenshotWorker screenshotWorker)
+    public RefreshController(IIndeedApiSearchProvider indeed, IPageWatcher pageWatcher, ISearchRefreshWorker refreshWorker, IPageScreenshotWorker screenshotWorker)
     {
         _indeed = indeed;
         _pageWatcher = pageWatcher;

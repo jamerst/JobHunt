@@ -636,7 +636,7 @@ const Company = () => {
 
             <Tab>
               <ODataGrid
-                url={`/api/odata/job`}
+                url="/api/odata/Job"
                 columns={columns}
                 columnVisibilityModel={columnVisibility}
                 getRowId={(row) => row["Id"]}

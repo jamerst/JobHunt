@@ -310,7 +310,7 @@ const Companies: FunctionComponent = (props) => {
       </Helmet>
 
       <ODataGrid
-        url="/api/odata/company"
+        url="/api/odata/Company"
         columns={columns}
         columnVisibilityModel={columnVisibility}
         getRowId={(row) => row["Id"]}

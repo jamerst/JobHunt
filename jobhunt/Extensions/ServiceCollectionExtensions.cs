@@ -2,10 +2,12 @@ using Microsoft.EntityFrameworkCore;
 
 using Polly;
 using Polly.Extensions.Http;
+using Refit;
 using Serilog;
 
 using JobHunt.Geocoding;
-using JobHunt.Searching;
+using JobHunt.PageWatcher;
+using JobHunt.Searching.Indeed;
 using JobHunt.Workers;
 
 namespace JobHunt.Extensions;
@@ -29,16 +31,6 @@ public static class ServiceCollectionExtensions
 
         services.AddHttpClient();
 
-        // retry requests on fail for Indeed requests - getting increased request failures recently
-        var retryPolicy = HttpPolicyExtensions
-            .HandleTransientHttpError()
-            .WaitAndRetryAsync(
-                5,
-                attempt => TimeSpan.FromSeconds(attempt),
-                (result, _, count, _) => Log.Logger.Warning($"HTTP Request failed, retrying for {count.ToOrdinalString()} time", result.Exception)
-            );
-        services.AddHttpClient<IIndeedAPI, IndeedAPI>().AddPolicyHandler(retryPolicy);
-
         services.AddScoped<IAlertService, AlertService>();
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<ICompanyService, CompanyService>();
@@ -48,15 +40,41 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IWatchedPageChangeService, WatchedPageChangeService>();
 
         services.AddMemoryCache(); // memory cache used for caching geocoded locations
+        services.AddRefitClient<INominatimApi>()
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://nominatim.openstreetmap.org"));
         services.AddTransient<IGeocoder, Nominatim>();
 
         return services;
     }
 
-    public static IServiceCollection AddJobHuntSearching(this IServiceCollection services)
+    public static IServiceCollection AddIndeedApiSearchProvider(this IServiceCollection services)
     {
-        services.AddScoped<IIndeedAPI, IndeedAPI>();
-        services.AddScoped<IPageWatcher, PageWatcher>();
+        var retryPolicy = HttpPolicyExtensions
+            .HandleTransientHttpError()
+            .WaitAndRetryAsync(
+                5,
+                attempt => TimeSpan.FromSeconds(attempt),
+                (result, _, count, _) => Log.Logger.Warning(result.Exception, "HTTP request attempt {attempt} failed", count)
+            );
+
+        services.AddRefitClient<IIndeedPublisherApi>()
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://api.indeed.com"))
+            .AddPolicyHandler(retryPolicy);
+
+        services.AddScoped<IIndeedSalaryApiFactory, IndeedSalaryApiFactory>();
+
+        services.AddRefitClient<IIndeedJobDescriptionApi>()
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://indeed.com"))
+            .AddPolicyHandler(retryPolicy);
+
+        services.AddScoped<IIndeedApiSearchProvider, IndeedApiSearchProvider>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddPageWatcher(this IServiceCollection services)
+    {
+        services.AddScoped<IPageWatcher, PageWatcher.PageWatcher>();
 
         return services;
     }

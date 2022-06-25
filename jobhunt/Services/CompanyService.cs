@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 
 using JobHunt.Geocoding;
-using JobHunt.Searching;
+using JobHunt.PageWatcher;
 using JobHunt.Services.BaseServices;
 
 namespace JobHunt.Services;

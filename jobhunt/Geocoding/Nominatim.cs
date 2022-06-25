@@ -1,25 +1,20 @@
-using System.Net.Http.Headers;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Caching.Memory;
+
+using Refit;
 
 namespace JobHunt.Geocoding;
 public class Nominatim : IGeocoder
 {
-    private const string _searchUrl = "https://nominatim.openstreetmap.org/search";
-
     private readonly SearchOptions _options;
     private readonly ILogger _logger;
-    private readonly HttpClient _client;
+    private readonly INominatimApi _api;
     private readonly IMemoryCache _cache;
 
-    public Nominatim(IOptions<SearchOptions> options, ILogger<Nominatim> logger, HttpClient client, IMemoryCache cache)
+    public Nominatim(IOptions<SearchOptions> options, ILogger<Nominatim> logger, INominatimApi api, IMemoryCache cache)
     {
         _options = options.Value;
         _logger = logger;
-        _client = client;
+        _api = api;
         _cache = cache;
     }
 
@@ -31,39 +26,27 @@ public class Nominatim : IGeocoder
         }
         else
         {
-            Dictionary<string, string?> query = new Dictionary<string, string?>() {
-                    { "q", location },
-                    { "countrycodes", _options.NominatimCountryCodes },
-                    { "limit", "1" },
-                    { "format", "jsonv2" }
-                };
+            Location? nominatimResult = null;
 
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, QueryHelpers.AddQueryString(_searchUrl, query));
-            request.Headers.UserAgent.Add(new ProductInfoHeaderValue("JobHunt", "1.0"));
-
-            List<NominatimResponse>? response = null;
-            using (var httpResponse = await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
+            try
             {
-                string responseContent = await httpResponse.Content.ReadAsStringAsync();
-                if (httpResponse.IsSuccessStatusCode)
-                {
-                    response = JsonSerializer.Deserialize<List<NominatimResponse>>(responseContent);
-                }
-                else
-                {
-                    _logger.LogError("Nominatim request failed. Received HTTP {StatusCode} with body {Content}", (int) httpResponse.StatusCode, responseContent);
-                    return null;
-                }
+                nominatimResult = (await _api.SearchAsync(
+                    new GeocodeParams
+                    {
+                        Query = location,
+                        CountryCodes = _options.NominatimCountryCodes,
+                        Limit = 1
+                    })
+                ).FirstOrDefault();
             }
-
-            if (response == null)
+            catch (ApiException ex)
             {
-                _logger.LogError("Nominatim request deserialisation failed");
+                _logger.LogError(ex, "Nominatim request exception for {location}", location);
                 return null;
             }
 
             Coordinate? coord = null;
-            if (double.TryParse(response.FirstOrDefault()?.Latitude, out double lat) && double.TryParse(response.FirstOrDefault()?.Longitude, out double lng))
+            if (double.TryParse(nominatimResult?.Latitude, out double lat) && double.TryParse(nominatimResult?.Longitude, out double lng))
             {
                 coord = new Coordinate
                 {
@@ -75,13 +58,5 @@ public class Nominatim : IGeocoder
             _cache.Set($"Nominatim.GeocodeAsync_{location.ToLower()}", coord);
             return coord;
         }
-    }
-
-    private class NominatimResponse
-    {
-        [JsonPropertyName("lat")]
-        public string? Latitude { get; set; }
-        [JsonPropertyName("lon")]
-        public string? Longitude { get; set; }
     }
 }

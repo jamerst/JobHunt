@@ -1,15 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 
 using JobHunt.Searching;
+using JobHunt.Searching.Indeed;
+using JobHunt.Services.BaseServices;
 
 namespace JobHunt.Services;
-public class SearchService : ISearchService
+public class SearchService : ODataBaseService<Search>, ISearchService
 {
-    private readonly JobHuntContext _context;
-    public SearchService(JobHuntContext context)
-    {
-        _context = context;
-    }
+    public SearchService(JobHuntContext context) : base(context) { }
 
     public async Task<Search?> GetByIdAsync(int id)
     {
@@ -91,7 +89,7 @@ public class SearchService : ISearchService
 
         if (search.Provider == SearchProviderName.Indeed)
         {
-            if (IndeedAPI.SupportedCountries.Contains(details.Country.ToLower()))
+            if (IndeedApiSearchProvider.SupportedCountries.Contains(details.Country.ToLower()))
             {
                 search.Country = details.Country;
             }
@@ -103,7 +101,7 @@ public class SearchService : ISearchService
 
         if (!string.IsNullOrEmpty(search.JobType) && search.Provider == SearchProviderName.Indeed)
         {
-            if (IndeedAPI.JobTypes.Contains(details.JobType))
+            if (IndeedApiSearchProvider.JobTypes.Contains(details.JobType))
             {
                 search.JobType = details.JobType;
             }
@@ -146,7 +144,7 @@ public class SearchService : ISearchService
 
         if (search.Provider == SearchProviderName.Indeed)
         {
-            if (IndeedAPI.SupportedCountries.Contains(details.Country.ToLower()))
+            if (IndeedApiSearchProvider.SupportedCountries.Contains(details.Country.ToLower()))
             {
                 search.Country = details.Country;
             }
@@ -158,7 +156,7 @@ public class SearchService : ISearchService
 
         if (!string.IsNullOrEmpty(search.JobType) && search.Provider == SearchProviderName.Indeed)
         {
-            if (IndeedAPI.JobTypes.Contains(details.JobType))
+            if (IndeedApiSearchProvider.JobTypes.Contains(details.JobType))
             {
                 search.JobType = details.JobType;
             }
@@ -193,7 +191,7 @@ public class SearchService : ISearchService
     }
 }
 
-public interface ISearchService
+public interface ISearchService : IODataBaseService<Search>
 {
     Task<IEnumerable<Search>> FindEnabledByProviderAsync(string provider);
     Task CreateSearchRunAsync(int searchId, bool success, string? message, int newJobs, int newCompanies, int timeTaken);

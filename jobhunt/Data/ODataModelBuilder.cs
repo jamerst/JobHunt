@@ -7,11 +7,11 @@ public static class ODataModelBuilder
     {
         var builder = new ODataConventionModelBuilder();
 
-        builder.EntitySet<Job>("Job");
+        builder.EntitySet<Job>(nameof(Job));
 
-        builder.EntitySet<Company>("Company");
+        builder.EntitySet<Company>(nameof(Company));
 
-        builder.EntitySet<Search>("search");
+        builder.EntitySet<Search>(nameof(Search));
         builder.AddUnmappedProperty<Search>(s => s.DisplayName);
 
         return builder.GetEdmModel();

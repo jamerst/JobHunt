@@ -1,6 +1,7 @@
 using Cronos;
 
-using JobHunt.Searching;
+using JobHunt.PageWatcher;
+using JobHunt.Searching.Indeed;
 
 namespace JobHunt.Workers;
 public class SearchRefreshWorker : BackgroundService, ISearchRefreshWorker
@@ -70,7 +71,7 @@ public class SearchRefreshWorker : BackgroundService, ISearchRefreshWorker
         {
             List<Task> tasks = new List<Task>();
 
-            IIndeedAPI? indeed = indeedScope.ServiceProvider.GetService<IIndeedAPI>();
+            IIndeedApiSearchProvider? indeed = indeedScope.ServiceProvider.GetService<IIndeedApiSearchProvider>();
             if (indeed != null)
             {
                 tasks.Add(indeed.SearchAllAsync(token));
