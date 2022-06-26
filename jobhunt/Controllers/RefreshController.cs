@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 using JobHunt.PageWatcher;
 using JobHunt.Searching.Indeed;
@@ -13,12 +14,14 @@ public class RefreshController : ControllerBase
     private readonly IPageWatcher _pageWatcher;
     private readonly ISearchRefreshWorker _refreshWorker;
     private readonly IPageScreenshotWorker _screenshotWorker;
-    public RefreshController(IIndeedApiSearchProvider indeed, IPageWatcher pageWatcher, ISearchRefreshWorker refreshWorker, IPageScreenshotWorker screenshotWorker)
+    private readonly IJobService _jobService;
+    public RefreshController(IIndeedApiSearchProvider indeed, IPageWatcher pageWatcher, ISearchRefreshWorker refreshWorker, IPageScreenshotWorker screenshotWorker, IJobService jobService)
     {
         _indeed = indeed;
         _pageWatcher = pageWatcher;
         _refreshWorker = refreshWorker;
         _screenshotWorker = screenshotWorker;
+        _jobService = jobService;
     }
 
     [HttpGet]
@@ -48,5 +51,21 @@ public class RefreshController : ControllerBase
         CancellationToken token = new CancellationToken();
         int numScreenshots = await _screenshotWorker.TakeScreenshotsAsync(token);
         return new JsonResult(numScreenshots);
+    }
+
+    [HttpGet]
+    public async Task FindDuplicates()
+    {
+        var jobs = _jobService.Set.AsAsyncEnumerable();
+        await foreach (var job in jobs)
+        {
+            var duplicate = await _jobService.FindDuplicateAsync(job);
+            if (duplicate != default)
+            {
+                job.DuplicateJobId = duplicate.Id;
+            }
+        }
+
+        await _jobService.SaveChangesAsync();
     }
 }

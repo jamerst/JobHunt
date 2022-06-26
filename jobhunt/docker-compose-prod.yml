@@ -26,6 +26,10 @@ services:
       Search__Schedules__2: 0 18 * * *
       Search__NominatimCountryCodes: "gb"
       Search__PageLoadWaitSeconds: 5
+      Search__CheckForDuplicateJobs: "true"
+      Search__DescriptionSimilarityThreshold: 0.9
+      Search__TitleSimilarityThreshold: 0.7
+      Search__IdenticalDescriptionSimilarityThreshold: 0.98
       Serilog__WriteTo__0__Name: "Console"
       # Serilog__WriteTo__0__Name: "Elasticsearch"
       # Serilog__WriteTo__0__Args__nodeUris: "http://elasticsearch:9200"

@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
+
 namespace JobHunt.Data;
 public class JobHuntContext : DbContext
 {
@@ -61,6 +63,17 @@ public class JobHuntContext : DbContext
             .WithOne(jc => jc.Job)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // indexes for faster similarity searching
+        builder.Entity<Job>()
+            .HasIndex(j => j.Title)
+            .HasMethod("gin")
+            .HasOperators("gin_trgm_ops");
+
+        builder.Entity<Job>()
+            .HasIndex(j => j.Description)
+            .HasMethod("gin")
+            .HasOperators("gin_trgm_ops");
+
         builder.Entity<JobCategory>()
             .HasKey(jc => new { jc.JobId, jc.CategoryId });
 
@@ -85,6 +98,9 @@ public class JobHuntContext : DbContext
                 new[] { typeof(double), typeof(double), typeof(double), typeof(double) }
             )!
         ).HasName("geodistance");
+
+        // add trigram extension to allow computing string similarity to find duplicate jobs
+        builder.HasPostgresExtension("pg_trgm");
     }
 
     public DbSet<Alert> Alerts => Set<Alert>();
@@ -99,4 +115,25 @@ public class JobHuntContext : DbContext
     public DbSet<WatchedPage> WatchedPages => Set<WatchedPage>();
     public DbSet<WatchedPageChange> WatchedPageChanges => Set<WatchedPageChange>();
     public double GeoDistance(double alat, double alng, double blat, double blng) => throw new NotSupportedException();
+}
+
+// this is needed because the migration CLI doesn't work otherwise
+// IConfiguration is null in such cases, so we can't use the method in AddJobHuntCoreServices like is used at runtime
+public class JobHuntContextFactory : IDesignTimeDbContextFactory<JobHuntContext>
+{
+    public JobHuntContext CreateDbContext(string[] args)
+    {
+        var optionsBuilder = new DbContextOptionsBuilder<JobHuntContext>();
+
+        IConfiguration config = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json", false, true)
+            .Build();
+
+        optionsBuilder.UseNpgsql(
+            config.GetConnectionString("DefaultConnection"),
+            o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
+        );
+
+        return new JobHuntContext(optionsBuilder.Options);
+    }
 }

@@ -25,6 +25,11 @@ builder.Host.ConfigureServices(services =>
     services.AddHostedService<PageScreenshotWorker>();
 });
 
+builder.Services.AddCors(builder =>
+{
+    builder.AddDefaultPolicy(policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+});
+
 builder.Services
     .AddControllers(options => options.Filters.Add(typeof(ExceptionLogger)))
     .AddJobHuntOData(builder.Configuration)
@@ -61,6 +66,8 @@ try
     app.UseSpaStaticFiles();
 
     app.UseRouting();
+
+    app.UseCors();
 
     app.UseEndpoints(endpoints => endpoints.MapControllers());
 

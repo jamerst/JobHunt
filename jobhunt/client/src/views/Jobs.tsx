@@ -63,12 +63,32 @@ const alwaysSelect = ["Id", "Archived"];
 const columns: ODataGridColDef[] = [
   {
     field: "Title",
+    select: "Title,DuplicateJobId",
     headerName: "Job Title",
     flex: 2,
-    renderCell: (params) => {
-      return (<Link component={RouterLink} to={`/job/${params.id}`}>{params.value}</Link>)
-    },
+    renderCell: (params) => <Link component={RouterLink} to={`/job/${params.id}`}>
+      <Grid container spacing={1} alignItems="center" wrap="nowrap">
+        <Grid item>{params.value}</Grid>
+        {params.row.DuplicateJobId && <Grid item><Chip sx={{ cursor: "pointer" }} label="Duplicate" size="small" /></Grid>}
+      </Grid>
+
+    </Link>,
     autocompleteGroup: "Job"
+  },
+  {
+    field: "DuplicateJob/Title",
+    select: "DuplicateJobId",
+    expand: {
+      navigationField: "DuplicateJob",
+      select: "Title"
+    },
+    headerName: "Duplicate Job",
+    flex: 1.5,
+    renderCell: (params) => <Link component={RouterLink} to={`/job/${params.row.DuplicateJobId}`}>{params.value}</Link>,
+    filterOperators: ["eq", "ne"],
+    filterType: "boolean",
+    autocompleteGroup: "Job",
+    getCustomFilterString: (_, value) => value === "true" ? "DuplicateJobId ne null" : "DuplicateJobId eq null"
   },
   {
     field: "Location",
@@ -284,6 +304,7 @@ const columns: ODataGridColDef[] = [
 
 const columnVisibility: ODataColumnVisibilityModel = {
   "Company/Name": { xs: false, md: true },
+  "DuplicateJob/Title": false,
   "Salary": { xs: false, lg: true },
   "Status": false,
   "JobCategories": { xs: false, xl: true },

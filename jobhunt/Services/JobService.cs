@@ -8,9 +8,11 @@ namespace JobHunt.Services;
 public class JobService : ODataBaseService<Job>, IJobService
 {
     private readonly IGeocoder _geocoder;
-    public JobService(JobHuntContext context, IGeocoder geocoder) : base(context)
+    private readonly SearchOptions _options;
+    public JobService(JobHuntContext context, IGeocoder geocoder, IOptions<SearchOptions> options) : base(context)
     {
         _geocoder = geocoder;
+        _options = options.Value;
     }
 
     public async Task<Job?> GetByIdAsync(int id)
@@ -283,6 +285,71 @@ public class JobService : ODataBaseService<Job>, IJobService
     {
         return _context.Jobs;
     }
+
+    public async Task<Job?> FindDuplicateAsync(Job job)
+    {
+        IQueryable<Job> jobs = _context.Jobs.Where(j => j.Id != job.Id);
+
+        if (_options.DuplicateCheckMonths.HasValue && job.Posted.HasValue)
+        {
+            DateTime lower = job.Posted.Value.AddMonths(-_options.DuplicateCheckMonths.Value).Date;
+            DateTime upper = job.Posted.Value.AddMonths(_options.DuplicateCheckMonths.Value).Date;
+
+            jobs = jobs.Where(j => !j.Posted.HasValue || (j.Posted > lower && j.Posted < upper));
+        }
+
+        // Inner join each job with the job we are checking for
+        // This looks silly, but it gives a substantial performance increase because doing it this way means that the
+        // index can be used properly. When passing in the title or description as parameters they cannot use the index,
+        // so must be re-computed every time, leading to a significant performance penalty.
+        // This way reduces the query time from 300ms to <1ms
+        var joinedJobs = jobs.Join(
+            _context.Jobs,
+            j1 => job.Id,
+            j2 => j2.Id,
+            (j1, j2) => new { Job1 = j1, Job2 = j2 }
+        );
+
+        // set threshold values for similarity operations
+
+        // this must be done because the similarity() function cannot use indexes, but the % operator can and using
+        // indexes makes searching MUCH faster
+
+        // unfortunately we can't use the same similarity measure for both the Title and Description since you can only
+        // set one threshold value, but that doesn't really matter
+        await _setThreshold("word_similarity_threshold", _options.TitleSimilarityThreshold);
+        await _setThreshold("similarity_threshold", _options.DescriptionSimilarityThreshold);
+
+        // check for similarity based on Title and Description first
+        Job? result = await joinedJobs
+            .Where(x => EF.Functions.TrigramsAreWordSimilar(x.Job1.Title, x.Job2.Title)
+                && EF.Functions.TrigramsAreSimilar(x.Job1.Description, x.Job2.Description)
+            )
+            .Select(x => x.Job1)
+            .OrderByDescending(j => j.Posted)
+            .FirstOrDefaultAsync();
+
+        if (result != default)
+        {
+            return result;
+        }
+        else
+        {
+            // if no matches check again checking just for identical/very close to identical descriptions
+            await _setThreshold("similarity_threshold", _options.IdenticalDescriptionSimilarityThreshold);
+
+            return await joinedJobs
+                .Where(x => EF.Functions.TrigramsAreSimilar(x.Job1.Description, x.Job2.Description))
+                .Select(x => x.Job1)
+                .OrderByDescending(j => j.Posted)
+                .FirstOrDefaultAsync();
+        }
+    }
+
+    private async Task _setThreshold(string thresholdType, double threshold)
+    {
+        await _context.Database.ExecuteSqlRawAsync($"SET pg_trgm.{thresholdType} = {threshold};");
+    }
 }
 
 public interface IJobService : IODataBaseService<Job>
@@ -301,4 +368,5 @@ public interface IJobService : IODataBaseService<Job>
     Task<IEnumerable<Category>> GetJobCategoriesAsync();
     Task<bool> UpdateStatusAsync(int id, string status);
     DbSet<Job> GetSet();
+    Task<Job?> FindDuplicateAsync(Job job);
 }

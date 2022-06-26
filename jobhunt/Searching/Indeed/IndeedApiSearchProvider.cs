@@ -305,7 +305,25 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
 
         await _jobService.CreateAllAsync(jobs);
         await _companyService.CreateAllAsync(companies);
+
+        // check for duplicates after saving in DB so that any duplicates within the new jobs are detected
+        if (_options.CheckForDuplicateJobs)
+        {
+            foreach (var job in allJobs)
+            {
+                Job? duplicate = await _jobService.FindDuplicateAsync(job);
+
+                if (duplicate != default)
+                {
+                    job.DuplicateJobId = duplicate.Id;
+                }
+            }
+
+            await _jobService.SaveChangesAsync();
+        }
+
         sw.Stop();
+
         await _searchService.CreateSearchRunAsync(search.Id!, descSuccess, descMessage, newJobs, companies.Count, (int) sw.Elapsed.TotalSeconds);
 
         foreach (JobAlertData jobAlert in jobAlerts)

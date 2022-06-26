@@ -23,7 +23,7 @@ public static class ServiceCollectionExtensions
                 configuration.GetConnectionString("DefaultConnection"),
                 o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
             )
-        // .EnableSensitiveDataLogging()
+            // .EnableSensitiveDataLogging()
         );
 
         services.Configure<ScreenshotOptions>(configuration.GetSection(ScreenshotOptions.Section));
