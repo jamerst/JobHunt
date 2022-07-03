@@ -288,7 +288,9 @@ public class JobService : ODataBaseService<Job>, IJobService
 
     public async Task<Job?> FindDuplicateAsync(Job job)
     {
-        IQueryable<Job> jobs = _context.Jobs.Where(j => j.Id != job.Id);
+        IQueryable<Job> jobs = _context.Jobs
+            .Where(j => j.Id != job.Id)
+            .Include(j => j.JobCategories);
 
         if (_options.DuplicateCheckMonths.HasValue && job.Posted.HasValue)
         {

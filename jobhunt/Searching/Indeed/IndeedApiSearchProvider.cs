@@ -316,6 +316,11 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
                 if (duplicate != default)
                 {
                     job.DuplicateJobId = duplicate.Id;
+
+                    job.JobCategories.AddRange(
+                        duplicate.JobCategories
+                            .Select(c => new JobCategory { CategoryId = c.CategoryId })
+                    );
                 }
             }
 
