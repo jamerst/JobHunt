@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 
+using EFCore.BulkExtensions;
+
 using JobHunt.Geocoding;
 using JobHunt.PageWatcher;
 using JobHunt.Services.BaseServices;
@@ -261,57 +263,41 @@ public class CompanyService : ODataBaseService<Company>, ICompanyService
     public async Task<bool> MergeAsync(int srcId, int destId)
     {
         Company? src = await _context.Companies
-            .Include(c => c.AlternateNames)
-            .Include(c => c.CompanyCategories)
-            .Include(c => c.Jobs)
-            .Include(c => c.WatchedPages)
-            .AsSplitQuery()
             .SingleOrDefaultAsync(c => c.Id == srcId);
         Company? dest = await _context.Companies
             .Include(c => c.AlternateNames)
             .Include(c => c.CompanyCategories)
-            .Include(c => c.Jobs)
-            .Include(c => c.WatchedPages)
-            .AsSplitQuery()
             .SingleOrDefaultAsync(c => c.Id == destId);
 
-        if (src == null || dest == null)
+        if (src == default || dest == default)
         {
             return false;
         }
 
-        foreach (var an in src.AlternateNames)
+        using (var transaction = await _context.Database.BeginTransactionAsync())
         {
-            if (!dest.AlternateNames.Any(anD => anD.Name == an.Name))
-            {
-                an.CompanyId = dest.Id;
-            }
-        }
+            await _context.Jobs
+                .Where(j => j.CompanyId == srcId)
+                .BatchUpdateAsync(new Job { CompanyId = destId });
+            await _context.Jobs
+                .Where(j => j.ActualCompanyId == srcId)
+                .BatchUpdateAsync(new Job { ActualCompanyId = destId });
 
-        foreach (var cc in src.CompanyCategories)
-        {
-            if (!dest.CompanyCategories.Any(ccD => ccD.CategoryId == cc.CategoryId))
-            {
-                dest.CompanyCategories.Add(new CompanyCategory { CategoryId = cc.CategoryId });
-            }
-        }
+            var destNames = dest.AlternateNames.Select(n => n.Name);
+            await _context.CompanyNames
+                .Where(n => n.CompanyId == srcId && !destNames.Contains(n.Name))
+                .BatchUpdateAsync(new CompanyName { CompanyId = destId });
 
-        foreach (var j in src.Jobs)
-        {
-            j.CompanyId = dest.Id;
-        }
+            var destCategories = dest.CompanyCategories.Select(c => c.CategoryId);
+            await _context.CompanyCategories
+                .Where(c => c.CompanyId == srcId)
+                .BatchUpdateAsync(new CompanyCategory { CategoryId = destId });
 
-        foreach (var wp in src.WatchedPages)
-        {
-            if (!dest.WatchedPages.Any(wpD => wpD.Url == wp.Url))
-            {
-                wp.CompanyId = dest.Id;
-            }
-        }
+            await _context.WatchedPages
+                .Where(p => p.CompanyId == srcId)
+                .BatchUpdateAsync(new WatchedPage { CompanyId = destId });
 
-        if (src.Name != dest.Name)
-        {
-            dest.AlternateNames.Add(new CompanyName { Name = src.Name });
+            await transaction.CommitAsync();
         }
 
         if (src.Recruiter && !dest.Recruiter)

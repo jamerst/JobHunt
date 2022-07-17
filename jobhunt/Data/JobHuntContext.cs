@@ -1,27 +1,37 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace JobHunt.Data;
 public class JobHuntContext : DbContext
 {
     public JobHuntContext(DbContextOptions options) : base(options) { }
 
-    // protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
-    //     var loggerFactory = LoggerFactory.Create(builder => {
-    //         builder
-    //         .AddConsole((options) => { })
-    //         .AddFilter((category, level) =>
-    //             category == DbLoggerCategory.Database.Command.Name
-    //             && level == LogLevel.Information);
-    //     });
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
+        // var loggerFactory = LoggerFactory.Create(builder => {
+        //     builder
+        //     .AddConsole((options) => { })
+        //     .AddFilter((category, level) =>
+        //         category == DbLoggerCategory.Database.Command.Name
+        //         && level == LogLevel.Information);
+        // });
 
-    //     optionsBuilder.UseLoggerFactory(loggerFactory);
-    // }
+        // optionsBuilder.UseLoggerFactory(loggerFactory);
+
+        // disable global query filter warning for related entries
+        // without this a warning is thrown at every start for the JobCategories entity
+        // I could add the filter to JobCategories as well, but this will cause a join every time JobCategories are queried
+        // JobCategories are never queried directly anyway, so just disable the warning
+        optionsBuilder.ConfigureWarnings(builder =>
+            builder.Ignore(CoreEventId.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning)
+        );
+    }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
 
+        #region Category
         builder.Entity<Category>()
             .HasMany(c => c.CompanyCategories)
             .WithOne(cc => cc.Category)
@@ -31,7 +41,9 @@ public class JobHuntContext : DbContext
             .HasMany(c => c.JobCategories)
             .WithOne(jc => jc.Category)
             .OnDelete(DeleteBehavior.Cascade);
+        #endregion
 
+        #region Company
         builder.Entity<Company>()
             .HasMany(c => c.AlternateNames)
             .WithOne(cn => cn.Company)
@@ -41,6 +53,11 @@ public class JobHuntContext : DbContext
             .HasMany(c => c.Jobs)
             .WithOne(c => c.Company!)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Company>()
+            .HasMany<Job>()
+            .WithOne(j => j.ActualCompany)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.Entity<Company>()
             .HasMany(c => c.WatchedPages)
@@ -57,7 +74,9 @@ public class JobHuntContext : DbContext
 
         builder.Entity<CompanyName>()
             .HasKey(cn => new { cn.CompanyId, cn.Name });
+        #endregion
 
+        #region Job
         builder.Entity<Job>()
             .HasMany(j => j.JobCategories)
             .WithOne(jc => jc.Job)
@@ -74,9 +93,14 @@ public class JobHuntContext : DbContext
             .HasMethod("gin")
             .HasOperators("gin_trgm_ops");
 
+        builder.Entity<Job>()
+            .HasQueryFilter(j => !j.Deleted);
+
         builder.Entity<JobCategory>()
             .HasKey(jc => new { jc.JobId, jc.CategoryId });
+        #endregion
 
+        #region Search
         builder.Entity<Search>()
             .HasMany(s => s.FoundJobs)
             .WithOne(j => j.Source!)
@@ -86,6 +110,7 @@ public class JobHuntContext : DbContext
             .HasMany(s => s.Runs)
             .WithOne(sr => sr.Search)
             .OnDelete(DeleteBehavior.Cascade);
+        #endregion
 
         builder.Entity<WatchedPage>()
             .HasMany(p => p.Changes)

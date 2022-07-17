@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState, Fragment } from "react"
-import { Box, Button, Container, Divider, FormControl, IconButton, InputLabel, Menu, MenuItem, Select, TextField, Typography, Link, Chip } from "@mui/material"
+import { Box, Button, Container, Divider, FormControl, IconButton, InputLabel, Menu, MenuItem, Select, TextField, Typography, Link, Chip, SelectChangeEvent } from "@mui/material"
 import Grid from "components/Grid";
 import { useParams } from "react-router"
 import { Helmet } from "react-helmet"
@@ -12,36 +12,15 @@ import CardHeader from "components/CardHeader";
 import CardBody from "components/CardBody";
 import Tabs from "components/Tabs";
 import Tab from "components/Tab";
+
+import { Job as JobResponse } from "types/models/Job";
+
 import ReactMarkdown from "react-markdown";
 import { Map, MoreHoriz, OpenInNew, Save, Subject } from "@mui/icons-material";
 import { Link as RouterLink } from "react-router-dom";
 import dayjs from "dayjs";
+import JobDialog from "./components/JobDialog";
 
-
-type JobResponse = {
-  id: number,
-  title: string,
-  description: string,
-  salary?: string,
-  avgYearlySalary?: number,
-  location: string,
-  url?: string,
-  companyId?: number,
-  companyName?: string,
-  companyRecruiter?: boolean,
-  posted: string,
-  notes?: string,
-  archived: boolean,
-  status: string,
-  dateApplied?: string,
-  categories: Category[],
-  provider: string,
-  sourceId?: number,
-  sourceName?: string,
-  seen: boolean,
-  latitude?: number,
-  longitude?: number
-}
 
 const Job = () => {
   const { id } = useParams();
@@ -52,14 +31,14 @@ const Job = () => {
   const [editing, setEditing] = useState<boolean>(false);
 
   const fetchData = useCallback(async () => {
-    const response = await fetch(`/api/jobs/${id}`, { method: "GET" });
+    const response = await fetch(`/api/odata/job(${id})?$expand=Company,ActualCompany,JobCategories/Category`, { method: "GET" });
     if (response.ok) {
       const data = await response.json() as JobResponse;
 
-      if (!data.seen) {
+      if (!data.Seen) {
         const response = await fetch(`/api/jobs/seen/${id}`, { method: "PATCH" });
         if (response.ok) {
-          data.seen = true;
+          data.Seen = true;
         } else {
           console.error(`API request failed: PATCH /api/jobs/seen/${id}, HTTP ${response.status}`);
         }
@@ -90,7 +69,8 @@ const Job = () => {
     setEditing(false);
   }, [jobData, origJobData, id]);
 
-  const updateStatus = useCallback(async (status: string) => {
+  const updateStatus = useCallback(async (e: SelectChangeEvent<string>) => {
+    const status = e.target.value;
     const response = await fetch(`/api/jobs/status/${id}`, {
       method: "PATCH",
       body: JSON.stringify(status),
@@ -100,23 +80,40 @@ const Job = () => {
     });
 
     if (response.ok) {
-      if (jobData && origJobData) {
-        setJobData({...jobData, status: status});
-        setOrigJobData({...origJobData, status: status});
-      }
+      setJobData(data => data ? ({...data, Status: status}) : undefined);
+      setOrigJobData(data => data ? ({...data, Status: status}) : undefined);
     } else {
       console.error(`API request failed: PATCH /api/jobs/status/${id}, HTTP ${response.status}`);
     }
-  }, [id, jobData, origJobData]);
+  }, [id]);
 
   const archiveJob = useCallback(async () => {
     const response = await fetch(`/api/jobs/archive/${id}?toggle=true`, { method: "PATCH" });
-    if (response.ok && jobData) {
-      setJobData({...jobData, archived: !jobData.archived});
+    if (response.ok) {
+      setJobData(data => data ? ({ ...data, Archived: !data.Archived }) : undefined);
     } else {
       console.error(`API request failed: /api/jobs/archive/${id}, HTTP ${response.status}`);
     }
-  }, [jobData, id])
+  }, [id]);
+
+  const onChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setJobData(data => {
+      const key = e.target.name as keyof JobResponse;
+
+      if (data && key) {
+        if (typeof data[key] === "string") {
+          return { ...data, [key]: e.target.value };
+        } else if (typeof data[key] === "number") {
+          const parse = e.target.value.includes(".") ? (s: string) => parseFloat(s) : (s: string) => parseInt(s, 10);
+          const result = parse(e.target.value);
+
+          return { ...data, [key]: isNaN(result) ? undefined : result };
+        }
+      } else {
+        return data;
+      }
+    })
+  }, []);
 
   useEffect(() => { fetchData() }, [fetchData]);
 
@@ -127,17 +124,18 @@ const Job = () => {
   return (
     <Container>
       <Helmet>
-        <title>{jobData.title} - {jobData.companyName} | JobHunt</title>
+        <title>{jobData.Title} - {jobData.Company?.Name} | JobHunt</title>
       </Helmet>
+      <JobDialog mode="edit" />
       <Card>
         <CardHeader>
           <Grid container alignItems="center" spacing={1}>
             <Grid item xs>
-              <EditableComponent editing={editing} value={jobData.title} onChange={(e) => setJobData({...jobData, title: e.target.value})} label="Job Title" size="medium" fontSize="h4" colour="#fff">
-                <Typography variant="h4">{jobData.title}</Typography>
+              <EditableComponent editing={editing} value={jobData.Title} name="Title" onChange={onChange} label="Job Title" size="medium" fontSize="h4" colour="#fff">
+                <Typography variant="h4">{jobData.Title}</Typography>
               </EditableComponent>
-              <Typography variant="h6"><Link sx={{ textDecoration: "underline" }} component={RouterLink} to={`/company/${jobData.companyId}`}>{jobData.companyName}</Link>, {jobData.location}</Typography>
-              {jobData.archived ? (<Typography variant="subtitle1"><em>Archived</em></Typography>) : null}
+              <Typography variant="h6"><Link sx={{ textDecoration: "underline" }} component={RouterLink} to={`/company/${jobData.CompanyId}`}>{jobData.Company?.Name}</Link>, {jobData.Location}</Typography>
+              {jobData.Archived ? (<Typography variant="subtitle1"><em>Archived</em></Typography>) : null}
             </Grid>
             <Grid item>
               <IconButton onClick={(e) => setMenuAnchor(e.currentTarget)} size="large">
@@ -152,23 +150,24 @@ const Job = () => {
                 transformOrigin={{ vertical: "top", horizontal: "right" }}
               >
                 <MenuItem onClick={() => {setEditing(true); setMenuAnchor(null);}}>Edit Job</MenuItem>
-                <MenuItem onClick={() => {archiveJob(); setMenuAnchor(null);}}>{jobData.archived ? "Restore" : "Archive"} Job</MenuItem>
+                <MenuItem onClick={() => {archiveJob(); setMenuAnchor(null);}}>{jobData.Archived ? "Restore" : "Archive"} Job</MenuItem>
               </Menu>
             </Grid>
           </Grid>
         </CardHeader>
         <CardBody>
           <Box mb={2}>
-            <EditableComponent editing={editing} value={jobData.salary} onChange={(e) => setJobData({...jobData, salary: e.target.value})} label="Salary" fontSize="h6">
-              <Typography variant="h6">{jobData.salary ?? "Unknown Salary"}</Typography>
+            <EditableComponent editing={editing} value={jobData.Salary} name="Salary" onChange={onChange} label="Salary" fontSize="h6">
+              <Typography variant="h6">{jobData.Salary ?? "Unknown Salary"}</Typography>
             </EditableComponent>
             {editing ? (
               <Box my={1}>
                 <Grid container spacing={1}>
                   <Grid item md={3}>
                     <TextField
-                      value={jobData.avgYearlySalary ?? ""}
-                      onChange={(e) => setJobData({...jobData, avgYearlySalary: isNaN(parseInt(e.target.value, 10)) ? undefined : parseInt(e.target.value, 10)})}
+                      value={jobData.AvgYearlySalary ?? ""}
+                      name="AvgYearlySalary"
+                      onChange={onChange}
                       label="Median Annual Salary"
                       variant="outlined"
                       fullWidth
@@ -178,14 +177,8 @@ const Job = () => {
                   </Grid>
                   <Grid item xs={3}>
                     <TextField
-                      value={jobData.latitude ?? ""}
-                      onChange={(e) => {
-                        if (!e.target.value) {
-                          setJobData({...jobData, latitude: undefined });
-                        } else if (!isNaN(parseFloat(e.target.value))) {
-                          setJobData({...jobData, latitude : parseFloat(e.target.value)});
-                        }
-                      }}
+                      value={jobData.Latitude ?? ""}
+                      onChange={onChange}
                       label="Latitude"
                       variant="outlined"
                       fullWidth
@@ -194,14 +187,8 @@ const Job = () => {
                   </Grid>
                   <Grid item xs={3}>
                     <TextField
-                      value={jobData.longitude ?? ""}
-                      onChange={(e) => {
-                        if (!e.target.value) {
-                          setJobData({...jobData, longitude: undefined });
-                        } else if (!isNaN(parseFloat(e.target.value))) {
-                          setJobData({...jobData, longitude : parseFloat(e.target.value)});
-                        }
-                      }}
+                      value={jobData.Longitude ?? ""}
+                      onChange={onChange}
                       label="Longitude"
                       variant="outlined"
                       fullWidth
@@ -211,17 +198,17 @@ const Job = () => {
                 </Grid>
               </Box>
             ) : null}
-            <Typography variant="subtitle1">Posted {dayjs.utc(jobData.posted).local().format("DD/MM/YYYY HH:mm")}</Typography>
-            <Typography variant="subtitle2">{jobData.sourceName ? `From "${jobData.sourceName}"` : "Created manually"}</Typography>
+            <Typography variant="subtitle1">Posted {dayjs.utc(jobData.Posted).local().format("DD/MM/YYYY HH:mm")}</Typography>
+            <Typography variant="subtitle2">{jobData.Source ? `From "${jobData.Source.DisplayName}"` : "Created manually"}</Typography>
             <Box mt={1}>
-              <Categories
+              {/* <Categories
                 categories={jobData.categories}
                 updateUrl={`/api/jobs/categories/${id}`}
                 onCategoryAdd={(cats) => setJobData({ ...jobData, categories: cats})}
                 onCategoryRemove={(cats) => setJobData({ ...jobData, categories: cats})}
               >
                 {jobData.companyRecruiter ? <Grid item><Chip label="Recruiter" color="secondary"/></Grid> : null}
-              </Categories>
+              </Categories> */}
             </Box>
             <Box my={2}>
               <Grid container>
@@ -230,8 +217,8 @@ const Job = () => {
                     <InputLabel id="status-select-label">Status</InputLabel>
                     <Select
                       labelId="status-select-label"
-                      value={jobData.status}
-                      onChange={(e) => updateStatus(e.target.value as string)}
+                      value={jobData.Status}
+                      onChange={updateStatus}
                       label="Status"
                     >
                       <MenuItem value="Not Applied">Not Applied</MenuItem>
@@ -262,14 +249,14 @@ const Job = () => {
                   :
                   (
                     <Fragment>
-                      { jobData.url ? (
+                      { jobData.Url ? (
                         <Grid item>
-                          <Button variant="contained" color="secondary" startIcon={<Subject/>} endIcon={<OpenInNew/>} component="a" href={jobData.url} target="_blank">View Listing</Button>
+                          <Button variant="contained" color="secondary" startIcon={<Subject/>} endIcon={<OpenInNew/>} component="a" href={jobData.Url} target="_blank">View Listing</Button>
                         </Grid>
                       ) : null}
-                      {jobData.latitude && jobData.longitude ? (
+                      {jobData.Latitude && jobData.Longitude ? (
                         <Grid item>
-                          <Button variant="contained" color="secondary" startIcon={<Map/>} endIcon={<OpenInNew/>} component="a" href={`https://www.google.com/maps/search/?api=1&query=${jobData.latitude},${jobData.longitude}`} target="_blank">View Location</Button>
+                          <Button variant="contained" color="secondary" startIcon={<Map/>} endIcon={<OpenInNew/>} component="a" href={`https://www.google.com/maps/search/?api=1&query=${jobData.Latitude},${jobData.Longitude}`} target="_blank">View Location</Button>
                         </Grid>
                       ) : null}
                     </Fragment>
@@ -280,15 +267,15 @@ const Job = () => {
 
             <Tabs labels={["Description", "Notes"]}>
               <Tab>
-                <EditableComponent editing={editing} value={jobData.description} onChange={(e) => setJobData({...jobData, description: e.target.value})} label="Job Description" multiline rows={20}>
-                  <ExpandableSnippet hidden={!jobData.description}>
-                    <ReactMarkdown skipHtml>{jobData.description ? jobData.description : "_No description available_"}</ReactMarkdown>
+                <EditableComponent editing={editing} value={jobData.Description} name="Description" onChange={onChange} label="Job Description" multiline rows={20}>
+                  <ExpandableSnippet hidden={!jobData.Description}>
+                    <ReactMarkdown skipHtml>{jobData.Description ? jobData.Description : "_No description available_"}</ReactMarkdown>
                   </ExpandableSnippet>
                 </EditableComponent>
               </Tab>
               <Tab>
-                <EditableComponent editing={editing} value={jobData.notes} onChange={(e) => setJobData({...jobData, notes: e.target.value})} label="Notes" multiline rows={20}>
-                  <ReactMarkdown skipHtml>{jobData.notes ? jobData.notes : "_No notes added_"}</ReactMarkdown>
+                <EditableComponent editing={editing} value={jobData.Notes} onChange={onChange} label="Notes" multiline rows={20}>
+                  <ReactMarkdown skipHtml>{jobData.Notes ? jobData.Notes : "_No notes added_"}</ReactMarkdown>
                 </EditableComponent>
               </Tab>
             </Tabs>

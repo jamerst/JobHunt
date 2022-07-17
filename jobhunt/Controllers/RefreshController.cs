@@ -56,7 +56,11 @@ public class RefreshController : ControllerBase
     [HttpGet]
     public async Task FindDuplicates()
     {
-        var jobs = _jobService.Set.Where(j => !j.DuplicateJobId.HasValue).AsAsyncEnumerable();
+        var jobs = _jobService.Set
+            .Where(j => !j.DuplicateJobId.HasValue)
+            .Include(j => j.JobCategories)
+            .AsAsyncEnumerable();
+
         await foreach (var job in jobs)
         {
             var duplicate = await _jobService.FindDuplicateAsync(job);
@@ -66,6 +70,7 @@ public class RefreshController : ControllerBase
 
                 job.JobCategories.AddRange(
                         duplicate.JobCategories
+                            .Where(c1 => ! job.JobCategories.Any(c2 => c1.CategoryId == c2.CategoryId))
                             .Select(c => new JobCategory { CategoryId = c.CategoryId })
                     );
             }

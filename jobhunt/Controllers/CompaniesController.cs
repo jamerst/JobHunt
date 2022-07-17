@@ -63,27 +63,6 @@ public class CompaniesController : ControllerBase
         }
     }
 
-    [HttpGet]
-    [Route("~/api/companies/{id}/jobs")]
-    public async Task<IActionResult> GetJobs([FromRoute] int id, [FromQuery] int page, [FromQuery] int size, [FromQuery] bool count = false)
-    {
-        (var results, int? total) = await _jobService.GetLatestPagedByCompanyAsync(id, page, size, count);
-        return new JsonResult(new
-        {
-            total = total,
-            results = results.Select(j => new
-            {
-                Id = j.Id,
-                Title = j.Title,
-                Location = j.Location,
-                CompanyId = j.CompanyId,
-                CompanyName = j.Company?.Name,
-                Posted = j.Posted,
-                Seen = j.Seen
-            })
-        });
-    }
-
     [HttpPatch]
     [Route("~/api/companies/{id}")]
     public async Task<IActionResult> Update([FromRoute] int id, [FromBody] CompanyDto details)

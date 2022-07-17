@@ -96,7 +96,14 @@ namespace JobHunt.Controllers
         [Route("{id}")]
         public async Task Archive([FromRoute] int id, [FromQuery] bool toggle = false)
         {
-            await _jobService.MarkAsArchivedAsync(id, toggle);
+            await _jobService.ArchiveAsync(id, toggle);
+        }
+
+        [HttpDelete]
+        [Route("{id}")]
+        public async Task Delete([FromRoute] int id)
+        {
+            await _jobService.DeleteAsync(id);
         }
 
         [HttpPatch]
@@ -117,26 +124,6 @@ namespace JobHunt.Controllers
             {
                 return BadRequest();
             }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Latest([FromQuery] int page, [FromQuery] int size, [FromQuery] bool count = false)
-        {
-            (var results, int? total) = await _jobService.GetLatestPagedAsync(page, size, count);
-            return new JsonResult(new
-            {
-                total = total,
-                results = results.Select(j => new
-                {
-                    Id = j.Id,
-                    Title = j.Title,
-                    Location = j.Location,
-                    CompanyId = j.CompanyId,
-                    CompanyName = j.Company?.Name,
-                    Posted = j.Posted,
-                    Seen = j.Seen
-                })
-            });
         }
 
         [HttpGet]

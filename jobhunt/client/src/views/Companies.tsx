@@ -2,7 +2,7 @@ import React, { FunctionComponent, useState, useCallback } from "react"
 import {  Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Fab, Link, Typography, Slider, Chip } from "@mui/material";
 import Grid from "components/Grid";
 import { GridSortModel } from "@mui/x-data-grid"
-import DateAdapter from "@mui/lab/AdapterDayjs";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { Add, Visibility } from "@mui/icons-material";
 import { Helmet } from "react-helmet";
 import { useNavigate } from "react-router";
@@ -316,7 +316,7 @@ const Companies: FunctionComponent = (props) => {
         getRowId={(row) => row["Id"]}
         alwaysSelect={alwaysSelect}
         defaultSortModel={defaultSort}
-        filterBuilderProps={{ localizationProviderProps: { dateAdapter: DateAdapter, locale: enGB } }}
+        filterBuilderProps={{ localizationProviderProps: { dateAdapter: AdapterDayjs, locale: enGB } }}
         defaultPageSize={15}
       />
 

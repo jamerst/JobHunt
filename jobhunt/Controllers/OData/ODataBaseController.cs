@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.OData.Deltas;
 using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.OData.Results;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.EntityFrameworkCore;
 
 using JobHunt.Services.BaseServices;
 
@@ -22,7 +23,7 @@ public abstract class ODataBaseController<T> : ODataController where T : class, 
     [EnableQuery(MaxAnyAllExpressionDepth = 5)]
     public virtual IActionResult Get()
     {
-        return Ok(_service.Set);
+        return Ok(_service.Set.AsNoTracking());
     }
 
     [HttpGet]
@@ -31,7 +32,7 @@ public abstract class ODataBaseController<T> : ODataController where T : class, 
     {
         // returning a SingleResult allows features such as $expand to work
         // they don't work otherwise because calling FirstOrDefaultAsync triggers the DB call so .Include can't be called
-        return SingleResult.Create(_service.Set.Where(x => x.Id == key));
+        return SingleResult.Create(_service.Set.AsNoTracking().Where(x => x.Id == key));
     }
 
     [HttpPost]

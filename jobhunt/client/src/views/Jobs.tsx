@@ -1,8 +1,8 @@
 import React, { FunctionComponent, Fragment, useEffect, useState, useCallback, useRef } from "react"
 import { Button, Chip, Slider, TextField, Tooltip, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Fab, Link } from "@mui/material";
 import Grid from "components/Grid";
-import DatePicker from "@mui/lab/DatePicker";
-import DateAdapter from "@mui/lab/AdapterDayjs";
+import { DatePicker } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
 import { GridRowParams, GridSortModel } from "@mui/x-data-grid"
 import Autocomplete from '@mui/material/Autocomplete';
@@ -374,7 +374,7 @@ const Jobs: FunctionComponent = (props) => {
         alwaysSelect={alwaysSelect}
         defaultSortModel={defaultSort}
         getRowClassName={getClass}
-        filterBuilderProps={{ localizationProviderProps: { dateAdapter: DateAdapter, locale: enGB }, autocompleteGroups: ["Job", "Company"] }}
+        filterBuilderProps={{ localizationProviderProps: { dateAdapter: AdapterDayjs, locale: enGB }, autocompleteGroups: ["Job", "Company"] }}
         defaultPageSize={15}
       />
 
@@ -425,7 +425,7 @@ const Jobs: FunctionComponent = (props) => {
                 <TextField label="URL" value={newJob.url ?? ""} onChange={(e) => setNewJob({...newJob, url: e.target.value})} variant="outlined" fullWidth/>
               </Grid>
               <Grid item xs={12}>
-                <LocalizationProvider dateAdapter={DateAdapter} locale={enGB}>
+                <LocalizationProvider dateAdapter={AdapterDayjs} locale={enGB}>
                   <DatePicker
                     label="Posted"
                     value={newJob.posted ?? null}

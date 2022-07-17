@@ -26,4 +26,7 @@ public class Job : KeyedEntity
     public Search? Source { get; set; }
     public int? DuplicateJobId { get; set; }
     public Job? DuplicateJob { get; set; }
+    public int? ActualCompanyId { get; set; }
+    public Company? ActualCompany { get; set; }
+    public bool Deleted { get; set; }
 }

@@ -133,7 +133,7 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
                     _logger.LogInformation("Found job posted before {MaxAge}, {JobKey}", maxAge, job.JobKey);
                 }
 
-                if (!await _jobService.AnyWithSourceIdAsync(SearchProviderName.Indeed, job.JobKey))
+                if (!await _jobService.AnyWithProviderIdAsync(SearchProviderName.Indeed, job.JobKey))
                 {
                     newJobs++;
 
@@ -316,6 +316,7 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
                 if (duplicate != default)
                 {
                     job.DuplicateJobId = duplicate.Id;
+                    job.ActualCompanyId = duplicate.ActualCompanyId;
 
                     job.JobCategories.AddRange(
                         duplicate.JobCategories
