@@ -24,6 +24,7 @@ import enGB from "dayjs/locale/en-gb"
 import { LocationFilter } from "types";
 import Categories, { Category } from "components/Categories";
 import HideOnScroll from "components/HideOnScroll";
+import JobDialog from "./components/JobDialog";
 
 type Job = {
   company?: Company | null,
@@ -378,75 +379,7 @@ const Jobs: FunctionComponent = (props) => {
         defaultPageSize={15}
       />
 
-      <HideOnScroll>
-        <Fab className={classes.fab} color="secondary" aria-label="add" onClick={() => { setDialogOpen(!dialogOpen); }}>
-          <Add/>
-        </Fab>
-      </HideOnScroll>
-
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} aria-labelledby="add-dialog-title">
-        <DialogTitle id="add-dialog-title">Add New Job</DialogTitle>
-        <form onSubmit={(e) => { e.preventDefault(); create(newJob); }}>
-          <DialogContent>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <TextField label="Title" value={newJob.title} onChange={(e) => setNewJob({...newJob, title: e.target.value})} variant="outlined" fullWidth required />
-              </Grid>
-              <Grid item xs={12}>
-                <Autocomplete
-                  options={companies}
-                  getOptionLabel={(option) => option.name}
-                  renderInput={(params) => <TextField {...params} label="Company" variant="outlined" />}
-                  fullWidth
-                  value={newJob.company}
-                  onChange={(_, val) => setNewJob({...newJob, company: val, companyId: val?.companyId})}
-                />
-
-              </Grid>
-              <Grid item xs={12}>
-                <TextField label="Location" value={newJob.location ?? ""} onChange={(e) => setNewJob({...newJob, location: e.target.value})} variant="outlined" fullWidth />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField label="Salary" value={newJob.salary ?? ""} onChange={(e) => setNewJob({...newJob, salary: e.target.value})} variant="outlined" fullWidth />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField label="Yearly Salary"
-                  value={newJob.avgYearlySalary ?? ""}
-                  onChange={(e) => setNewJob({...newJob, avgYearlySalary: isNaN(parseInt(e.target.value, 10)) ? undefined : parseInt(e.target.value, 10)})}
-                  variant="outlined"
-                  fullWidth
-                  type="number"
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField label="Description (HTML)" value={newJob.description ?? ""} onChange={(e) => setNewJob({...newJob, description: e.target.value})} variant="outlined" fullWidth multiline rows={10} />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField label="URL" value={newJob.url ?? ""} onChange={(e) => setNewJob({...newJob, url: e.target.value})} variant="outlined" fullWidth/>
-              </Grid>
-              <Grid item xs={12}>
-                <LocalizationProvider dateAdapter={AdapterDayjs} locale={enGB}>
-                  <DatePicker
-                    label="Posted"
-                    value={newJob.posted ?? null}
-                    renderInput={(params) => (<TextField {...params} variant="outlined" fullWidth />)}
-                    onChange={(date) => setNewJob({ ...newJob, posted: date as Date }) }
-                    disableFuture
-                  />
-                </LocalizationProvider>
-              </Grid>
-            </Grid>
-          </DialogContent>
-          <DialogActions>
-            <Button color="primary" onClick={() => setDialogOpen(false)} type="reset">
-              Cancel
-            </Button>
-            <Button color="primary" type="submit">
-              Add
-            </Button>
-          </DialogActions>
-        </form>
-      </Dialog>
+      <JobDialog mode="create" />
     </div>
   );
 }

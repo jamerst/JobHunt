@@ -9,10 +9,12 @@ public class JobService : ODataBaseService<Job>, IJobService
 {
     private readonly IGeocoder _geocoder;
     private readonly SearchOptions _options;
-    public JobService(JobHuntContext context, IGeocoder geocoder, IOptions<SearchOptions> options) : base(context)
+    private readonly ILogger _logger;
+    public JobService(JobHuntContext context, IGeocoder geocoder, IOptions<SearchOptions> options, ILogger<JobService> logger) : base(context)
     {
         _geocoder = geocoder;
         _options = options.Value;
+        _logger = logger;
     }
 
     public async Task<Job?> GetByIdAsync(int id)
@@ -187,7 +189,7 @@ public class JobService : ODataBaseService<Job>, IJobService
 
         if (!string.IsNullOrEmpty(details.Description))
         {
-            (bool success, string output) = await PandocConverter.Convert("html", "markdown_strict", details.Description);
+            (bool success, string output) = await PandocConverter.ConvertAsync("html", "markdown_strict", details.Description);
             if (success)
             {
                 job.Description = output;
@@ -211,16 +213,6 @@ public class JobService : ODataBaseService<Job>, IJobService
         if (job != default)
         {
             job.Archived = !(toggle && job.Archived);
-            await _context.SaveChangesAsync();
-        }
-    }
-
-    public async Task DeleteAsync(int id)
-    {
-        Job? job = await _context.Jobs.FirstOrDefaultAsync(j => j.Id == id);
-        if (job != default)
-        {
-            job.Deleted = true;
             await _context.SaveChangesAsync();
         }
     }
@@ -323,6 +315,39 @@ public class JobService : ODataBaseService<Job>, IJobService
     {
         await _context.Database.ExecuteSqlRawAsync($"SET pg_trgm.{thresholdType} = {threshold};");
     }
+
+    public override async Task<bool> DeleteAsync(int id)
+    {
+        Job? job = await FindByIdAsync(id);
+        if (job == default)
+        {
+            return false;
+        }
+
+        job.Deleted = true;
+        await SaveChangesAsync();
+
+        return true;
+    }
+
+    public override async Task<Job> BeforeSaveAsync(Job entity)
+    {
+        if (!string.IsNullOrEmpty(entity.Description) && StringUtils.IsHtml(entity.Description))
+        {
+            (bool success, string output) = await PandocConverter.ConvertAsync("html", "markdown_strict", entity.Description);
+
+            if (success)
+            {
+                entity.Description = output;
+            }
+            else
+            {
+                _logger.LogWarning("Failed to convert job description to markdown {error}", output);
+            }
+        }
+
+        return entity;
+    }
 }
 
 public interface IJobService : IODataBaseService<Job>
@@ -335,7 +360,6 @@ public interface IJobService : IODataBaseService<Job>
     Task<IEnumerable<Category>?> UpdateCategoriesAsync(int id, CategoryDto[] categories);
     Task<bool> UpdateAsync(int id, JobDto details);
     Task<int?> CreateAsync(NewJobDto details);
-    Task DeleteAsync(int id);
     Task ArchiveAsync(int id, bool toggle);
     Task<IEnumerable<Category>> GetJobCategoriesAsync();
     Task<bool> UpdateStatusAsync(int id, string status);

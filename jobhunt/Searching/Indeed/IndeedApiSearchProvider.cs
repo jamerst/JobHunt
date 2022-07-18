@@ -277,7 +277,7 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
                 {
                     try
                     {
-                        (bool success, string output) = await PandocConverter.Convert("html", "markdown_strict", desc);
+                        (bool success, string output) = await PandocConverter.ConvertAsync("html", "markdown_strict", desc);
                         if (success)
                         {
                             job.Description = output;

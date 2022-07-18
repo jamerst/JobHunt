@@ -8,3 +8,4 @@ global using JobHunt.DTO;
 global using JobHunt.Extensions;
 global using JobHunt.Models;
 global using JobHunt.Services;
+global using JobHunt.Utils;

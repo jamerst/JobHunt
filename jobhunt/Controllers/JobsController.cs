@@ -99,13 +99,6 @@ namespace JobHunt.Controllers
             await _jobService.ArchiveAsync(id, toggle);
         }
 
-        [HttpDelete]
-        [Route("{id}")]
-        public async Task Delete([FromRoute] int id)
-        {
-            await _jobService.DeleteAsync(id);
-        }
-
         [HttpPatch]
         [Route("{id}")]
         public async Task<IActionResult> Categories([FromRoute] int id, [FromBody] CategoryDto[] categories)

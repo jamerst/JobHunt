@@ -6,7 +6,7 @@ public class ODataBaseService<T> : KeyedEntityBaseService<T>, IODataBaseService<
 {
     public ODataBaseService(JobHuntContext context) : base(context) { }
 
-    public async Task<T?> PutAsync(int id, Delta<T> delta)
+    public virtual async Task<T?> PutAsync(int id, Delta<T> delta)
     {
         var entity = await FindByIdAsync(id);
         if (entity == default)
@@ -16,12 +16,14 @@ public class ODataBaseService<T> : KeyedEntityBaseService<T>, IODataBaseService<
 
         delta.Put(entity);
 
+        await BeforeSaveAsync(entity);
+
         await SaveChangesAsync();
 
         return entity;
     }
 
-    public async Task<T?> PatchAsync(int id, Delta<T> delta)
+    public virtual async Task<T?> PatchAsync(int id, Delta<T> delta)
     {
         var entity = await FindByIdAsync(id);
         if (entity == default)
@@ -30,6 +32,8 @@ public class ODataBaseService<T> : KeyedEntityBaseService<T>, IODataBaseService<
         }
 
         delta.Patch(entity);
+
+        await BeforeSaveAsync(entity);
 
         await SaveChangesAsync();
 

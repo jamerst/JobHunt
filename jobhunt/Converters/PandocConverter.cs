@@ -3,7 +3,7 @@ using Medallion.Shell;
 namespace JobHunt.Converters;
 public static class PandocConverter
 {
-    public static async Task<(bool, string)> Convert(string from, string to, string input)
+    public static async Task<(bool, string)> ConvertAsync(string from, string to, string input)
     {
         if (!PandocInputFormats.Contains(from))
         {

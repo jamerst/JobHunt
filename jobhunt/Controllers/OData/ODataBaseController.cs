@@ -28,7 +28,7 @@ public abstract class ODataBaseController<T> : ODataController where T : class, 
 
     [HttpGet]
     [EnableQuery(MaxAnyAllExpressionDepth = 5)]
-    public virtual SingleResult<T> Get([FromODataUri] int key) // parameter must be named "key" otherwise it doesn't work
+    public virtual SingleResult<T> Get(int key) // parameter must be named "key" otherwise it doesn't work
     {
         // returning a SingleResult allows features such as $expand to work
         // they don't work otherwise because calling FirstOrDefaultAsync triggers the DB call so .Include can't be called
@@ -36,17 +36,13 @@ public abstract class ODataBaseController<T> : ODataController where T : class, 
     }
 
     [HttpPost]
-    public virtual async Task<IActionResult> Post([FromBody] T entity)
+    public virtual async Task<IActionResult> Post(T entity)
     {
-        _service.Set.Add(entity);
-
-        await _service.SaveChangesAsync();
-
-        return Created(entity);
+        return Created(await _service.CreateAsync(entity));
     }
 
     [HttpPut]
-    public virtual async Task<IActionResult> Put(int key, [FromBody] Delta<T> delta)
+    public virtual async Task<IActionResult> Put(int key, Delta<T> delta)
     {
         var result = await _service.PutAsync(key, delta);
 
@@ -59,7 +55,7 @@ public abstract class ODataBaseController<T> : ODataController where T : class, 
     }
 
     [HttpPatch]
-    public virtual async Task<IActionResult> Patch(int key, [FromBody] Delta<T> delta)
+    public virtual async Task<IActionResult> Patch(int key, Delta<T> delta)
     {
         var result = await _service.PatchAsync(key, delta);
 
@@ -74,16 +70,13 @@ public abstract class ODataBaseController<T> : ODataController where T : class, 
     [HttpDelete]
     public virtual async Task<IActionResult> Delete(int key)
     {
-        var entity = await _service.FindByIdAsync(key);
-
-        if (entity == default)
+        if (await _service.DeleteAsync(key))
+        {
+            return Ok();
+        }
+        else
         {
             return NotFound($"{nameof(T)} with Id={key} not found");
         }
-
-        _service.Set.Remove(entity);
-        await _service.SaveChangesAsync();
-
-        return Ok();
     }
 }

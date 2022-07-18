@@ -126,7 +126,7 @@ const Job = () => {
       <Helmet>
         <title>{jobData.Title} - {jobData.Company?.Name} | JobHunt</title>
       </Helmet>
-      <JobDialog mode="edit" />
+      <JobDialog mode="edit" job={jobData} />
       <Card>
         <CardHeader>
           <Grid container alignItems="center" spacing={1}>
