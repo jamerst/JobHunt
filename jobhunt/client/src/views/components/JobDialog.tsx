@@ -1,24 +1,23 @@
 import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router";
 
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Fab } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers"
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { Add, Edit } from "@mui/icons-material";
 
-import { Autocomplete, DatePicker, TextField } from "mui-rff";
+import { Autocomplete, DateTimePicker, TextField } from "mui-rff";
 import { Form } from "react-final-form";
 
+import dayjs, { Dayjs } from "dayjs";
 import enGB from "dayjs/locale/en-gb"
 import utc from "dayjs/plugin/utc"
 
+import makeStyles from "makeStyles";
 import HideOnScroll from "components/HideOnScroll";
 import Grid from "components/Grid";
 
 import { Job } from "types/models/Job";
-import makeStyles from "makeStyles";
-import dayjs, { Dayjs } from "dayjs";
-import { useNavigate } from "react-router";
-import Company from "types/models/Company";
 
 type JobDialogProps = {
   mode: "edit" | "create",
@@ -68,6 +67,7 @@ const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
   );
 
   const onSubmit = useCallback(async (values: FormJob) => {
+    console.debug(values);
     const requestData: Job = { ...values, Posted: values.Posted.format("YYYY-MM-DDTHH:mm:ss") + "Z" };
 
     if (mode === "create") {
@@ -195,7 +195,7 @@ const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
                     </Grid>
                     <Grid item xs={12}>
                       <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={enGB}>
-                        <DatePicker label="Posted" name="Posted" required disableFuture />
+                        <DateTimePicker label="Posted" name="Posted" required disableFuture inputFormat="DD/MM/YYYY HH:mm" />
                       </LocalizationProvider>
                     </Grid>
                   </Grid>

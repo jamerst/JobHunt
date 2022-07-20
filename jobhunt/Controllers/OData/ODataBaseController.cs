@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.AspNetCore.OData.Deltas;
 using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.OData.Results;
@@ -36,7 +35,7 @@ public abstract class ODataBaseController<T> : ODataController where T : class, 
     }
 
     [HttpPost]
-    public virtual async Task<IActionResult> Post(T entity)
+    public virtual async Task<IActionResult> Post([FromBody] T entity)
     {
         return Created(await _service.CreateAsync(entity));
     }

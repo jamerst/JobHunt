@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.OData;
-using Microsoft.AspNetCore.OData.Routing.Conventions;
 using Microsoft.AspNetCore.OData.Query.Expressions;
 
 using JobHunt.Data.OData;

@@ -346,6 +346,28 @@ public class JobService : ODataBaseService<Job>, IJobService
             }
         }
 
+        if (!entity.Latitude.HasValue || !entity.Longitude.HasValue)
+        {
+            var result = await _geocoder.GeocodeAsync(entity.Location);
+
+            if (result.HasValue)
+            {
+                entity.Latitude = result.Value.Latitude;
+                entity.Longitude = result.Value.Longitude;
+            }
+        }
+
+        // workaround for stupid OData bug where all dates are parsed as Unspecified
+        if (entity.Posted.HasValue && entity.Posted.Value.Kind == DateTimeKind.Unspecified)
+        {
+            entity.Posted = DateTime.SpecifyKind(entity.Posted.Value, DateTimeKind.Utc);
+        }
+
+        if (entity.DateApplied.HasValue && entity.DateApplied.Value.Kind == DateTimeKind.Unspecified)
+        {
+            entity.Posted = DateTime.SpecifyKind(entity.DateApplied.Value, DateTimeKind.Utc);
+        }
+
         return entity;
     }
 }
