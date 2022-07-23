@@ -18,8 +18,6 @@ public class ODataBaseService<T> : KeyedEntityBaseService<T>, IODataBaseService<
 
         await BeforeSaveAsync(entity);
 
-        await SaveChangesAsync();
-
         return entity;
     }
 
@@ -34,8 +32,6 @@ public class ODataBaseService<T> : KeyedEntityBaseService<T>, IODataBaseService<
         delta.Patch(entity);
 
         await BeforeSaveAsync(entity);
-
-        await SaveChangesAsync();
 
         return entity;
     }

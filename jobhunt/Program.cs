@@ -31,7 +31,11 @@ builder.Services.AddCors(builder =>
 });
 
 builder.Services
-    .AddControllers(options => options.Filters.Add(typeof(ExceptionLogger)))
+    .AddControllers(options =>
+    {
+        options.Filters.Add(typeof(ExceptionLogger));
+        options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+    })
     .AddJobHuntOData(builder.Configuration)
     .AddJsonOptions(options =>
     {

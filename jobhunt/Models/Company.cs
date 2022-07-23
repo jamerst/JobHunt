@@ -3,6 +3,7 @@ public class Company : KeyedEntity
 {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
+    [Required]
     public string Name { get; set; } = null!;
     public string Location { get; set; } = null!;
     public double? Latitude { get; set; }

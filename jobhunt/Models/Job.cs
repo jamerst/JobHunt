@@ -3,14 +3,18 @@ public class Job : KeyedEntity
 {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
+    [Required]
     public string Title { get; set; } = null!;
+    [Required]
     public string Description { get; set; } = null!;
     public string? Salary { get; set; }
     public int? AvgYearlySalary { get; set; }
+    [Required]
     public string Location { get; set; } = null!;
     public double? Latitude { get; set; }
     public double? Longitude { get; set; }
     public string? Url { get; set; }
+    [Required]
     public int? CompanyId { get; set; }
     public Company? Company { get; set; }
     public DateTime? Posted { get; set; }
