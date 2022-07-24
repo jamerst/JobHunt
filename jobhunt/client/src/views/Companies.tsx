@@ -1,14 +1,13 @@
-import React, { FunctionComponent, useState, useCallback } from "react"
-import {  Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Fab, Link, Typography, Slider, Chip } from "@mui/material";
+import React, { useState, useCallback } from "react"
+import { Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Fab } from "@mui/material";
 import Grid from "components/Grid";
 import { GridSortModel } from "@mui/x-data-grid"
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { Add, Visibility } from "@mui/icons-material";
+import { Add } from "@mui/icons-material";
 import { Helmet } from "react-helmet";
 import { useNavigate } from "react-router";
-import { Link as RouterLink } from "react-router-dom";
-import { ODataGridColDef, numericOperators, ODataColumnVisibilityModel, escapeODataString } from "o-data-grid";
-import ODataGrid from "components/ODataGrid";
+import { ODataColumnVisibilityModel } from "o-data-grid";
+import ODataGrid from "components/odata/ODataGrid";
 
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
@@ -16,14 +15,8 @@ import utc from "dayjs/plugin/utc"
 import enGB from "dayjs/locale/en-gb"
 
 import makeStyles from "makeStyles";
-import { LocationFilter } from "types";
-import Categories, { Category } from "components/Categories";
 import HideOnScroll from "components/HideOnScroll";
-
-type JobResult = {
-  Posted: string,
-  AvgYearlySalary: number
-}
+import { getCompanyColumns } from "odata/CompanyColumns";
 
 type Company = {
   name: string,
@@ -45,243 +38,21 @@ const useStyles = makeStyles()((theme) => ({
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
 
-const currencyFormatter = new Intl.NumberFormat(undefined, {
-  style: "currency",
-  currency: "GBP",
-  maximumFractionDigits: 0
-})
-
-const columns: ODataGridColDef[] = [
-  {
-    field: "Name",
-    select: "Name,Recruiter,Blacklisted,Watched",
-    headerName: "Name",
-    flex: 2,
-    renderCell: (params) => (
-      <Link
-        component={RouterLink}
-        to={`/company/${params.id}`}
-      >
-        <Grid container spacing={1} alignItems="center" wrap="nowrap">
-          <Grid item>
-            {params.value}
-          </Grid>
-          {params.row["Recruiter"] && <Grid item><Chip sx={{ cursor: "pointer" }} label="Recruiter" size="small" /></Grid>}
-          {params.row["Blacklisted"] && <Grid item><Chip sx={{ cursor: "pointer" }} label="Blacklisted" size="small" color="error" /></Grid>}
-          {params.row["Watched"] && <Grid item sx={{ display: "flex", alignItems: "center" }}><Visibility fontSize="small" /></Grid>}
-        </Grid>
-      </Link>
-    )
-  },
-  {
-    field: "Location",
-    headerName: "Location",
-    flex: 1,
-    sortable: false,
-    renderCustomFilter: (value, setValue) => (
-      <Grid item container xs={12} md spacing={1}>
-        <Grid item xs={12} md>
-          <TextField
-            value={(value as LocationFilter)?.location ?? ""}
-            onChange={(e) => setValue({ ...value, location: e.target.value })}
-            size="small"
-            fullWidth
-            label="Search Location"
-            required
-          />
-        </Grid>
-        <Grid item xs={12} md>
-          <Typography variant="body2">Distance</Typography>
-          <Slider
-            value={(value as LocationFilter)?.distance ?? 15}
-            onChange={(_, val) => setValue({ ...value, distance: val as number })}
-            step={5}
-            min={0}
-            max={50}
-            valueLabelFormat={(val) => `${val}mi`}
-            valueLabelDisplay="auto"
-            size="small"
-            sx={{padding: 0}}
-          />
-        </Grid>
-      </Grid>
-    ),
-    getCustomFilterString: (_, v) => {
-      const filter = v as LocationFilter;
-      return {
-        filter: `Latitude ne null and Longitude ne null and Distance le ${filter.distance ?? 15}`,
-        compute: {
-          compute: `geocode('${escapeODataString(filter.location ?? "")}', Latitude, Longitude) as Distance`,
-          select: ["Distance"]
-        }
-      };
-    },
-    valueGetter: (params) => `${params.row.Location}${params.row.Distance ? ` (${params.row.Distance.toFixed(1)}mi away)` : ""}`,
-  },
-  {
-    // This field has to be calculated clientside - $apply doesn't appear to work for collections
-    field: "AvgSalary",
-    headerName: "Average Salary",
-    expand: { navigationField: "Jobs", select: "AvgYearlySalary" },
-    type: "number",
-    filterable: false,
-    sortable: false,
-    valueGetter: (params) => {
-      const jobs = (params.row["Jobs"] as JobResult[]).filter(j => j.AvgYearlySalary);
-      if (jobs && jobs.length > 0) {
-        return currencyFormatter.format(jobs.map(j => j.AvgYearlySalary).reduce((a, b) => a + b) / jobs.length);
-      } else {
-        return "";
-      }
-    },
-    flex: .5
-  },
-  {
-    field: "Jobs@odata.count",
-    filterField: "Jobs/$count",
-    sortField: "Jobs/$count",
-    expand: { navigationField: "Jobs", top: 0, count: true },
-    filterOperators: numericOperators,
-    headerName: "Jobs Posted",
-    type: "number",
-    flex: .5
-  },
-  {
-    field: "LatestJob",
-    headerName: "Latest Job Posted",
-    expand: { navigationField: "Jobs", select: "Posted", orderBy: "Posted desc" },
-    type: "datetime",
-    filterable: false,
-    sortable: false,
-    renderCell: (params) => {
-      const jobs = params.row["Jobs"] as JobResult[];
-      if (jobs && jobs.length > 0) {
-        return dayjs.utc(jobs[0].Posted).local().format("DD/MM/YYYY HH:mm");
-      } else {
-        return "";
-      }
-    },
-    flex: .5
-  },
-  {
-    field: "LatestPageUpdate",
-    headerName: "Latest Page Updated",
-    expand: { navigationField: "WatchedPages", select: "LastUpdated", orderBy: "LastUpdated desc" },
-    filterable: false,
-    sortable: false,
-    type: "datetime",
-    flex: .5,
-    renderCell: (params) => {
-      const pages = params.row["WatchedPages"] as ({ LastUpdated: string })[];
-      if (pages && pages.length > 0) {
-        return dayjs.utc(pages[0].LastUpdated).local().format("DD/MM/YYYY HH:mm");
-      } else {
-        return "";
-      }
-    }
-  },
-  {
-    field: "CompanyCategories",
-    headerName: "Categories",
-    label: "Category",
-    expand: {
-      navigationField: "CompanyCategories/Category",
-      select: "Name"
-    },
-    sortable: false,
-    flex: 1,
-    renderCustomFilter: (value, setValue) => (
-      <Grid item container alignSelf="center" xs={12} md>
-        <Categories
-          fetchUrl="/api/companies/categories"
-          categories={value ? value as Category[] : []}
-          onCategoryAdd={(cats) => setValue(cats)}
-          onCategoryRemove={(cats) => setValue(cats)}
-          openByDefault
-        >
-          <Grid item>
-            <Typography variant="body1">Is one of:</Typography>
-          </Grid>
-        </Categories>
-      </Grid>
-    ),
-    getCustomFilterString: (_, value) =>
-      value && (value as Category[]).length > 0 ?
-        `CompanyCategories/any(x:x/CategoryId in (${(value as Category[]).map(c => c.id).join(", ")}))`
-        : "",
-    renderCell: (params) => params.row.CompanyCategories.map((c: any) => c["Category/Name"]).join(", "),
-  },
-
-  {
-    field: "Recruiter",
-    label: "Company Type",
-    filterOnly: true,
-    filterOperators: ["eq", "ne"],
-    type: "singleSelect",
-    valueOptions: [
-      { label: "Employer", value: false },
-      { label: "Recruiter", value: true }
-    ],
-  },
-  {
-    field: "Watched",
-    label: "Company Watched",
-    filterOnly: true,
-    filterOperators: ["eq", "ne"],
-    type: "boolean",
-  },
-  {
-    field: "Blacklisted",
-    label: "Company Blacklisted",
-    filterOnly: true,
-    filterOperators: ["eq", "ne"],
-    type: "boolean",
-  },
-  {
-    field: "Notes",
-    filterOnly: true,
-    filterOperators: ["contains"]
-  },
-  {
-    field: "JobCategories",
-    filterOnly: true,
-    label: "Job Categories",
-    renderCustomFilter: (value, setValue) => (
-      <Grid item container alignSelf="center" xs={12} md>
-        <Categories
-          fetchUrl="/api/jobs/categories"
-          categories={value ? value as Category[] : []}
-          onCategoryAdd={(cats) => setValue(cats)}
-          onCategoryRemove={(cats) => setValue(cats)}
-          openByDefault
-        >
-          <Grid item>
-            <Typography variant="body1">Is one of:</Typography>
-          </Grid>
-        </Categories>
-      </Grid>
-    ),
-    getCustomFilterString: (_, value) =>
-      value && (value as Category[]).length > 0 ?
-        `Jobs/any(j:j/JobCategories/any(x:x/CategoryId in (${(value as Category[]).map(c => c.id).join(", ")})))`
-        : "",
-    autocompleteGroup: "Jobs"
-  },
-];
-
 const columnVisibility: ODataColumnVisibilityModel = {
-  "AvgSalary": { xs: false, xl: true },
-  "Jobs@odata.count": { xs: false, md: true },
-  "LatestJob": { xs: false, md: true },
-  "LatestPageUpdate": { xs: false, xl: true },
-  "CompanyCategories": { xs: false, xxl: true },
+  "avgSalary": { xs: false, xl: true },
+  "jobs@odata.count": { xs: false, md: true },
+  "latestJob": { xs: false, md: true },
+  "latestPageUpdate": { xs: false, xl: true },
+  "companyCategories": { xs: false, xxl: true },
 }
 
-const defaultSort: GridSortModel = [{ field: "Name", sort: "asc" }];
+const columns = getCompanyColumns();
 
-const alwaysSelect = ["Id"];
+const defaultSort: GridSortModel = [{ field: "name", sort: "asc" }];
 
-const Companies: FunctionComponent = (props) => {
+const alwaysSelect = ["id"];
+
+const Companies = () => {
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [newCompany, setNewCompany] = useState<Company>({ name: "", location: "" });
 
@@ -313,7 +84,6 @@ const Companies: FunctionComponent = (props) => {
         url="/api/odata/Company"
         columns={columns}
         columnVisibilityModel={columnVisibility}
-        getRowId={(row) => row["Id"]}
         alwaysSelect={alwaysSelect}
         defaultSortModel={defaultSort}
         filterBuilderProps={{ localizationProviderProps: { dateAdapter: AdapterDayjs, locale: enGB } }}

@@ -14,12 +14,16 @@ import enGB from "dayjs/locale/en-gb"
 import utc from "dayjs/plugin/utc"
 
 import makeStyles from "makeStyles";
+
 import HideOnScroll from "components/HideOnScroll";
 import Grid from "components/Grid";
+import NumberField from "components/forms/NumberField";
 
-import { Job } from "types/models/Job";
-import NumberField from "components/NumberField";
 import { getChangedProperties } from "utils/forms";
+
+import Job from "types/models/Job";
+import Company from "types/models/Company";
+import { ODataMultipleResult } from "types/odata/ODataMultipleResult";
 
 type JobDialogProps = {
   mode: "edit" | "create",
@@ -29,15 +33,6 @@ type JobDialogProps = {
 
 type FormJob = Omit<Job, "Posted"> & {
   Posted: Dayjs
-}
-
-type ODataMultipleResult<T> = {
-  value: T[]
-}
-
-type CompanyResult = {
-  Id: number,
-  Name: string
 }
 
 const useStyles = makeStyles()(theme => ({
@@ -50,9 +45,12 @@ const useStyles = makeStyles()(theme => ({
 
 dayjs.extend(utc);
 
+const getOptionValue = (c: Company) => c.id;
+const getOptionLabel = (c: Company | string) => (c as Company)?.name ?? "";
+
 const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
   const [open, setOpen] = useState<boolean>(false);
-  const [companies, setCompanies] = useState<CompanyResult[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
   const companiesFetched = useRef(false);
 
   const { classes } = useStyles();
@@ -63,13 +61,13 @@ const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
 
   const formJob: FormJob | undefined = useMemo(
     () => job ?
-      ({ ...job, Posted: dayjs.utc(job.Posted) })
+      ({ ...job, Posted: dayjs.utc(job.posted) })
       : undefined,
     [job]
   );
 
   const onSubmit = useCallback(async (values: FormJob) => {
-    const requestData: Job = { ...values, Posted: values.Posted.format("YYYY-MM-DDTHH:mm:ss") + "Z" };
+    const requestData: Job = { ...values, posted: values.Posted.format("YYYY-MM-DDTHH:mm:ss") + "Z" };
 
     if (mode === "create") {
       const response = await fetch("/api/odata/job", {
@@ -83,7 +81,7 @@ const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
       if (response.ok) {
         const responseData = await response.json() as Job;
         if (responseData) {
-          navigate(`/job/${responseData.Id}`);
+          navigate(`/job/${responseData.id}`);
         }
       } else {
         console.error(`API request failed: POST /api/odata/job, HTTP ${response.status}`);
@@ -91,7 +89,7 @@ const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
     } else if (mode === "edit" && job) {
       const changed = getChangedProperties(job, requestData);
 
-      const response = await fetch(`/api/odata/job(${job.Id})`, {
+      const response = await fetch(`/api/odata/job(${job.id})`, {
         method: "PATCH",
         body: JSON.stringify(changed),
         headers: {
@@ -104,7 +102,7 @@ const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
           onUpdate();
         }
       } else {
-        console.error(`API request failed: PATCH /api/odata/job(${job.Id}), HTTP ${response.status}`);
+        console.error(`API request failed: PATCH /api/odata/job(${job.id}), HTTP ${response.status}`);
       }
     }
 
@@ -120,10 +118,12 @@ const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
       return;
     }
 
+    // can't use ApiAutocomplete because wrapping the mui-rff Autocomplete breaks it for some reason
+    // if it is wrapped in another component it won't select the initial value
     const fetchCompanies = async () => {
       const response = await fetch("/api/odata/company?$select=Id,Name&$orderby=Name");
       if (response.ok) {
-        const data = await response.json() as ODataMultipleResult<CompanyResult>;
+        const data = await response.json() as ODataMultipleResult<Company>;
         if (data) {
           setCompanies(data.value);
         }
@@ -152,30 +152,30 @@ const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
               <DialogContent>
                 <Grid container spacing={2}>
                   <Grid item xs={12} mb={2}>
-                    <TextField label="Title" name="Title" fullWidth required />
+                    <TextField label="Title" name="title" fullWidth required />
                   </Grid>
                   <Grid item xs={12}>
-                    <TextField label="Location" name="Location" fullWidth required />
+                    <TextField label="Location" name="location" fullWidth required />
                   </Grid>
                   {
                     mode === "edit" &&
                     <Grid item container xs={12} spacing={1}>
                       <Grid item xs={12} md={6}>
-                        <NumberField component={TextField} label="Latitude" name="Latitude" fullWidth size="small" allowDecimal allowNegative />
+                          <NumberField component={TextField} label="Latitude" name="latitude" fullWidth size="small" allowDecimal allowNegative />
                       </Grid>
                       <Grid item xs={12} md={6}>
-                        <NumberField component={TextField} label="Longitude" name="Longitude" fullWidth size="small" allowDecimal allowNegative />
+                        <NumberField component={TextField} label="Longitude" name="longitude" fullWidth size="small" allowDecimal allowNegative />
                       </Grid>
                     </Grid>
                   }
                   <Grid item xs={12} mt={2}>
                     <Autocomplete
                       label="Company"
-                      name="CompanyId"
+                      name="companyId"
                       required
                       options={companies}
-                      getOptionValue={o => o.Id}
-                      getOptionLabel={o => (o as CompanyResult)?.Name ?? o}
+                      getOptionValue={getOptionValue}
+                      getOptionLabel={getOptionLabel}
                       fullWidth
                     />
                   </Grid>
@@ -184,32 +184,32 @@ const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
                     <Grid item xs={12}>
                       <Autocomplete
                         label="Actual Company (if posted by recruiter)"
-                        name="ActualCompanyId"
+                        name="actualCompanyId"
                         options={companies}
-                        getOptionValue={o => o.Id}
-                        getOptionLabel={o => (o as CompanyResult)?.Name ?? o}
+                        getOptionValue={getOptionValue}
+                        getOptionLabel={getOptionLabel}
                         fullWidth
-                        size="small"
+                        defaultValue=""
                       />
                     </Grid>
                   }
                   <Grid item container xs={12} spacing={1} mt={2} mb={2}>
                     <Grid item xs={12} md={6}>
-                      <TextField label="Salary" name="Salary" fullWidth />
+                      <TextField label="Salary" name="salary" fullWidth />
                     </Grid>
                     <Grid item xs={12} md={6}>
-                      <NumberField component={TextField} label="Yearly Salary" name="AvgYearlySalary" fullWidth />
+                      <NumberField component={TextField} label="Yearly Salary" name="avgYearlySalary" fullWidth />
                     </Grid>
                   </Grid>
                   <Grid item xs={12} mb={2}>
-                    <TextField label="Job Description" name="Description" fullWidth multiline rows={10} />
+                    <TextField label="Job Description" name="description" fullWidth multiline rows={10} />
                   </Grid>
                   <Grid item xs={12} mb={2}>
-                    <TextField label="URL" name="Url" fullWidth />
+                    <TextField label="URL" name="url" fullWidth />
                   </Grid>
                   <Grid item xs={12}>
                     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={enGB}>
-                      <DateTimePicker label="Posted" name="Posted" required disableFuture inputFormat="DD/MM/YYYY HH:mm" />
+                      <DateTimePicker label="Posted" name="posted" required disableFuture inputFormat="DD/MM/YYYY HH:mm" />
                     </LocalizationProvider>
                   </Grid>
                 </Grid>

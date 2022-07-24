@@ -5,8 +5,8 @@ import { AccountBalance, Block, Delete, LinkedIn, Map, MoreHoriz, OpenInNew, Rat
 import makeStyles from "makeStyles";
 import Autocomplete from '@mui/material/Autocomplete';
 import { GridRowParams, GridSortModel } from "@mui/x-data-grid"
-import { ODataColumnVisibilityModel, ODataGridColDef } from "o-data-grid";
-import ODataGrid from "components/ODataGrid";
+import { ODataColumnVisibilityModel } from "o-data-grid";
+import ODataGrid from "components/odata/ODataGrid";
 
 import { useParams } from "react-router"
 import { Link as RouterLink, useNavigate } from "react-router-dom"
@@ -23,6 +23,7 @@ import CardBody from "components/CardBody";
 import Tabs from "components/Tabs";
 import Tab from "components/Tab";
 import Markdown from "components/Markdown";
+import { getJobColumns } from "odata/JobColumns";
 
 type CompanyResponse = {
   id: number,
@@ -69,90 +70,20 @@ const UpdateArray = <T, >(array: T[], index: number, update: (current: T) => T) 
 
 dayjs.extend(relativeTime);
 
-const columns: ODataGridColDef[] = [
-  {
-    field: "Title",
-    headerName: "Job Title",
-    flex: 2,
-    renderCell: (params) => {
-      return (<Link component={RouterLink} to={`/job/${params.id}`}>{params.value}</Link>)
-    }
-  },
-  {
-    field: "Location",
-    headerName: "Location",
-    flex: 1
-  },
-  {
-    field: "Salary",
-    filterField: "AvgYearlySalary",
-    sortField: "AvgYearlySalary",
-    label: "Median Annual Salary",
-    flex: 1
-  },
-  {
-    field: "Status"
-  },
-  {
-    field: "JobCategories",
-    headerName: "Categories",
-    label: "Category",
-    expand: {
-      navigationField: "JobCategories/Category",
-      select: "Name"
-    },
-    sortable: false,
-    flex: 1,
-    renderCell: (params) => params.row.JobCategories.map((c: any) => c["Category/Name"]).join(", ")
-  },
-  {
-    field: "Source/DisplayName",
-    expand: { navigationField: "Source", select: "DisplayName" },
-    headerName: "Source",
-    filterable: false,
-    sortable: false,
-    flex: 1,
-    valueGetter: (params) => params.row[params.field] ? params.row[params.field] : "Added Manually"
-  },
-  {
-    field: "Posted",
-    select: "Posted,Seen",
-    headerName: "Posted",
-    type: "date",
-    flex: 1.25,
-    renderCell: (params) => {
-      let date = dayjs.utc(params.value as string);
-      if (date.isBefore(dayjs.utc().subtract(14, "day"), "day")) {
-        return (<Fragment>{date.format("DD/MM/YYYY HH:mm")}</Fragment>);
-      } else {
-        let newTag = params.row.Seen ? null : (<Chip label="New" color="secondary" />);
-        return (
-          <Grid container justifyContent="space-between" alignItems="center">
-            <Tooltip
-              title={<Typography variant="body2">{date.local().format("DD/MM/YYYY HH:mm")}</Typography>}
-              placement="right"
-            >
-              <span>{date.fromNow()}</span>
-            </Tooltip>
-            {newTag}
-          </Grid>
-        );
-      }
-    }
-  },
-];
+const jobColumns = getJobColumns();
 
 const columnVisibility: ODataColumnVisibilityModel = {
-  "Salary": { xs: false, xl: true },
-  "Status": false,
-  "Categories": false,
-  "Source/DisplayName": false,
-  "Posted": { xs: false, sm: true }
+  "salary": { xs: false, xl: true },
+  "duplicateJob/title": false,
+  "status": false,
+  "categories": false,
+  "source/displayName": false,
+  "posted": { xs: false, sm: true }
 };
 
-const defaultSort: GridSortModel = [{ field: "Posted", sort: "desc" }]
+const defaultSort: GridSortModel = [{ field: "posted", sort: "desc" }]
 
-const alwaysSelect = ["Id"];
+const alwaysSelect = ["id"];
 
 const useStyles = makeStyles()((theme) => ({
   unseen: {
@@ -264,7 +195,7 @@ const Company = () => {
     }
   }, [id, companyData]);
 
-  const getClass = useCallback((params: GridRowParams) => params.row.Seen ? "" : classes.unseen, [classes]);
+  const getClass = useCallback((params: GridRowParams) => params.row.seen ? "" : classes.unseen, [classes]);
 
   useEffect(() => { fetchData() }, [fetchData]);
 
@@ -637,9 +568,8 @@ const Company = () => {
             <Tab>
               <ODataGrid
                 url="/api/odata/Job"
-                columns={columns}
+                columns={jobColumns}
                 columnVisibilityModel={columnVisibility}
-                getRowId={(row) => row["Id"]}
                 alwaysSelect={alwaysSelect}
                 defaultSortModel={defaultSort}
                 $filter={`CompanyId eq ${id}`}

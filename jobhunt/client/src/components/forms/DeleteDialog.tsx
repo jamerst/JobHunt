@@ -24,7 +24,7 @@ const DeleteDialog = ({ open, entityName, deleteUrl, onConfirm, onClose }: Delet
     }
 
     onClose();
-  }, [deleteUrl, onConfirm]);
+  }, [deleteUrl, onConfirm, onClose]);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth>

@@ -34,7 +34,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAlertService, AlertService>();
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<ICompanyService, CompanyService>();
+        services.AddScoped<ICompanyCategoryService, CompanyCategoryService>();
         services.AddScoped<IJobService, JobService>();
+        services.AddScoped<IJobCategoryService, JobCategoryService>();
         services.AddScoped<ISearchService, SearchService>();
         services.AddScoped<IWatchedPageService, WatchedPageService>();
         services.AddScoped<IWatchedPageChangeService, WatchedPageChangeService>();

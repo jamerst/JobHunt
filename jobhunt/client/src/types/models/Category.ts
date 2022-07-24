@@ -1,6 +1,6 @@
 type Category = {
-  Id: number,
-  Name: string
+  id: number,
+  name: string
 }
 
 export default Category;

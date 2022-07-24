@@ -1,9 +1,9 @@
 import Category from "./Category"
 
 type JobCategory = {
-  JobId: number,
-  CategoryId: number,
-  Category: Category
+  jobId: number,
+  categoryId: number,
+  category: Category
 }
 
 export default JobCategory;

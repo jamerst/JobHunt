@@ -12,7 +12,7 @@ import relativeTime from "dayjs/plugin/relativeTime"
 import Card from "components/Card";
 import CardBody from "components/CardBody";
 import CardHeader from "components/CardHeader";
-import CountrySelector from "components/CountrySelector";
+import CountrySelector from "components/forms/CountrySelector";
 import { IndeedSupportedCountries } from "utils/constants";
 import { ODataColumnVisibilityModel, ODataGrid, ODataGridColDef } from "o-data-grid";
 
@@ -27,7 +27,7 @@ dayjs.extend(relativeTime);
 
 const columns: ODataGridColDef[] = [
   {
-    field: "DisplayName",
+    field: "displayName",
     headerName: "Description",
     flex: 2,
     sortable: false,
@@ -36,13 +36,13 @@ const columns: ODataGridColDef[] = [
     }
   },
   {
-    field: "Enabled",
+    field: "enabled",
     headerName: "Enabled",
     renderCell: (params) => (<Switch defaultChecked={params.row.Enabled} onChange={(e) => { toggleEnabled(params.row.id) }} />)
   },
   {
-    field: "LastRun",
-    select: "LastRun,LastFetchSuccess",
+    field: "lastRun",
+    select: "lastRun,lastFetchSuccess",
     headerName: "Last Run",
     flex: 1,
     sortable: false,
@@ -72,10 +72,10 @@ const columns: ODataGridColDef[] = [
 ];
 
 const columnVisibility: ODataColumnVisibilityModel = {
-  "LastRun": { xs: false, md: true }
+  "lastRun": { xs: false, md: true }
 }
 
-const alwaysSelect = ["Id"];
+const alwaysSelect = ["id"];
 
 type Search = {
   provider: string,
@@ -122,7 +122,6 @@ const Searches: FunctionComponent = (props) => {
             url="/api/odata/Search"
             columns={columns}
             columnVisibilityModel={columnVisibility}
-            getRowId={(row) => row["Id"]}
             alwaysSelect={alwaysSelect}
             disableFilterBuilder
           />

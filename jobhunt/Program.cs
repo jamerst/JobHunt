@@ -25,10 +25,13 @@ builder.Host.ConfigureServices(services =>
     services.AddHostedService<PageScreenshotWorker>();
 });
 
-builder.Services.AddCors(builder =>
+if (builder.Environment.IsDevelopment())
 {
-    builder.AddDefaultPolicy(policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
-});
+    builder.Services.AddCors(builder =>
+    {
+        builder.AddDefaultPolicy(policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+    });
+}
 
 builder.Services
     .AddControllers(options =>

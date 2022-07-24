@@ -19,14 +19,14 @@ public abstract class ODataBaseController<T> : ODataController where T : class, 
     }
 
     [HttpGet]
-    [EnableQuery(MaxAnyAllExpressionDepth = 5)]
+    [EnableQuery(MaxAnyAllExpressionDepth = 5, MaxExpansionDepth = 3)]
     public virtual IActionResult Get()
     {
         return Ok(_service.Set.AsNoTracking());
     }
 
     [HttpGet]
-    [EnableQuery(MaxAnyAllExpressionDepth = 5)]
+    [EnableQuery(MaxAnyAllExpressionDepth = 5, MaxExpansionDepth = 3)]
     public virtual SingleResult<T> Get(int key) // parameter must be named "key" otherwise it doesn't work
     {
         // returning a SingleResult allows features such as $expand to work

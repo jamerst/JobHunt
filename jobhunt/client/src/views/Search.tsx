@@ -10,7 +10,7 @@ import dayjs from "dayjs"
 import Card from "components/Card";
 import CardHeader from "components/CardHeader";
 import CardBody from "components/CardBody";
-import CountrySelector from "components/CountrySelector";
+import CountrySelector from "components/forms/CountrySelector";
 import Grid from "components/Grid";
 import Tabs from "components/Tabs";
 import Tab from "components/Tab";

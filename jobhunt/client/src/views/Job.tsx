@@ -12,34 +12,34 @@ import CardBody from "components/CardBody";
 import Tabs from "components/Tabs";
 import Tab from "components/Tab";
 
-import { Job as JobResponse } from "types/models/Job";
+import JobEntity from "types/models/Job";
 
 import ReactMarkdown from "react-markdown";
 import { Map, MoreHoriz, OpenInNew, Subject } from "@mui/icons-material";
 import { Link as RouterLink } from "react-router-dom";
 import dayjs from "dayjs";
-import JobDialog from "./components/JobDialog";
-import DeleteDialog from "components/DeleteDialog";
+import JobDialog from "components/model-dialogs/JobDialog";
+import DeleteDialog from "components/forms/DeleteDialog";
 
 
 const Job = () => {
   const { id } = useParams();
 
-  const [jobData, setJobData] = useState<JobResponse>();
+  const [jobData, setJobData] = useState<JobEntity>();
   const [menuAnchor, setMenuAnchor] = useState<null | Element>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const navigate = useNavigate();
 
   const fetchData = useCallback(async () => {
-    const response = await fetch(`/api/odata/job(${id})?$expand=Company,ActualCompany,JobCategories/Category`, { method: "GET" });
+    const response = await fetch(`/api/odata/job(${id})?$expand=company,actualCompany,jobCategories($expand=Category)`, { method: "GET" });
     if (response.ok) {
-      const data = await response.json() as JobResponse;
+      const data = await response.json() as JobEntity;
 
-      if (!data.Seen) {
+      if (!data.seen) {
         const response = await fetch(`/api/jobs/seen/${id}`, { method: "PATCH" });
         if (response.ok) {
-          data.Seen = true;
+          data.seen = true;
         } else {
           console.error(`API request failed: PATCH /api/jobs/seen/${id}, HTTP ${response.status}`);
         }
@@ -62,7 +62,7 @@ const Job = () => {
     });
 
     if (response.ok) {
-      setJobData(data => data ? ({...data, Status: status}) : undefined);
+      setJobData(data => data ? ({...data, status: status}) : undefined);
     } else {
       console.error(`API request failed: PATCH /api/jobs/status/${id}, HTTP ${response.status}`);
     }
@@ -71,7 +71,7 @@ const Job = () => {
   const archiveJob = useCallback(async () => {
     const response = await fetch(`/api/jobs/archive/${id}?toggle=true`, { method: "PATCH" });
     if (response.ok) {
-      setJobData(data => data ? ({ ...data, Archived: !data.Archived }) : undefined);
+      setJobData(data => data ? ({ ...data, archived: !data.archived }) : undefined);
     } else {
       console.error(`API request failed: /api/jobs/archive/${id}, HTTP ${response.status}`);
     }
@@ -96,17 +96,17 @@ const Job = () => {
   return (
     <Container>
       <Helmet>
-        <title>{jobData.Title} - {jobData.Company?.Name} | JobHunt</title>
+        <title>{jobData.title} - {jobData.company?.name} | JobHunt</title>
       </Helmet>
       <JobDialog mode="edit" job={jobData} onUpdate={fetchData} />
-      <DeleteDialog open={deleteOpen} entityName="job" onClose={closeDelete} onConfirm={onDeleteConfirm} deleteUrl={`/api/odata/job(${jobData.Id})`} />
+      <DeleteDialog open={deleteOpen} entityName="job" onClose={closeDelete} onConfirm={onDeleteConfirm} deleteUrl={`/api/odata/job(${jobData.id})`} />
       <Card>
         <CardHeader>
           <Grid container alignItems="center" spacing={1}>
             <Grid item xs>
-              <Typography variant="h4">{jobData.Title}</Typography>
-              <Typography variant="h6"><Link sx={{ textDecoration: "underline" }} component={RouterLink} to={`/company/${jobData.CompanyId}`}>{jobData.Company?.Name}</Link>, {jobData.Location}</Typography>
-              {jobData.Archived ? (<Typography variant="subtitle1"><em>Archived</em></Typography>) : null}
+              <Typography variant="h4">{jobData.title}</Typography>
+              <Typography variant="h6"><Link sx={{ textDecoration: "underline" }} component={RouterLink} to={`/company/${jobData.companyId}`}>{jobData.company?.name}</Link>, {jobData.location}</Typography>
+              {jobData.archived ? (<Typography variant="subtitle1"><em>Archived</em></Typography>) : null}
             </Grid>
             <Grid item>
               <IconButton onClick={openMenu} size="large">
@@ -120,7 +120,7 @@ const Job = () => {
                 anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
                 transformOrigin={{ vertical: "top", horizontal: "right" }}
               >
-                <MenuItem onClick={archiveJob}>{jobData.Archived ? "Restore" : "Archive"} Job</MenuItem>
+                <MenuItem onClick={archiveJob}>{jobData.archived ? "Restore" : "Archive"} Job</MenuItem>
                 <MenuItem onClick={deleteJob}>Delete Job</MenuItem>
               </Menu>
             </Grid>
@@ -128,9 +128,9 @@ const Job = () => {
         </CardHeader>
         <CardBody>
           <Box mb={2}>
-            <Typography variant="h6">{jobData.Salary ?? "Unknown Salary"}</Typography>
-            <Typography variant="subtitle1">Posted {dayjs.utc(jobData.Posted).local().format("DD/MM/YYYY HH:mm")}</Typography>
-            <Typography variant="subtitle2">{jobData.Source ? `From "${jobData.Source.DisplayName}"` : "Created manually"}</Typography>
+            <Typography variant="h6">{jobData.salary ?? "Unknown Salary"}</Typography>
+            <Typography variant="subtitle1">Posted {dayjs.utc(jobData.posted).local().format("DD/MM/YYYY HH:mm")}</Typography>
+            <Typography variant="subtitle2">{jobData.source ? `From "${jobData.source.displayName}"` : "Created manually"}</Typography>
             <Box mt={1}>
               {/* <Categories
                 categories={jobData.categories}
@@ -149,7 +149,7 @@ const Job = () => {
                     <InputLabel id="status-select-label">Status</InputLabel>
                     <Select
                       labelId="status-select-label"
-                      value={jobData.Status}
+                      value={jobData.status}
                       onChange={updateStatus}
                       label="Status"
                     >
@@ -166,12 +166,12 @@ const Job = () => {
 
             <Box my={2}>
               <Grid container spacing={2}>
-                { jobData.Url &&
+                { jobData.url &&
                   <Grid item>
-                    <Button variant="contained" color="secondary" startIcon={<Subject/>} endIcon={<OpenInNew/>} component="a" href={jobData.Url} target="_blank">View Listing</Button>
+                    <Button variant="contained" color="secondary" startIcon={<Subject/>} endIcon={<OpenInNew/>} component="a" href={jobData.url} target="_blank">View Listing</Button>
                   </Grid>
                 }
-                {jobData.Latitude && jobData.Longitude &&
+                {jobData.latitude && jobData.longitude &&
                   <Grid item>
                     <Button
                       variant="contained"
@@ -179,7 +179,7 @@ const Job = () => {
                       startIcon={<Map />}
                       endIcon={<OpenInNew />}
                       component="a"
-                      href={`https://www.google.com/maps/search/?api=1&query=${jobData.Latitude},${jobData.Longitude}`}
+                      href={`https://www.google.com/maps/search/?api=1&query=${jobData.latitude},${jobData.longitude}`}
                       target="_blank"
                     >
                       View Location
@@ -191,12 +191,12 @@ const Job = () => {
 
             <Tabs labels={["Description", "Notes"]}>
               <Tab>
-                <ExpandableSnippet hidden={!jobData.Description}>
-                  <ReactMarkdown skipHtml>{jobData.Description ? jobData.Description : "_No description available_"}</ReactMarkdown>
+                <ExpandableSnippet hidden={!jobData.description}>
+                  <ReactMarkdown skipHtml>{jobData.description ? jobData.description : "_No description available_"}</ReactMarkdown>
                 </ExpandableSnippet>
               </Tab>
               <Tab>
-                <ReactMarkdown skipHtml>{jobData.Notes ? jobData.Notes : "_No notes added_"}</ReactMarkdown>
+                <ReactMarkdown skipHtml>{jobData.notes ? jobData.notes : "_No notes added_"}</ReactMarkdown>
               </Tab>
             </Tabs>
 
