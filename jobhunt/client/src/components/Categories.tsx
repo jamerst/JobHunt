@@ -1,23 +1,26 @@
-import React, { FunctionComponent, useCallback, useState } from "react"
-import { IconButton, Chip, Tooltip, InputBase, Autocomplete, createFilterOptions, autocompleteClasses, chipClasses } from "@mui/material"
+import React, { FunctionComponent, useCallback, useMemo, useState } from "react"
+import { IconButton, Chip, Tooltip, InputBase, Autocomplete, createFilterOptions, autocompleteClasses, chipClasses, AutocompleteRenderInputParams, FilterOptionsState } from "@mui/material"
 import Grid from "components/Grid";
 import { Add } from "@mui/icons-material"
 import makeStyles from "makeStyles";
+import { ICategoryLink } from "types/models/ICategoryLink";
+import Category from "types/models/Category";
+import { ODataSingleResult } from "types/odata/ODataSingleResult";
 
-export type Category = {
-  id?: number,
-  name: string,
-  displayName?: string,
-  colour?: "primary" | "secondary" | "default" | undefined
+type CategoryOption = Category & {
+  displayName?: string
+}
+
+type CategoryRequest = Partial<Omit<ICategoryLink, "category">> & {
+  category?: Partial<Category>
 }
 
 type CategoriesProps = {
-  categories: Category[],
-  fetchUrl?: string,
-  updateUrl?: string,
-  onCategoryAdd: (cats: Category[]) => void,
-  onCategoryRemove: (cats: Category[]) => void,
-  openByDefault?: boolean
+  initialValue: ICategoryLink[],
+  fetchUrl: string,
+  createUrl: string,
+  getDeleteUrl: (categoryId: number) => string,
+  getEntity: (c: Partial<ICategoryLink>) => Partial<ICategoryLink>
 }
 
 const useStyles = makeStyles()((theme) => ({
@@ -34,13 +37,35 @@ const useStyles = makeStyles()((theme) => ({
   }
 }));
 
-const filter = createFilterOptions<Category>({ ignoreCase: true, trim: true });
+const getOptionLabel = (o: string | CategoryOption) => {
+  const category = o as CategoryOption;
+  if (category) {
+    return category.displayName ?? category.name;
+  } else {
+    return o as string;
+  }
+};
 
-const Categories: FunctionComponent<CategoriesProps> = ({ children, categories, updateUrl, fetchUrl, onCategoryAdd, onCategoryRemove, openByDefault }) => {
-  const [adding, setAdding] = useState<boolean>(openByDefault ?? false);
-  const [newCategory, setNewCategory] = useState<Category | string | null>(null);
-  const [allCategories, setAllCategories] = useState<Category[]>([]);
+const filter = createFilterOptions<CategoryOption>({ ignoreCase: true, trim: true });
+const filterOptions = (options: CategoryOption[], params: FilterOptionsState<CategoryOption>) => {
+  const filtered = filter(options, params);
+  if (params.inputValue && !options.some((c) => params.inputValue.toLowerCase() === c.name.toLowerCase())) {
+    filtered.push({
+      id: 0,
+      displayName: `Add "${params.inputValue}"`,
+      name: params.inputValue
+    });
+  }
+
+  return filtered
+};
+
+const Categories: FunctionComponent<CategoriesProps> = ({ children, initialValue, fetchUrl, createUrl, getDeleteUrl, getEntity }) => {
+  const [open, setOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+  const [categories, setCategories] = useState(initialValue);
+  const [allCategories, setAllCategories] = useState<CategoryOption[]>([]);
+  const [newCategory, setNewCategory] = useState<Category | string | null>(null);
 
   const { classes, cx } = useStyles();
 
@@ -49,90 +74,88 @@ const Categories: FunctionComponent<CategoriesProps> = ({ children, categories, 
       return;
     }
 
-    const response = await fetch(fetchUrl ?? "/api/categories");
+    const response = await fetch(fetchUrl);
     if (response.ok) {
       const data = await response.json() as Category[];
       setAllCategories(data);
       setLoading(false);
     } else {
-      console.error(`API request failed: GET /api/categories, HTTP ${response.status}`);
+      console.error(`API request failed: GET ${fetchUrl}, HTTP ${response.status}`);
     }
   }, [allCategories, fetchUrl]);
-
-  if (openByDefault === true) {
-    fetchCategories();
-  }
 
   const addCategory = useCallback(async (keepOpen: boolean) => {
     if (!newCategory) {
       return;
     }
 
-    let newName;
-    let newId;
-    let refresh = false;
+    let isNewCategory = false;
+    const requestData: CategoryRequest = getEntity({});
     if (typeof newCategory === "string") {
-      newName = newCategory;
-      refresh = true;
+      isNewCategory = true;
+      requestData.category = {
+        name: newCategory
+      };
+    } else if (!newCategory.id) {
+      isNewCategory = true;
+      requestData.category = {
+        name: newCategory.name
+      };
     } else {
-      newName = newCategory?.name;
-      newId = newCategory?.id;
+      requestData.categoryId = newCategory.id;
     }
 
-    if (!newName) {
-      setAdding(false);
-      return;
+    const response = await fetch(createUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(requestData)
+    });
+
+    if (response.ok) {
+      const data = await response.json() as ICategoryLink;
+
+      if (data) {
+        if (isNewCategory) {
+          data.category = { id: data.categoryId, name: requestData.category!.name! };
+          setAllCategories((c) => [...c, { id: data.categoryId, name: data.category.name }]);
+        } else {
+          data.category = allCategories.find(c => c.id === data.categoryId)!;
+        }
+
+        setCategories((c) => [...c, data]);
+      }
+    } else {
+      console.error(`API request failed: POST ${createUrl}, HTTP ${response.status}`);
     }
 
     setNewCategory(null);
 
-    const newCategories = [...categories];
-    newCategories.push({ id: newId, name: newName });
-    if (updateUrl) {
-      const response = await fetch(updateUrl, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json"},
-        body: JSON.stringify(newCategories)
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        onCategoryAdd(data as Category[]);
-        if (refresh) {
-          fetchCategories(true);
-        }
-      } else {
-        console.error(`API request failed: ${updateUrl}, HTTP ${response.status}`);
-      }
-    } else {
-      onCategoryAdd(newCategories);
-    }
-
     if (!keepOpen) {
-      setAdding(false);
+      setOpen(false);
     }
-  }, [categories, updateUrl, onCategoryAdd, newCategory, fetchCategories])
+  }, [createUrl, newCategory, allCategories, getEntity])
 
   const removeCategory = useCallback(async (id?: number) => {
-    if (!id) return;
+    if (!id) {
+      return;
+    }
 
-    const newCategories = categories.filter(c => c.id !== id);
-    if (updateUrl) {
-      const response = await fetch(updateUrl, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json"},
-        body: JSON.stringify(newCategories)
-      });
+    const url = getDeleteUrl(id);
+    const response = await fetch(url, { method: "DELETE" });
+    if (response.ok) {
+      setCategories((c1) => c1.filter(c2 => c2.categoryId !== id));
 
-      if (response.ok) {
-        onCategoryRemove(newCategories);
-      } else {
-        console.error(`API request failed: ${updateUrl}, HTTP ${response.status}`);
+      const data = await response.json() as ODataSingleResult<boolean>;
+      if (data?.value === true) {
+        // remove category option if category deleted
+        setAllCategories((c) => c.filter(x => x.id !== id));
       }
     } else {
-      onCategoryRemove(newCategories);
+      console.error(`API request failed: POST ${url}, HTTP ${response.status}`);
     }
-  }, [categories, updateUrl, onCategoryRemove]);
+  }, [getDeleteUrl]);
+
+  const onChange = useCallback((_, val: Category | string | null) => setNewCategory(val), []);
 
   const handleKeyUp = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -140,59 +163,55 @@ const Categories: FunctionComponent<CategoriesProps> = ({ children, categories, 
       if ((e.target as HTMLInputElement).value) {
         addCategory(true);
       } else {
-        setAdding(false);
+        setOpen(false);
         setNewCategory(null);
       }
     } else if (e.key === "Escape") {
-      setAdding(false);
+      setOpen(false);
       setNewCategory(null);
     }
   }, [addCategory]);
 
   const handleBlur = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
     if (!(e.target as HTMLInputElement).value) {
-      setAdding(false);
+      setOpen(false);
     }
   }, []);
+
+  const renderInput = useCallback((params: AutocompleteRenderInputParams) => {
+    const { InputLabelProps, InputProps, ...rest } = params;
+    return <InputBase
+      {...rest}
+      {...params.InputProps}
+      className={cx(classes.input, chipClasses.root, chipClasses.label)}
+      autoFocus
+      placeholder="Enter a category"
+    />
+  }, [cx, classes]);
+
+  const filteredOptions = useMemo(() =>
+    allCategories.filter(c1 => !categories.some(c2 => c2.categoryId === c1.id)),
+    [allCategories, categories]
+  );
 
   return (
     <Grid container spacing={1} alignItems="center">
       {children}
       {categories.map(c =>
-        (<Grid item key={`category-${c.id}`}><Chip color={c.colour} label={c.name} onDelete={() => removeCategory(c.id)}/></Grid>)
+        (<Grid item key={`category-${c.categoryId}`}><Chip label={c.category.name} onDelete={() => removeCategory(c.categoryId)}/></Grid>)
       )}
 
       {
-        adding &&
+        open &&
         <Grid item>
           <Autocomplete
-            options={allCategories.filter(c1 => !categories.some(c2 => c2.id === c1.id))}
-            getOptionLabel={(option) => (option as Category)?.displayName ?? (option as Category)?.name ?? ""}
-            renderInput={(params) => {
-              const { InputLabelProps, InputProps, ...rest } = params;
-              return <InputBase
-                {...rest}
-                {...params.InputProps}
-                className={cx(classes.input, chipClasses.root, chipClasses.label)}
-                autoFocus
-                placeholder="Enter a category"
-              />
-            }}
+            options={filteredOptions}
+            getOptionLabel={getOptionLabel}
+            renderInput={renderInput}
             freeSolo
             value={newCategory ?? ""}
-            onChange={(_, val) => setNewCategory(val)}
-            filterOptions={(options, params) => {
-              const filtered = filter(options, params);
-
-              if (updateUrl && params.inputValue && !options.some((o) => params.inputValue.toLowerCase() === o.name.toLowerCase())) {
-                filtered.push({
-                  displayName: `Add "${params.inputValue}"`,
-                  name: params.inputValue
-                });
-              }
-
-              return filtered;
-            }}
+            onChange={onChange}
+            filterOptions={filterOptions}
             loading={loading}
             onKeyUp={handleKeyUp}
             onBlur={handleBlur}
@@ -202,7 +221,7 @@ const Categories: FunctionComponent<CategoriesProps> = ({ children, categories, 
 
       <Grid item>
         <Tooltip title="Add category" placement="right">
-          <IconButton size="small" onClick={() => { fetchCategories(false); setAdding(!adding); addCategory(false); }}><Add/></IconButton>
+          <IconButton size="small" onClick={() => { fetchCategories(false); setOpen(!open); addCategory(false); }}><Add/></IconButton>
         </Tooltip>
       </Grid>
     </Grid>

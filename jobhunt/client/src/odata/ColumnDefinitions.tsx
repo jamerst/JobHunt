@@ -17,6 +17,6 @@ export const createCategoryColumn = (field: string, navigationCollection: string
   flex: 1,
   renderCustomFilter: (value, setValue) => <ODataCategoryFilter value={value} setValue={setValue} fetchUrl={fetchUrl} />,
   getCustomFilterString: (_, value) => getCategoryFilterString(value, navigationCollection),
-  renderCell: (params) => { console.debug(params); return params.row[navigationCollection].map((c: any) => c["category/name"]).join(", ") },
+  renderCell: (params) => params.row[navigationCollection].map((c: any) => c["category/name"]).join(", "),
   ...props
 });

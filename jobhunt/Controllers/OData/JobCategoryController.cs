@@ -26,9 +26,10 @@ public class JobCategoryController : ODataController
     [HttpDelete]
     public virtual async Task<IActionResult> Delete(int keycategoryId, int keyjobId)
     {
-        if (await _service.DeleteAsync(keycategoryId, keyjobId))
+        bool? result = await _service.DeleteAsync(keycategoryId, keyjobId);
+        if (result.HasValue)
         {
-            return Ok();
+            return Ok(result.Value);
         }
         else
         {

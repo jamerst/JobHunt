@@ -15,7 +15,7 @@ import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
 
 import Card from "components/Card";
-import Categories, { Category } from "components/Categories";
+import Categories from "components/Categories";
 import EditableComponent from "components/EditableComponent";
 import CardHeader from "components/CardHeader";
 import CardBody from "components/CardBody";
@@ -38,7 +38,7 @@ type CompanyResponse = {
   linkedIn?: string,
   endole?: string,
   watchedPages: WatchedPage[],
-  categories: Category[],
+  // categories: Category[],
   alternateNames?: string[],
   latitude?: number,
   longitude?: number,
@@ -271,12 +271,12 @@ const Company = () => {
         </CardHeader>
         <CardBody>
           <Box mt={1}>
-            <Categories
+            {/* <Categories
               categories={companyData.categories}
-              updateUrl={`/api/companies/categories/${id}`}
+              createUrl={`/api/companies/categories/${id}`}
               onCategoryAdd={(cats) => setCompanyData({ ...companyData, categories: cats})}
               onCategoryRemove={(cats) => setCompanyData({ ...companyData, categories: cats})}
-            />
+            /> */}
           </Box>
           <Box my={2}>
             { editing ?

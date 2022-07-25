@@ -19,22 +19,24 @@ public class CompanyCategoryService : ICompanyCategoryService {
         return entity;
     }
 
-    public async Task<bool> DeleteAsync(int categoryId, int companyId)
+    public async Task<bool?> DeleteAsync(int categoryId, int companyId)
     {
         CompanyCategory? entity = await _context.CompanyCategories
             .FirstOrDefaultAsync(c => c.CategoryId == categoryId && c.CompanyId == companyId);
 
         if (entity == default)
         {
-            return false;
+            return null;
         }
 
+        bool deletedCategory = false;
         if (!_context.CompanyCategories.Any(cc => cc.CategoryId == categoryId && cc.CompanyId == companyId)
             && !_context.JobCategories.Any(jc => jc.CategoryId == categoryId))
         {
             Category? category = await _context.Categories.FirstOrDefaultAsync(c => c.Id == categoryId);
             if (category != default)
             {
+                deletedCategory = true;
                 _context.Categories.Remove(category);
             }
         }
@@ -43,12 +45,12 @@ public class CompanyCategoryService : ICompanyCategoryService {
 
         await _context.SaveChangesAsync();
 
-        return true;
+        return deletedCategory;
     }
 }
 
 public interface ICompanyCategoryService
 {
     Task<CompanyCategory> CreateAsync(CompanyCategory entity);
-    Task<bool> DeleteAsync(int categoryId, int companyId);
+    Task<bool?> DeleteAsync(int categoryId, int companyId);
 }
