@@ -22,6 +22,7 @@ import JobDialog from "components/model-dialogs/JobDialog";
 import DeleteDialog from "components/forms/DeleteDialog";
 import { ICategoryLink } from "types/models/ICategoryLink";
 import JobCategory from "types/models/JobCategory";
+import EditableMarkdown from "components/forms/EditableMarkdown";
 
 
 const Job = () => {
@@ -82,13 +83,13 @@ const Job = () => {
   }, [id]);
 
   const getCategoryDeleteUrl = useCallback(
-    (catId: number) => `/api/odata/jobCategory(categoryId=${catId},jobId=${jobData!.id})`,
-    [jobData]
+    (catId: number) => `/api/odata/jobCategory(categoryId=${catId},jobId=${id})`,
+    [id]
   );
 
   const getCategoryEntity = useCallback(
-    (cat: Partial<ICategoryLink>) => ({ ...cat as JobCategory, jobId: jobData!.id }),
-    [jobData]
+    (cat: Partial<ICategoryLink>) => ({ ...cat as JobCategory, jobId: id }),
+    [id]
   );
 
   const openMenu = useCallback((e: React.MouseEvent) => setMenuAnchor(e.currentTarget), []);
@@ -97,6 +98,24 @@ const Job = () => {
   const deleteJob = useCallback(() => setDeleteOpen(true), []);
   const closeDelete = useCallback(() => setDeleteOpen(false), []);
   const onDeleteConfirm = useCallback(() => navigate("/"), [navigate]);
+
+  const onNotesSave = useCallback(async (value: string) => {
+    const response = await fetch(`/api/odata/job(${id})`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        notes: value
+      }),
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (response.ok) {
+      setJobData(j => j ? ({ ...j, notes: value }) : undefined);
+    } else {
+      console.error(`API request failed PATCH /api/odata/jobs(${id}), HTTP ${response.status}`);
+    }
+  }, [id]);
 
   useEffect(() => { fetchData() }, [fetchData]);
 
@@ -208,7 +227,7 @@ const Job = () => {
                 </ExpandableSnippet>
               </Tab>
               <Tab>
-                <ReactMarkdown skipHtml>{jobData.notes ? jobData.notes : "_No notes added_"}</ReactMarkdown>
+                <EditableMarkdown value={jobData.notes} emptyText="_No notes added_" label="Notes" onSave={onNotesSave}/>
               </Tab>
             </Tabs>
 
