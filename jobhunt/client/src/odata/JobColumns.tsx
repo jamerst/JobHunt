@@ -100,19 +100,26 @@ export const getJobColumns = (): ODataGridColDef[] => {
       renderCell: (params) => (
         <Link
           component={RouterLink}
-          to={`/company/${params.row["company/id"]}`}
+          to={`/company/${params.row["actualCompany/id"] ?? params.row["company/id"]}`}
         >
           <Grid container spacing={1} alignItems="center" wrap="nowrap">
-            <Grid item>
-              {params.value}
-            </Grid>
+            {
+              params.row["actualCompany/id"]
+                ? <Grid item>
+                    {params.row["actualCompany/name"]} (posted by {params.value})
+                  </Grid>
+                : <Grid item>{params.value}</Grid>
+            }
             {params.row["company/recruiter"] && <Grid item><Chip sx={{ cursor: "pointer" }} label="Recruiter" size="small" /></Grid>}
             {params.row["company/blacklisted"] && <Grid item><Chip sx={{ cursor: "pointer" }} label="Blacklisted" size="small" color="error" /></Grid>}
             {params.row["company/watched"] && <Grid item sx={{ display: "flex", alignItems: "center" }}><Visibility fontSize="small" /></Grid>}
           </Grid>
         </Link>
       ),
-      expand: { navigationField: "company", select: "id,name,recruiter,blacklisted,watched" },
+      expand: [
+        { navigationField: "company", select: "id,name,recruiter,blacklisted,watched" },
+        { navigationField: "actualCompany", select: "id,name" }
+      ],
       autocompleteGroup: "Company"
     },
     {

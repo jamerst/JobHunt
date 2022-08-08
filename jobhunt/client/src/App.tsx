@@ -15,6 +15,8 @@ import Jobs from 'views/Jobs';
 import Search from 'views/Search';
 import Searches from 'views/Searches';
 import PageChanges from 'views/PageChanges';
+import LoadingContext from 'context/LoadingContext';
+import LoadingBackdrop from 'components/LoadingBackdrop';
 
 export const muiCache = createCache({
   key: "mui",
@@ -26,6 +28,16 @@ function App() {
     localStorage.getItem("theme") === "dark"
     || (window.matchMedia("(prefers-color-scheme: dark)").matches && localStorage.getItem("theme") === null)
   );
+
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState(false);
+
+  const loadingState = useMemo(() => ({
+    setLoading: setLoading,
+    setSuccess: setSuccess,
+    setError: setError
+  }), []);
 
   const theme = useMemo(() => {
     const theme = createTheme({
@@ -103,56 +115,59 @@ function App() {
     <CacheProvider value={muiCache}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={
-              <MainLayout pageTitle="Dashboard" darkMode={darkMode} setDarkMode={setDarkMode}>
-                <Dashboard/>
-              </MainLayout>
-            } />
-            <Route path="/jobs" element={
-              <MainLayout pageTitle="Saved Jobs" darkMode={darkMode} setDarkMode={setDarkMode}>
-                <Jobs/>
-              </MainLayout>
-            } />
+        <LoadingContext.Provider value={loadingState}>
+          <LoadingBackdrop loading={loading} success={success} error={error} />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={
+                <MainLayout pageTitle="Dashboard" darkMode={darkMode} setDarkMode={setDarkMode}>
+                  <Dashboard/>
+                </MainLayout>
+              } />
+              <Route path="/jobs" element={
+                <MainLayout pageTitle="Saved Jobs" darkMode={darkMode} setDarkMode={setDarkMode}>
+                  <Jobs/>
+                </MainLayout>
+              } />
 
-            <Route path="/job/:id" element={
-              <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
-                <Job/>
-              </MainLayout>
-            } />
+              <Route path="/job/:id" element={
+                <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+                  <Job/>
+                </MainLayout>
+              } />
 
-            <Route path="/companies" element={
-              <MainLayout pageTitle="Saved Companies" darkMode={darkMode} setDarkMode={setDarkMode}>
-                <Companies/>
-              </MainLayout>
-            } />
+              <Route path="/companies" element={
+                <MainLayout pageTitle="Saved Companies" darkMode={darkMode} setDarkMode={setDarkMode}>
+                  <Companies/>
+                </MainLayout>
+              } />
 
-            <Route path="/company/:id" element={
-              <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
-                <Company/>
-              </MainLayout>
-            } />
+              <Route path="/company/:id" element={
+                <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+                  <Company/>
+                </MainLayout>
+              } />
 
-            <Route path="/searches" element={
-              <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
-                <Searches/>
-              </MainLayout>
-            } />
+              <Route path="/searches" element={
+                <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+                  <Searches/>
+                </MainLayout>
+              } />
 
-            <Route path="/search/:id" element={
-              <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
-                <Search/>
-              </MainLayout>
-            } />
+              <Route path="/search/:id" element={
+                <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+                  <Search/>
+                </MainLayout>
+              } />
 
-            <Route path="/page-changes/:id" element={
-              <MainLayout pageTitle="Page Changes" darkMode={darkMode} setDarkMode={setDarkMode}>
-                <PageChanges/>
-              </MainLayout>
-            } />
-          </Routes>
-        </BrowserRouter>
+              <Route path="/page-changes/:id" element={
+                <MainLayout pageTitle="Page Changes" darkMode={darkMode} setDarkMode={setDarkMode}>
+                  <PageChanges/>
+                </MainLayout>
+              } />
+            </Routes>
+          </BrowserRouter>
+        </LoadingContext.Provider>
       </ThemeProvider>
     </CacheProvider>
   );

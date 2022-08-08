@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react"
+import React, { Fragment, useCallback, useContext, useEffect, useState } from "react"
 import { Box, Button, Container, FormControl, IconButton, InputLabel, Menu, MenuItem, Select, Typography, Link, Chip, SelectChangeEvent } from "@mui/material"
 import Grid from "components/Grid";
 import { useNavigate, useParams } from "react-router"
@@ -23,6 +23,7 @@ import DeleteDialog from "components/forms/DeleteDialog";
 import { ICategoryLink } from "types/models/ICategoryLink";
 import JobCategory from "types/models/JobCategory";
 import EditableMarkdown from "components/forms/EditableMarkdown";
+import LoadingContext from "context/LoadingContext";
 
 
 const Job = () => {
@@ -31,6 +32,8 @@ const Job = () => {
   const [jobData, setJobData] = useState<JobEntity>();
   const [menuAnchor, setMenuAnchor] = useState<null | Element>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const loadingContext = useContext(LoadingContext);
 
   const navigate = useNavigate();
 
@@ -50,11 +53,13 @@ const Job = () => {
 
       setJobData(data);
     } else {
+      loadingContext.setError(true);
       console.error(`API request failed: GET /api/jobs/${id}, HTTP ${response.status}`);
     }
-  }, [id]);
+  }, [id, loadingContext]);
 
   const updateStatus = useCallback(async (e: SelectChangeEvent<string>) => {
+    loadingContext.setLoading(true);
     const status = e.target.value;
     const response = await fetch(`/api/jobs/status/${id}`, {
       method: "PATCH",
@@ -66,21 +71,24 @@ const Job = () => {
 
     if (response.ok) {
       setJobData(data => data ? ({...data, status: status}) : undefined);
+      loadingContext.setSuccess(true);
     } else {
+      loadingContext.setError(true);
       console.error(`API request failed: PATCH /api/jobs/status/${id}, HTTP ${response.status}`);
     }
-  }, [id]);
+  }, [id, loadingContext]);
 
   const archiveJob = useCallback(async () => {
     const response = await fetch(`/api/jobs/archive/${id}?toggle=true`, { method: "PATCH" });
     if (response.ok) {
       setJobData(data => data ? ({ ...data, archived: !data.archived }) : undefined);
     } else {
+      loadingContext.setError(true);
       console.error(`API request failed: /api/jobs/archive/${id}, HTTP ${response.status}`);
     }
 
     setMenuAnchor(null);
-  }, [id]);
+  }, [id, loadingContext]);
 
   const getCategoryDeleteUrl = useCallback(
     (catId: number) => `/api/odata/jobCategory(categoryId=${catId},jobId=${id})`,
@@ -100,6 +108,7 @@ const Job = () => {
   const onDeleteConfirm = useCallback(() => navigate("/"), [navigate]);
 
   const onNotesSave = useCallback(async (value: string) => {
+    loadingContext.setLoading(true);
     const response = await fetch(`/api/odata/job(${id})`, {
       method: "PATCH",
       body: JSON.stringify({
@@ -112,10 +121,12 @@ const Job = () => {
 
     if (response.ok) {
       setJobData(j => j ? ({ ...j, notes: value }) : undefined);
+      loadingContext.setSuccess(true);
     } else {
+      loadingContext.setError(true);
       console.error(`API request failed PATCH /api/odata/jobs(${id}), HTTP ${response.status}`);
     }
-  }, [id]);
+  }, [id, loadingContext]);
 
   useEffect(() => { fetchData() }, [fetchData]);
 
@@ -128,14 +139,26 @@ const Job = () => {
       <Helmet>
         <title>{jobData.title} - {jobData.company?.name} | JobHunt</title>
       </Helmet>
+
       <JobDialog mode="edit" job={jobData} onUpdate={fetchData} />
       <DeleteDialog open={deleteOpen} entityName="job" onClose={closeDelete} onConfirm={onDeleteConfirm} deleteUrl={`/api/odata/job(${jobData.id})`} />
+
       <Card>
         <CardHeader>
           <Grid container alignItems="center" spacing={1}>
             <Grid item xs>
               <Typography variant="h4">{jobData.title}</Typography>
-              <Typography variant="h6"><Link sx={{ textDecoration: "underline" }} component={RouterLink} to={`/company/${jobData.companyId}`}>{jobData.company?.name}</Link>, {jobData.location}</Typography>
+              <Typography variant="h6">
+                {
+                  jobData.actualCompanyId
+                    ? <Fragment>
+                        <Link sx={{ textDecoration: "underline" }} component={RouterLink} to={`/company/${jobData.actualCompanyId}`}>{jobData.actualCompany?.name}</Link>
+                        &nbsp;(posted by <Link sx={{ textDecoration: "underline" }} component={RouterLink} to={`/company/${jobData.companyId}`}>{jobData.company?.name}</Link>)
+                      </Fragment>
+                    : <Link sx={{ textDecoration: "underline" }} component={RouterLink} to={`/company/${jobData.companyId}`}>{jobData.company?.name}</Link>
+                }
+                , {jobData.location}
+              </Typography>
               {jobData.archived ? (<Typography variant="subtitle1"><em>Archived</em></Typography>) : null}
             </Grid>
             <Grid item>
