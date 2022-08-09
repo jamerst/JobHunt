@@ -1,0 +1,1 @@
+export const toBase64Json = (obj: any) => Buffer.from(JSON.stringify(obj), "utf-8").toString("base64");

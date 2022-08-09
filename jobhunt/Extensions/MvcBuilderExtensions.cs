@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.OData;
+using Microsoft.AspNetCore.OData.Batch;
 using Microsoft.AspNetCore.OData.Query.Expressions;
 
 using JobHunt.Data.OData;
@@ -19,6 +20,8 @@ public static class MvcBuilderExtensions
                 .SetMaxTop(500);
 
             options.TimeZone = TimeZoneInfo.Utc;
+
+            var batchHandler = new DefaultODataBatchHandler();
             options.AddRouteComponents(
                 "api/odata",
                 ODataModelBuilder.Build(),
@@ -28,6 +31,7 @@ public static class MvcBuilderExtensions
                     .AddScoped<IFilterBinder, CustomFilterBinder>()
                     .AddScoped<IOrderByBinder, CustomOrderByBinder>()
                     .AddScoped<ISelectExpandBinder, CustomSelectExpandBinder>()
+                    .AddSingleton<ODataBatchHandler>(batchHandler)
             );
         });
 

@@ -1,4 +1,5 @@
 import CompanyCategory from "./CompanyCategory";
+import CompanyName from "./CompanyName";
 
 type Company = {
   id: number,
@@ -16,7 +17,8 @@ type Company = {
   endole?: string,
   recruiter: boolean,
 
-  companyCategories: CompanyCategory[]
+  companyCategories: CompanyCategory[],
+  alternateNames: CompanyName[]
 }
 
 export default Company;

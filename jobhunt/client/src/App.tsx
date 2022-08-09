@@ -5,6 +5,7 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { CacheProvider } from "@emotion/react";
 import createCache from "@emotion/cache"
 import { blue, purple } from '@mui/material/colors';
+import { RecoilRoot } from 'recoil';
 
 import MainLayout from "layouts/MainLayout"
 import Companies from 'views/Companies';
@@ -15,8 +16,7 @@ import Jobs from 'views/Jobs';
 import Search from 'views/Search';
 import Searches from 'views/Searches';
 import PageChanges from 'views/PageChanges';
-import LoadingContext from 'context/LoadingContext';
-import LoadingBackdrop from 'components/LoadingBackdrop';
+import FeedbackBackdrop from 'components/FeedbackBackdrop';
 
 export const muiCache = createCache({
   key: "mui",
@@ -28,16 +28,6 @@ function App() {
     localStorage.getItem("theme") === "dark"
     || (window.matchMedia("(prefers-color-scheme: dark)").matches && localStorage.getItem("theme") === null)
   );
-
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState(false);
-
-  const loadingState = useMemo(() => ({
-    setLoading: setLoading,
-    setSuccess: setSuccess,
-    setError: setError
-  }), []);
 
   const theme = useMemo(() => {
     const theme = createTheme({
@@ -115,8 +105,8 @@ function App() {
     <CacheProvider value={muiCache}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <LoadingContext.Provider value={loadingState}>
-          <LoadingBackdrop loading={loading} success={success} error={error} />
+        <RecoilRoot>
+          <FeedbackBackdrop />
           <BrowserRouter>
             <Routes>
               <Route path="/" element={
@@ -167,7 +157,7 @@ function App() {
               } />
             </Routes>
           </BrowserRouter>
-        </LoadingContext.Provider>
+        </RecoilRoot>
       </ThemeProvider>
     </CacheProvider>
   );

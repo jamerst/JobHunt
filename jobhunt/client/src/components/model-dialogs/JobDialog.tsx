@@ -1,4 +1,4 @@
-import React, { Fragment, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Fab } from "@mui/material";
@@ -24,7 +24,7 @@ import { getChangedProperties } from "utils/forms";
 import Job from "types/models/Job";
 import Company from "types/models/Company";
 import { ODataMultipleResult } from "types/odata/ODataMultipleResult";
-import LoadingContext from "context/LoadingContext";
+import { useFeedback } from "utils/hooks";
 
 type JobDialogProps = {
   mode: "edit" | "create",
@@ -54,7 +54,7 @@ const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const companiesFetched = useRef(false);
 
-  const loadingContext = useContext(LoadingContext);
+  const { showLoading, showSuccess, showError } = useFeedback();
 
   const { classes } = useStyles();
   const navigate = useNavigate();
@@ -70,7 +70,7 @@ const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
   );
 
   const onSubmit = useCallback(async (values: FormJob) => {
-    loadingContext.setLoading(true);
+    showLoading();
 
     const requestData: Job = { ...values, posted: values.Posted.format("YYYY-MM-DDTHH:mm:ss") + "Z" };
 
@@ -89,7 +89,7 @@ const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
           navigate(`/job/${responseData.id}`);
         }
       } else {
-        loadingContext.setError(true);
+        showError();
         console.error(`API request failed: POST /api/odata/job, HTTP ${response.status}`);
       }
     } else if (mode === "edit" && job) {
@@ -104,18 +104,18 @@ const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
       });
 
       if (response.ok) {
-        loadingContext.setSuccess(true);
+        showSuccess();
         if (onUpdate) {
           onUpdate();
         }
       } else {
-        loadingContext.setError(true);
+        showError();
         console.error(`API request failed: PATCH /api/odata/job(${job.id}), HTTP ${response.status}`);
       }
     }
 
     setOpen(false);
-  }, [mode, job, onUpdate, navigate, loadingContext]);
+  }, [mode, job, onUpdate, navigate, showLoading, showSuccess, showError]);
 
   const onCancel = useCallback(() => {
     setOpen(false);

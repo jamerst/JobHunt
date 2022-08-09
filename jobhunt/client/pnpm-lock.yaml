@@ -42,6 +42,7 @@ specifiers:
   react-scripts: 4.0.3
   react-swipeable-views: ^0.14.0
   react-swipeable-views-utils: ^0.14.0
+  recoil: ^0.7.4
   remark-gfm: ^3.0.1
   source-map-explorer: ^2.5.2
   tss-react: 3.7.1
@@ -79,6 +80,7 @@ dependencies:
   react-router-dom: 6.3.0_sfoxds7t5ydpegc3knd667wn6m
   react-swipeable-views: 0.14.0_react@17.0.2
   react-swipeable-views-utils: 0.14.0_react@17.0.2
+  recoil: 0.7.4_sfoxds7t5ydpegc3knd667wn6m
   remark-gfm: 3.0.1
   tss-react: 3.7.1_3xo436wc6jzkoohzgvl7pnb4zq
   typescript: 4.7.4
@@ -11945,6 +11947,23 @@ packages:
 
   /recoil/0.7.2_sfoxds7t5ydpegc3knd667wn6m:
     resolution: {integrity: sha512-OT4pI7FOUHcIoRtjsL5Lqq+lFFzQfir4MIbUkqyJ3nqv3WfBP1pHepyurqTsK5gw+T+I2R8+uOD28yH+Lg5o4g==}
+    peerDependencies:
+      react: '>=16.13.1'
+      react-dom: '*'
+      react-native: '*'
+    peerDependenciesMeta:
+      react-dom:
+        optional: true
+      react-native:
+        optional: true
+    dependencies:
+      hamt_plus: 1.0.2
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+    dev: false
+
+  /recoil/0.7.4_sfoxds7t5ydpegc3knd667wn6m:
+    resolution: {integrity: sha512-sCXvQGMfSprkNU4ZRkJV4B0qFQSURJMgsICqY1952WRlg66NMwYqi6n67vhnhn0qw4zHU1gHXJuMvRDaiRNFZw==}
     peerDependencies:
       react: '>=16.13.1'
       react-dom: '*'

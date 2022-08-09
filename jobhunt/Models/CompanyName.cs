@@ -1,5 +1,5 @@
 namespace JobHunt.Models;
-public class CompanyName
+public class CompanyName : KeyedEntity
 {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }

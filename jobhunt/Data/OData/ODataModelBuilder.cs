@@ -18,6 +18,7 @@ public static class ODataModelBuilder
         builder.EntitySet<CompanyCategory>(nameof(CompanyCategory));
         builder.EntityType<CompanyCategory>()
             .HasKey(cc => new { cc.CategoryId, cc.CompanyId });
+        builder.EntitySet<CompanyName>(nameof(CompanyName));
 
         builder.EntitySet<Search>(nameof(Search));
         builder.AddUnmappedProperty<Search>(s => s.DisplayName);

@@ -23,7 +23,7 @@ import DeleteDialog from "components/forms/DeleteDialog";
 import { ICategoryLink } from "types/models/ICategoryLink";
 import JobCategory from "types/models/JobCategory";
 import EditableMarkdown from "components/forms/EditableMarkdown";
-import LoadingContext from "context/LoadingContext";
+import { useFeedback } from "utils/hooks";
 
 
 const Job = () => {
@@ -33,7 +33,7 @@ const Job = () => {
   const [menuAnchor, setMenuAnchor] = useState<null | Element>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const loadingContext = useContext(LoadingContext);
+  const { showLoading, showSuccess, showError } = useFeedback();
 
   const navigate = useNavigate();
 
@@ -53,13 +53,13 @@ const Job = () => {
 
       setJobData(data);
     } else {
-      loadingContext.setError(true);
+      showError();
       console.error(`API request failed: GET /api/jobs/${id}, HTTP ${response.status}`);
     }
-  }, [id, loadingContext]);
+  }, [id, showError]);
 
   const updateStatus = useCallback(async (e: SelectChangeEvent<string>) => {
-    loadingContext.setLoading(true);
+    showLoading()
     const status = e.target.value;
     const response = await fetch(`/api/jobs/status/${id}`, {
       method: "PATCH",
@@ -71,24 +71,24 @@ const Job = () => {
 
     if (response.ok) {
       setJobData(data => data ? ({...data, status: status}) : undefined);
-      loadingContext.setSuccess(true);
+      showSuccess();
     } else {
-      loadingContext.setError(true);
+      showError();
       console.error(`API request failed: PATCH /api/jobs/status/${id}, HTTP ${response.status}`);
     }
-  }, [id, loadingContext]);
+  }, [id, showLoading, showSuccess, showError]);
 
   const archiveJob = useCallback(async () => {
     const response = await fetch(`/api/jobs/archive/${id}?toggle=true`, { method: "PATCH" });
     if (response.ok) {
       setJobData(data => data ? ({ ...data, archived: !data.archived }) : undefined);
     } else {
-      loadingContext.setError(true);
+      showError();
       console.error(`API request failed: /api/jobs/archive/${id}, HTTP ${response.status}`);
     }
 
     setMenuAnchor(null);
-  }, [id, loadingContext]);
+  }, [id, showError]);
 
   const getCategoryDeleteUrl = useCallback(
     (catId: number) => `/api/odata/jobCategory(categoryId=${catId},jobId=${id})`,
@@ -108,7 +108,7 @@ const Job = () => {
   const onDeleteConfirm = useCallback(() => navigate("/"), [navigate]);
 
   const onNotesSave = useCallback(async (value: string) => {
-    loadingContext.setLoading(true);
+    showLoading();
     const response = await fetch(`/api/odata/job(${id})`, {
       method: "PATCH",
       body: JSON.stringify({
@@ -121,12 +121,12 @@ const Job = () => {
 
     if (response.ok) {
       setJobData(j => j ? ({ ...j, notes: value }) : undefined);
-      loadingContext.setSuccess(true);
+      showSuccess();
     } else {
-      loadingContext.setError(true);
+      showError();
       console.error(`API request failed PATCH /api/odata/jobs(${id}), HTTP ${response.status}`);
     }
-  }, [id, loadingContext]);
+  }, [id, showLoading, showSuccess, showError]);
 
   useEffect(() => { fetchData() }, [fetchData]);
 

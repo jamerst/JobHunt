@@ -24,6 +24,9 @@ import Tabs from "components/Tabs";
 import Tab from "components/Tab";
 import Markdown from "components/Markdown";
 import { getJobColumns } from "odata/JobColumns";
+import CompanyEntity from "types/models/Company";
+import CompanyDialog from "components/model-dialogs/CompanyDialog";
+import { useFeedback } from "utils/hooks";
 
 type CompanyResponse = {
   id: number,
@@ -111,6 +114,22 @@ const Company = () => {
   const [mergeCompany, setMergeCompany] = useState<CompanyName | null>(null);
   const [mergeOpen, setMergeOpen] = useState<boolean>(false);
 
+  const { showError } = useFeedback();
+
+  const [company, setCompany] = useState<CompanyEntity>();
+
+  const fetchCompany = useCallback(async () => {
+    const response = await fetch(`/api/odata/company(${id})?$expand=alternateNames`, { method: "GET" });
+    if (response.ok) {
+      const data = await response.json() as CompanyEntity;
+
+      setCompany(data);
+    } else {
+      showError();
+      console.error(`API request failed: GET /api/jobs/${id}, HTTP ${response.status}`);
+    }
+  }, [id, showError]);
+
   const fetchData = useCallback(async () => {
     const response = await fetch(`/api/companies/${id}`, { method: "GET" });
     if (response.ok) {
@@ -197,7 +216,7 @@ const Company = () => {
 
   const getClass = useCallback((params: GridRowParams) => params.row.seen ? "" : classes.unseen, [classes]);
 
-  useEffect(() => { fetchData() }, [fetchData]);
+  useEffect(() => { fetchData(); fetchCompany(); }, [fetchData]);
 
   if (!companyData) {
     return null;
@@ -208,6 +227,7 @@ const Company = () => {
       <Helmet>
         <title>{companyData.name} | JobHunt</title>
       </Helmet>
+      <CompanyDialog mode="edit" company={company}/>
       <Card>
         <CardHeader>
           <Grid container alignItems="center" spacing={1}>

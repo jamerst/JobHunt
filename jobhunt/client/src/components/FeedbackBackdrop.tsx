@@ -1,15 +1,10 @@
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, { useCallback, useEffect } from "react";
 import { Backdrop, CircularProgress, Grow, Paper, Typography } from "@mui/material";
 import makeStyles from "makeStyles";
 import { Check } from "@mui/icons-material";
 import Grid from "./Grid";
-import LoadingContext from "context/LoadingContext";
-
-type LoadingBackdropProps = {
-  loading: boolean,
-  success: boolean,
-  error: boolean
-}
+import { useRecoilState } from "recoil";
+import feedbackState from "state/FeedbackState";
 
 const useStyles = makeStyles()((theme) => ({
   backdrop: {
@@ -41,41 +36,30 @@ const useStyles = makeStyles()((theme) => ({
   }
 }));
 
-const LoadingBackdrop = ({ loading, success, error }: LoadingBackdropProps) => {
-  const state = useContext(LoadingContext);
-
-  const [open, setOpen] = useState(loading || success || error);
-
+const FeedbackBackdrop = () => {
+  const [state, setState] = useRecoilState(feedbackState);
   const { classes } = useStyles();
 
   const handleClick = useCallback(() => {
-    if (success || error) {
-      setOpen(false);
-      state.setLoading(false);
-      state.setSuccess(false);
-      state.setError(false);
+    if (state.success || state.error) {
+      setState({ loading: false, success: false, error: false });
     }
-  }, [success, error, state]);
+  }, [state, setState]);
 
   useEffect(() => {
-    setOpen(loading || success || error);
-
-    if (success) {
+    if (state.success) {
       setTimeout(() => {
-        setOpen(false);
-        state.setLoading(false);
-        state.setSuccess(false);
-        state.setError(false);
-      }, 750);
+        setState({ loading: false, success: false, error: false });
+      }, 1000);
     }
-  }, [loading, success, error, state]);
+  }, [state, setState]);
 
   return (
-    <Backdrop open={open} className={classes.backdrop} onClick={handleClick}>
-      {loading && !success && !error && <CircularProgress size="10em" className={classes.progress} />}
-      {success && <Grow in={success}><Check className={classes.check} /></Grow>}
-      {error &&
-        <Grow in={error}>
+    <Backdrop open={state.loading || state.success || state.error} className={classes.backdrop} onClick={handleClick}>
+      {state.loading && !state.success && !state.error && <CircularProgress size="10em" className={classes.progress} />}
+      {state.success && <Grow in={state.success}><Check className={classes.check} /></Grow>}
+      {state.error &&
+        <Grow in={state.error}>
           <Grid container direction="column" alignItems="center" spacing={3}>
             <Grid item><Typography variant="h1" className={classes.error}>!</Typography></Grid>
             <Grid item><Paper className={classes.errorPaper}><Typography variant="body1">An error has occurred. Please try again or report this problem if it continues.</Typography></Paper></Grid>
@@ -85,4 +69,4 @@ const LoadingBackdrop = ({ loading, success, error }: LoadingBackdropProps) => {
   );
 }
 
-export default LoadingBackdrop;
+export default FeedbackBackdrop;

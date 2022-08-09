@@ -69,6 +69,8 @@ try
         app.UseExceptionHandler("/Error");
     }
 
+    app.UseODataBatching();
+
     app.UseStaticFiles();
     app.UseSpaStaticFiles();
 

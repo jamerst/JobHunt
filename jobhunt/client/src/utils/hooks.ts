@@ -1,5 +1,7 @@
 import { useTheme, Breakpoint, Theme } from "@mui/material/styles"
-import React, { useEffect, useState } from "react"
+import React, { useCallback, useEffect, useState } from "react"
+import { useSetRecoilState } from "recoil"
+import feedbackState from "state/FeedbackState"
 
 export type ResponsiveValues<P> = Partial<Record<Breakpoint, P>>
 
@@ -65,3 +67,13 @@ const getMatches = (breakpoints: Breakpoint[], theme: Theme) => breakpoints.redu
   }),
   {}
 );
+
+export const useFeedback = () => {
+  const setState = useSetRecoilState(feedbackState);
+
+  const showLoading = useCallback(() => setState((s) => ({ ...s, loading: true })), [setState]);
+  const showSuccess = useCallback(() => setState((s) => ({ ...s, success: true })), [setState]);
+  const showError = useCallback(() => setState((s) => ({ ...s, error: true })), [setState]);
+
+  return { showLoading, showSuccess, showError };
+}
