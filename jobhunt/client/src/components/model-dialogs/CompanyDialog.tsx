@@ -16,7 +16,7 @@ import NumberField from "components/forms/NumberField";
 import Job from "types/models/Job";
 import Company from "types/models/Company";
 import CompanyName from "types/models/CompanyName";
-import { getChangedProperties } from "utils/forms";
+import { getChangedProperties, hasDefined } from "utils/forms";
 import ODataBatchRequest from "types/odata/ODataBatchRequest";
 import ODataBatchResponse from "types/odata/ODataBatchResponse";
 import { toBase64Json } from "utils/requests";
@@ -41,13 +41,12 @@ const useStyles = makeStyles()(theme => ({
 }));
 
 const options: CompanyName[] = [];
-const getOptionValue = (c: CompanyName) => c.name;
 const getOptionLabel = (c: CompanyName | string) => (c as CompanyName)?.name ?? "";
 
 const CompanyDialog = ({ mode, company, onUpdate }: CompanyDialogProps) => {
   const [open, setOpen] = useState<boolean>(false);
 
-  const { showLoading, showSuccess, showError } = useFeedback();
+  const { showLoading, showSuccess, showError, clear } = useFeedback();
 
   const { classes } = useStyles();
   const navigate = useNavigate();
@@ -80,6 +79,7 @@ const CompanyDialog = ({ mode, company, onUpdate }: CompanyDialogProps) => {
 
       if (response.ok) {
         const responseData = await response.json() as Job;
+        showSuccess();
         if (responseData) {
           navigate(`/job/${responseData.id}`);
         }
@@ -95,7 +95,7 @@ const CompanyDialog = ({ mode, company, onUpdate }: CompanyDialogProps) => {
       changed.alternateNames = undefined;
 
       // only send patch request if fields have actually changed
-      if (Object.entries(changed).some(([_, v]) => v)) {
+      if (hasDefined(changed)) {
         batch.requests.push({
           id: "patch-company",
           method: "PATCH",
@@ -161,15 +161,12 @@ const CompanyDialog = ({ mode, company, onUpdate }: CompanyDialogProps) => {
           console.error(`API request failed: PATCH /api/odata/company(${company.id}), HTTP ${response.status}`);
         }
       } else {
-        showSuccess();
-        if (onUpdate) {
-          onUpdate();
-        }
+        clear();
       }
     }
 
     setOpen(false);
-  }, [mode, company, onUpdate, navigate, showLoading, showSuccess, showError]);
+  }, [mode, company, onUpdate, navigate, showLoading, showSuccess, showError, clear]);
 
   const onCancel = useCallback(() => {
     setOpen(false);

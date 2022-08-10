@@ -19,7 +19,7 @@ import HideOnScroll from "components/HideOnScroll";
 import Grid from "components/Grid";
 import NumberField from "components/forms/NumberField";
 
-import { getChangedProperties } from "utils/forms";
+import { getChangedProperties, hasDefined } from "utils/forms";
 
 import Job from "types/models/Job";
 import Company from "types/models/Company";
@@ -54,7 +54,7 @@ const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const companiesFetched = useRef(false);
 
-  const { showLoading, showSuccess, showError } = useFeedback();
+  const { showLoading, showSuccess, showError, clear } = useFeedback();
 
   const { classes } = useStyles();
   const navigate = useNavigate();
@@ -85,6 +85,7 @@ const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
 
       if (response.ok) {
         const responseData = await response.json() as Job;
+        showSuccess();
         if (responseData) {
           navigate(`/job/${responseData.id}`);
         }
@@ -95,27 +96,31 @@ const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
     } else if (mode === "edit" && job) {
       const changed = getChangedProperties(job, requestData);
 
-      const response = await fetch(`/api/odata/job(${job.id})`, {
-        method: "PATCH",
-        body: JSON.stringify(changed),
-        headers: {
-          "Content-Type": "application/json"
-        }
-      });
+      if (hasDefined(changed)) {
+        const response = await fetch(`/api/odata/job(${job.id})`, {
+          method: "PATCH",
+          body: JSON.stringify(changed),
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
 
-      if (response.ok) {
-        showSuccess();
-        if (onUpdate) {
-          onUpdate();
+        if (response.ok) {
+          showSuccess();
+          if (onUpdate) {
+            onUpdate();
+          }
+        } else {
+          showError();
+          console.error(`API request failed: PATCH /api/odata/job(${job.id}), HTTP ${response.status}`);
         }
       } else {
-        showError();
-        console.error(`API request failed: PATCH /api/odata/job(${job.id}), HTTP ${response.status}`);
+        clear();
       }
     }
 
     setOpen(false);
-  }, [mode, job, onUpdate, navigate, showLoading, showSuccess, showError]);
+  }, [mode, job, onUpdate, navigate, showLoading, showSuccess, showError, clear]);
 
   const onCancel = useCallback(() => {
     setOpen(false);

@@ -3,7 +3,7 @@ import { IconButton, Chip, Tooltip, InputBase, Autocomplete, createFilterOptions
 import Grid from "components/Grid";
 import { Add } from "@mui/icons-material"
 import makeStyles from "makeStyles";
-import { ICategoryLink } from "types/models/ICategoryLink";
+import ICategoryLink from "types/models/ICategoryLink";
 import Category from "types/models/Category";
 import { ODataSingleResult } from "types/odata/ODataSingleResult";
 

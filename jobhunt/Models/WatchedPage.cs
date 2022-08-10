@@ -1,5 +1,5 @@
 namespace JobHunt.Models;
-public class WatchedPage : WatchedPageBase
+public class WatchedPage : WatchedPageBase, KeyedEntity
 {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }

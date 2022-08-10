@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Routes, BrowserRouter, Route } from "react-router-dom"
 import { CssBaseline, gridClasses } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { CacheProvider } from "@emotion/react";
 import createCache from "@emotion/cache"
 import { blue, purple } from '@mui/material/colors';
-import { RecoilRoot } from 'recoil';
+import { useRecoilValue } from 'recoil';
 
 import MainLayout from "layouts/MainLayout"
 import Companies from 'views/Companies';
@@ -17,6 +17,7 @@ import Search from 'views/Search';
 import Searches from 'views/Searches';
 import PageChanges from 'views/PageChanges';
 import FeedbackBackdrop from 'components/FeedbackBackdrop';
+import { themeState } from 'state';
 
 export const muiCache = createCache({
   key: "mui",
@@ -24,15 +25,12 @@ export const muiCache = createCache({
 });
 
 function App() {
-  const [darkMode, setDarkMode] = useState<boolean>(
-    localStorage.getItem("theme") === "dark"
-    || (window.matchMedia("(prefers-color-scheme: dark)").matches && localStorage.getItem("theme") === null)
-  );
+  const themeMode = useRecoilValue(themeState);
 
   const theme = useMemo(() => {
     const theme = createTheme({
       palette: {
-        mode: darkMode ? "dark" : "light",
+        mode: themeMode,
         primary: {
           main: blue[500],
           dark: blue[700]
@@ -41,8 +39,8 @@ function App() {
           main: purple[500]
         },
         background: {
-          default: darkMode ? "#303030" : "#fafafa",
-          paper: darkMode ? "#424242" : "#fff"
+          default: themeMode === "dark" ? "#303030" : "#fafafa",
+          paper: themeMode === "dark" ? "#424242" : "#fff"
         }
       },
       components: {
@@ -99,65 +97,63 @@ function App() {
     }
 
     return theme;
-  }, [darkMode]);
+  }, [themeMode]);
 
   return (
     <CacheProvider value={muiCache}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <RecoilRoot>
-          <FeedbackBackdrop />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={
-                <MainLayout pageTitle="Dashboard" darkMode={darkMode} setDarkMode={setDarkMode}>
-                  <Dashboard/>
-                </MainLayout>
-              } />
-              <Route path="/jobs" element={
-                <MainLayout pageTitle="Saved Jobs" darkMode={darkMode} setDarkMode={setDarkMode}>
-                  <Jobs/>
-                </MainLayout>
-              } />
+        <FeedbackBackdrop />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={
+              <MainLayout pageTitle="Dashboard">
+                <Dashboard/>
+              </MainLayout>
+            } />
+            <Route path="/jobs" element={
+              <MainLayout pageTitle="Saved Jobs">
+                <Jobs/>
+              </MainLayout>
+            } />
 
-              <Route path="/job/:id" element={
-                <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
-                  <Job/>
-                </MainLayout>
-              } />
+            <Route path="/job/:id" element={
+              <MainLayout>
+                <Job/>
+              </MainLayout>
+            } />
 
-              <Route path="/companies" element={
-                <MainLayout pageTitle="Saved Companies" darkMode={darkMode} setDarkMode={setDarkMode}>
-                  <Companies/>
-                </MainLayout>
-              } />
+            <Route path="/companies" element={
+              <MainLayout pageTitle="Saved Companies">
+                <Companies/>
+              </MainLayout>
+            } />
 
-              <Route path="/company/:id" element={
-                <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
-                  <Company/>
-                </MainLayout>
-              } />
+            <Route path="/company/:id" element={
+              <MainLayout>
+                <Company/>
+              </MainLayout>
+            } />
 
-              <Route path="/searches" element={
-                <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
-                  <Searches/>
-                </MainLayout>
-              } />
+            <Route path="/searches" element={
+              <MainLayout>
+                <Searches/>
+              </MainLayout>
+            } />
 
-              <Route path="/search/:id" element={
-                <MainLayout darkMode={darkMode} setDarkMode={setDarkMode}>
-                  <Search/>
-                </MainLayout>
-              } />
+            <Route path="/search/:id" element={
+              <MainLayout>
+                <Search/>
+              </MainLayout>
+            } />
 
-              <Route path="/page-changes/:id" element={
-                <MainLayout pageTitle="Page Changes" darkMode={darkMode} setDarkMode={setDarkMode}>
-                  <PageChanges/>
-                </MainLayout>
-              } />
-            </Routes>
-          </BrowserRouter>
-        </RecoilRoot>
+            <Route path="/page-changes/:id" element={
+              <MainLayout pageTitle="Page Changes">
+                <PageChanges/>
+              </MainLayout>
+            } />
+          </Routes>
+        </BrowserRouter>
       </ThemeProvider>
     </CacheProvider>
   );

@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useMemo } from "react"
+import React, { Fragment, useState, useMemo, useCallback } from "react"
 import { Badge, Divider, Drawer, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Tooltip, Typography } from "@mui/material"
 import Grid from "components/Grid";
 import { BrightnessHigh, Brightness2, Work, Business, Search, Dashboard, Menu  } from "@mui/icons-material";
@@ -9,10 +9,10 @@ import { Link } from "react-router-dom";
 import Alerts from "components/Alerts";
 import { useResponsive } from "utils/hooks";
 import { useEffect } from "react";
+import { useRecoilState } from "recoil";
+import { themeState } from "state";
 
 type MainLayoutProps = {
-  darkMode: boolean,
-  setDarkMode: React.Dispatch<React.SetStateAction<boolean>>,
   pageTitle?: string
 }
 
@@ -66,6 +66,26 @@ const MainLayout = (props: React.PropsWithChildren<MainLayoutProps>) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [alertCount, setAlertCount] = useState(0);
 
+  const [theme, setTheme] = useRecoilState(themeState);
+
+  const changeTheme = useCallback(() => {
+    setTheme((t) => {
+      let newTheme: "light" | "dark";
+      if (t === "light") {
+        newTheme = "dark";
+      } else {
+        newTheme = "light";
+      }
+
+      localStorage.setItem("theme", newTheme);
+
+      return newTheme;
+    });
+  }, [setTheme]);
+
+  const openDrawer = useCallback(() => setDrawerOpen(true), []);
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
+
   useEffect(() => {
     const fetchUnreadCount = async () => {
       const response = await fetch("/api/alerts/unreadcount");
@@ -77,7 +97,7 @@ const MainLayout = (props: React.PropsWithChildren<MainLayoutProps>) => {
     }
 
     fetchUnreadCount();
-  }, [])
+  }, []);
 
   const open = useMemo(() => r({ xs: drawerOpen, md: true }), [r, drawerOpen]);
   const variant: "temporary" | "permanent" | undefined = useMemo(() => r({ xs: "temporary", md: "permanent" }), [r]);
@@ -89,26 +109,26 @@ const MainLayout = (props: React.PropsWithChildren<MainLayoutProps>) => {
         anchor="left"
         className={classes.drawer}
         open={open}
-        onClose={() => setDrawerOpen(false)}
+        onClose={closeDrawer}
       >
         <List>
           <ListItem>
             <Typography className={classes.title} variant="h5">JobHunt</Typography>
           </ListItem>
           <Divider />
-          <ListItem button component={ Link } to="/" onClick={() => setDrawerOpen(false)}>
+          <ListItem button component={ Link } to="/" onClick={closeDrawer}>
             <ListItemIcon><Dashboard/></ListItemIcon>
             <ListItemText primary="Dashboard"/>
           </ListItem>
-          <ListItem button component={ Link } to="/jobs" onClick={() => setDrawerOpen(false)}>
+          <ListItem button component={ Link } to="/jobs" onClick={closeDrawer}>
             <ListItemIcon><Work/></ListItemIcon>
             <ListItemText primary="Jobs"/>
           </ListItem>
-          <ListItem button component={Link} to="/companies" onClick={() => setDrawerOpen(false)}>
+          <ListItem button component={Link} to="/companies" onClick={closeDrawer}>
             <ListItemIcon><Business/></ListItemIcon>
             <ListItemText primary="Companies"/>
           </ListItem>
-          <ListItem button component={Link} to="/searches" onClick={() => setDrawerOpen(false)}>
+          <ListItem button component={Link} to="/searches" onClick={closeDrawer}>
             <ListItemIcon><Search/></ListItemIcon>
             <ListItemText primary="Searches"/>
           </ListItem>
@@ -119,14 +139,14 @@ const MainLayout = (props: React.PropsWithChildren<MainLayoutProps>) => {
                 <Tooltip title="Toggle theme">
                   <IconButton
                     aria-label="Toggle theme"
-                    onClick={() => { props.setDarkMode(!props.darkMode); localStorage.setItem("theme", props.darkMode ? "light" : "dark") }}
+                    onClick={changeTheme}
                     size="large">
-                    {props.darkMode ? <BrightnessHigh /> : <Brightness2 />}
+                    {theme === "dark" ? <BrightnessHigh /> : <Brightness2 />}
                   </IconButton>
                 </Tooltip>
               </Grid>
               <Grid item>
-                <Alerts onAlertClick={() => setDrawerOpen(false)} setAlertCount={(count) => setAlertCount(count)} />
+                <Alerts onAlertClick={closeDrawer} setAlertCount={setAlertCount} />
               </Grid>
             </Grid>
           </ListItem>
@@ -134,7 +154,7 @@ const MainLayout = (props: React.PropsWithChildren<MainLayoutProps>) => {
       </Drawer>
       <main className={classes.mainContainer}>
         <Toolbar className={classes.toolbar}>
-          <IconButton onClick={() => setDrawerOpen(true)} size="large" sx={{ display: { md: "none", xs: "block" }}}>
+          <IconButton onClick={openDrawer} size="large" sx={{ display: { md: "none", xs: "block" }}}>
             <Badge badgeContent={alertCount} color="secondary">
               <Menu/>
             </Badge>

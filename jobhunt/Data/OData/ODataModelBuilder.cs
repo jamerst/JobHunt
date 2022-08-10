@@ -23,6 +23,8 @@ public static class ODataModelBuilder
         builder.EntitySet<Search>(nameof(Search));
         builder.AddUnmappedProperty<Search>(s => s.DisplayName);
 
+        builder.EntitySet<WatchedPage>(nameof(WatchedPage));
+
         return builder.GetEdmModel();
     }
 }

@@ -18,3 +18,10 @@ export const getChangedProperties = <T,>(original: T, modified: T) =>
     },
     {}
   );
+
+/**
+ * Check if a partial has any properties that are defined (i.e. !== undefined)
+ * @param partial Partial object
+ * @returns True if there is at least one property of partial that is defined
+ */
+export const hasDefined = <T,>(partial: Partial<T>) => Object.entries(partial).some(([_, v]) => v !== undefined);

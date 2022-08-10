@@ -1,5 +1,5 @@
-import React, { Fragment, useState, useCallback, useEffect } from "react"
-import { Badge, IconButton, List, ListItem, Paper, Popover, Tooltip, Typography, Link } from "@mui/material"
+import React, { Fragment, useState, useCallback, useEffect, useMemo } from "react"
+import { Badge, IconButton, List, ListItem, Paper, Popover, Tooltip, Typography, Link, PopoverOrigin } from "@mui/material"
 import Grid from "components/Grid";
 import { Notifications, ClearAll  } from "@mui/icons-material";
 import makeStyles from "makeStyles";
@@ -10,7 +10,7 @@ import relativeTime from "dayjs/plugin/relativeTime"
 
 type AlertProps = {
   onAlertClick?: () => void,
-  setAlertCount?: (count: number) => void
+  setAlertCount?: React.Dispatch<React.SetStateAction<number>>
 }
 
 type Alert = {
@@ -20,7 +20,8 @@ type Alert = {
   title: string,
   message?: string,
   url?: string,
-  created: Dayjs
+  created: Dayjs,
+  createdString: string
 }
 
 const useStyles = makeStyles()((theme) => ({
@@ -51,6 +52,7 @@ const useStyles = makeStyles()((theme) => ({
     padding: theme.spacing(3, 2, 3, 4),
     transition: ".25s ease",
     position: "relative",
+    cursor: "pointer",
     "&:hover": {
       background: theme.palette.action.selected
     },
@@ -59,65 +61,103 @@ const useStyles = makeStyles()((theme) => ({
     }
   },
   unread: {
-    position: "absolute",
-    left: theme.spacing(1),
-    top: 0,
-    bottom: 0,
-    margin: "auto",
-    borderRadius: "50%",
-    content: "''",
-    width: theme.spacing(2),
-    height: theme.spacing(2),
-    background: theme.palette.primary.main
+    "&::before": {
+      content: "''",
+      position: "absolute",
+      left: theme.spacing(1),
+      top: 0,
+      bottom: 0,
+      margin: "auto",
+      borderRadius: "50%",
+      width: theme.spacing(2),
+      height: theme.spacing(2),
+      background: theme.palette.primary.main
+    }
   }
 }));
 
 dayjs.extend(relativeTime);
-const Alerts = (props: AlertProps) => {
+
+const anchorOrigin:PopoverOrigin = { vertical: "bottom", horizontal: "left" };
+
+const Alerts = ({onAlertClick, setAlertCount}: AlertProps) => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [alertAnchor, setAlertAnchor] = useState<null | HTMLElement>(null);
 
-  const { classes } = useStyles();
+  const { classes, cx } = useStyles();
 
   const onClick = useCallback(async (id: number) => {
     const response = await fetch(`/api/alerts/read/${id}`, { method: "PATCH" });
     if (response.ok) {
-      let newAlerts = [...alerts];
-      const alertIndex = newAlerts.findIndex(a => a.id === id);
-      newAlerts[alertIndex].read = true;
-      setAlerts(newAlerts);
+      setAlerts((a) => {
+        let newAlerts = [...a];
+        const alertIndex = newAlerts.findIndex(a => a.id === id);
+        newAlerts[alertIndex].read = true;
+        return newAlerts;
+      });
       setAlertAnchor(null);
-      if (props.onAlertClick) {
-        props.onAlertClick();
+
+      if (onAlertClick) {
+        onAlertClick();
       }
-      if (props.setAlertCount) {
-        props.setAlertCount(newAlerts.filter(a => !a.read).length);
+
+      if (setAlertCount) {
+        setAlertCount(c => c - 1);
       }
     } else {
       console.error(`API request failed: PATCH /api/alerts/read/${id}, HTTP ${response.status}`);
     }
-  }, [alerts, props]);
+  }, [onAlertClick, setAlertCount]);
 
   const markAllRead = useCallback(async () => {
     const response = await fetch(`/api/alerts/allread`, { method: "PATCH" });
     if (response.ok) {
-      let newAlerts = [...alerts];
-      newAlerts.forEach(a => a.read = true);
-      setAlerts(newAlerts);
+      setAlerts((a) => {
+        let newAlerts = [...a];
+        newAlerts.forEach(a => a.read = true);
+        return newAlerts;
+      });
+
+      if (setAlertCount) {
+        setAlertCount(0);
+      }
     } else {
       console.error(`API request failed: PATCH /api/alerts/allread, HTTP ${response.status}`);
     }
-  }, [alerts]);
+  }, [setAlertCount]);
+
+  const onOpen = useCallback((e: React.MouseEvent) => setAlertAnchor(e.currentTarget as HTMLElement), []);
+  const onClose = useCallback(() => setAlertAnchor(null), []);
+
+  const unread = useMemo(() => alerts.filter(a => !a.read).length, [alerts]);
+
+  const getClasses = useCallback((a: Alert) => {
+    const c = [classes.listItem];
+    if (!a.read) {
+      c.push(classes.unread);
+    }
+
+    return cx(c);
+  }, [classes, cx]);
 
   useEffect(() => {
     const fetchAlerts = async () => {
       const response = await fetch("/api/alerts");
       if (response.ok) {
         const data = await response.json() as Alert[];
-        data.forEach(a => a.created = dayjs.utc(a.created));
+        data.forEach(a => {
+          a.created = dayjs.utc(a.created);
+          if (a.created.isBefore(dayjs.utc().subtract(1, "day"), "day")) {
+            a.createdString = a.created.local().format("DD/MM/YYYY HH:mm");
+          } else {
+            a.createdString = a.created.fromNow();
+          }
+        });
+
         setAlerts(data);
-        if (props.setAlertCount) {
-          props.setAlertCount(data.filter(a => !a.read).length);
+
+        if (setAlertCount) {
+          setAlertCount(data.filter(a => !a.read).length);
         }
       } else {
         console.error(`API request failed: GET /api/alerts, HTTP ${response.status}`);
@@ -125,16 +165,16 @@ const Alerts = (props: AlertProps) => {
     }
 
     fetchAlerts();
-  }, [props]);
+  }, [setAlertCount]);
 
   return (
     <Fragment>
       <Tooltip title="View Alerts">
         <IconButton
           aria-label="View Alerts"
-          onClick={(e) => setAlertAnchor(e.currentTarget)}
+          onClick={onOpen}
           size="large">
-          <Badge badgeContent={alerts.filter(a => !a.read).length} color="secondary">
+          <Badge badgeContent={unread} color="secondary">
             <Notifications/>
           </Badge>
         </IconButton>
@@ -142,9 +182,9 @@ const Alerts = (props: AlertProps) => {
       <Popover
         anchorEl={alertAnchor}
         open={alertAnchor !== null}
-        anchorOrigin={{vertical: "bottom", horizontal: "left"}}
+        anchorOrigin={anchorOrigin}
         className={classes.popper}
-        onClose={() => setAlertAnchor(null)}
+        onClose={onClose}
         transitionDuration={250}
       >
         <Paper className={classes.paper}>
@@ -154,7 +194,7 @@ const Alerts = (props: AlertProps) => {
             </Grid>
             <Grid item>
               <Tooltip title="Mark all as read">
-                <IconButton onClick={() => markAllRead()} size="large">
+                <IconButton onClick={markAllRead} size="large">
                   <ClearAll/>
                 </IconButton>
               </Tooltip>
@@ -162,20 +202,18 @@ const Alerts = (props: AlertProps) => {
           </Grid>
           <List className={classes.list}>
             {alerts.map(a => (
-              <ListItem key={a.id} className={classes.listItem}>
+              <ListItem key={a.id} className={getClasses(a)} onClick={() => onClick(a.id)}>
                 {a.url ? (
-                  <Link component={RouterLink} to={a.url} onClick={() => onClick(a.id)}>
-                    {a.read ? null : <div className={classes.unread}></div>}
+                  <Link component={RouterLink} to={a.url}>
                     <Typography>{a.title}</Typography>
                     <Typography variant="body2">{a.message}</Typography>
-                    <Typography variant="caption">{a.created.isBefore(dayjs.utc().subtract(1, "day"), "day") ? a.created.local().format("DD/MM/YYYY HH:mm") : a.created.fromNow() }</Typography>
+                    <Typography variant="caption">{a.createdString}</Typography>
                   </Link>
                 ) : (
                   <Fragment>
-                    {a.read ? null : <div className={classes.unread}></div>}
                     <Typography>{a.title}</Typography>
                     <Typography variant="body2">{a.message}</Typography>
-                    <Typography variant="caption">{a.created.isBefore(dayjs.utc().subtract(1, "day"), "day") ? a.created.local().format("DD/MM/YYYY HH:mm") : a.created.fromNow() }</Typography>
+                    <Typography variant="caption">{a.createdString}</Typography>
                   </Fragment>
                 )}
               </ListItem>

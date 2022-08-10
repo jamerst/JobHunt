@@ -124,7 +124,7 @@ export const getCompanyColumns = (): ODataGridColDef[] => {
       field: "latestJob",
       headerName: "Latest Job Posted",
       expand: { navigationField: "jobs", select: "posted", orderBy: "posted desc" },
-      type: "datetime",
+      type: "dateTime",
       filterable: false,
       sortable: false,
       renderCell: (params) => {
@@ -143,7 +143,7 @@ export const getCompanyColumns = (): ODataGridColDef[] => {
       expand: { navigationField: "watchedPages", select: "lastUpdated", orderBy: "lastUpdated desc" },
       filterable: false,
       sortable: false,
-      type: "datetime",
+      type: "dateTime",
       flex: .5,
       renderCell: (params) => {
         const pages = params.row["watchedPages"] as ({ lastUpdated: string })[];

@@ -1,15 +1,12 @@
 using Microsoft.EntityFrameworkCore;
+using JobHunt.Services.BaseServices;
 
 namespace JobHunt.Services;
-public class WatchedPageService : IWatchedPageService
+public class WatchedPageService : ODataBaseService<WatchedPage>, IWatchedPageService
 {
-    private readonly JobHuntContext _context;
-    public WatchedPageService(JobHuntContext context)
-    {
-        _context = context;
-    }
+    public WatchedPageService(JobHuntContext context) : base(context) { }
 
-    public async Task<WatchedPage?> FindByIdAsync(int id)
+    public async override Task<WatchedPage?> FindByIdAsync(int id)
     {
         return await _context.WatchedPages
             .Include(p => p.Company)
@@ -63,9 +60,8 @@ public class WatchedPageService : IWatchedPageService
     }
 }
 
-public interface IWatchedPageService
+public interface IWatchedPageService : IODataBaseService<WatchedPage>
 {
-    Task<WatchedPage?> FindByIdAsync(int id);
     Task UpdateStatusAsync(int id, bool changed = false, string? statusMessage = null);
     Task<List<WatchedPage>> GetAllActiveAsync();
     Task<List<WatchedPage>> GetActiveUnfetchedAsync(int companyId);

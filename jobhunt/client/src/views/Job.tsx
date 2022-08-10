@@ -1,39 +1,39 @@
-import React, { Fragment, useCallback, useContext, useEffect, useState } from "react"
+import React, { Fragment, useCallback, useEffect, useState } from "react"
 import { Box, Button, Container, FormControl, IconButton, InputLabel, Menu, MenuItem, Select, Typography, Link, Chip, SelectChangeEvent } from "@mui/material"
-import Grid from "components/Grid";
+import { Map, MoreHoriz, OpenInNew, Subject } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router"
 import { Helmet } from "react-helmet"
+import ReactMarkdown from "react-markdown";
+import { Link as RouterLink } from "react-router-dom";
+import dayjs from "dayjs";
 
 import Card from "components/Card";
 import ExpandableSnippet from "components/ExpandableSnippet";
 import Categories from "components/Categories";
 import CardHeader from "components/CardHeader";
 import CardBody from "components/CardBody";
-import Tabs from "components/Tabs";
-import Tab from "components/Tab";
-
-import JobEntity from "types/models/Job";
-
-import ReactMarkdown from "react-markdown";
-import { Map, MoreHoriz, OpenInNew, Subject } from "@mui/icons-material";
-import { Link as RouterLink } from "react-router-dom";
-import dayjs from "dayjs";
-import JobDialog from "components/model-dialogs/JobDialog";
 import DeleteDialog from "components/forms/DeleteDialog";
-import { ICategoryLink } from "types/models/ICategoryLink";
-import JobCategory from "types/models/JobCategory";
 import EditableMarkdown from "components/forms/EditableMarkdown";
+import Grid from "components/Grid";
+import JobDialog from "components/model-dialogs/JobDialog";
+import Tab from "components/Tab";
+import Tabs from "components/Tabs";
+
 import { useFeedback } from "utils/hooks";
+
+import ICategoryLink from "types/models/ICategoryLink";
+import JobEntity from "types/models/Job";
+import JobCategory from "types/models/JobCategory";
 
 
 const Job = () => {
   const { id } = useParams();
 
-  const [jobData, setJobData] = useState<JobEntity>();
+  const [job, setJob] = useState<JobEntity>();
   const [menuAnchor, setMenuAnchor] = useState<null | Element>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const { showLoading, showSuccess, showError } = useFeedback();
+  const { showLoading, showSuccess, showError, clear } = useFeedback();
 
   const navigate = useNavigate();
 
@@ -51,12 +51,13 @@ const Job = () => {
         }
       }
 
-      setJobData(data);
+      clear();
+      setJob(data);
     } else {
       showError();
-      console.error(`API request failed: GET /api/jobs/${id}, HTTP ${response.status}`);
+      console.error(`API request failed: GET /api/odata/job(${id})?$expand=company,actualCompany,jobCategories($expand=category), HTTP ${response.status}`);
     }
-  }, [id, showError]);
+  }, [id, showError, clear]);
 
   const updateStatus = useCallback(async (e: SelectChangeEvent<string>) => {
     showLoading()
@@ -70,7 +71,7 @@ const Job = () => {
     });
 
     if (response.ok) {
-      setJobData(data => data ? ({...data, status: status}) : undefined);
+      setJob(data => data ? ({...data, status: status}) : undefined);
       showSuccess();
     } else {
       showError();
@@ -81,7 +82,7 @@ const Job = () => {
   const archiveJob = useCallback(async () => {
     const response = await fetch(`/api/jobs/archive/${id}?toggle=true`, { method: "PATCH" });
     if (response.ok) {
-      setJobData(data => data ? ({ ...data, archived: !data.archived }) : undefined);
+      setJob(data => data ? ({ ...data, archived: !data.archived }) : undefined);
     } else {
       showError();
       console.error(`API request failed: /api/jobs/archive/${id}, HTTP ${response.status}`);
@@ -120,7 +121,7 @@ const Job = () => {
     });
 
     if (response.ok) {
-      setJobData(j => j ? ({ ...j, notes: value }) : undefined);
+      setJob(j => j ? ({ ...j, notes: value }) : undefined);
       showSuccess();
     } else {
       showError();
@@ -130,36 +131,36 @@ const Job = () => {
 
   useEffect(() => { fetchData() }, [fetchData]);
 
-  if (!jobData) {
+  if (!job) {
     return null;
   }
 
   return (
     <Container>
       <Helmet>
-        <title>{jobData.title} - {jobData.company?.name} | JobHunt</title>
+        <title>{job.title} - {job.company?.name} | JobHunt</title>
       </Helmet>
 
-      <JobDialog mode="edit" job={jobData} onUpdate={fetchData} />
-      <DeleteDialog open={deleteOpen} entityName="job" onClose={closeDelete} onConfirm={onDeleteConfirm} deleteUrl={`/api/odata/job(${jobData.id})`} />
+      <JobDialog mode="edit" job={job} onUpdate={fetchData} />
+      <DeleteDialog open={deleteOpen} entityName="job" onClose={closeDelete} onConfirm={onDeleteConfirm} deleteUrl={`/api/odata/job(${job.id})`} />
 
       <Card>
         <CardHeader>
           <Grid container alignItems="center" spacing={1}>
             <Grid item xs>
-              <Typography variant="h4">{jobData.title}</Typography>
+              <Typography variant="h4">{job.title}</Typography>
               <Typography variant="h6">
                 {
-                  jobData.actualCompanyId
+                  job.actualCompanyId
                     ? <Fragment>
-                        <Link sx={{ textDecoration: "underline" }} component={RouterLink} to={`/company/${jobData.actualCompanyId}`}>{jobData.actualCompany?.name}</Link>
-                        &nbsp;(posted by <Link sx={{ textDecoration: "underline" }} component={RouterLink} to={`/company/${jobData.companyId}`}>{jobData.company?.name}</Link>)
+                        <Link sx={{ textDecoration: "underline" }} component={RouterLink} to={`/company/${job.actualCompanyId}`}>{job.actualCompany?.name}</Link>
+                        &nbsp;(posted by <Link sx={{ textDecoration: "underline" }} component={RouterLink} to={`/company/${job.companyId}`}>{job.company?.name}</Link>)
                       </Fragment>
-                    : <Link sx={{ textDecoration: "underline" }} component={RouterLink} to={`/company/${jobData.companyId}`}>{jobData.company?.name}</Link>
+                    : <Link sx={{ textDecoration: "underline" }} component={RouterLink} to={`/company/${job.companyId}`}>{job.company?.name}</Link>
                 }
-                , {jobData.location}
+                , {job.location}
               </Typography>
-              {jobData.archived ? (<Typography variant="subtitle1"><em>Archived</em></Typography>) : null}
+              {job.archived ? (<Typography variant="subtitle1"><em>Archived</em></Typography>) : null}
             </Grid>
             <Grid item>
               <IconButton onClick={openMenu} size="large">
@@ -173,7 +174,7 @@ const Job = () => {
                 anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
                 transformOrigin={{ vertical: "top", horizontal: "right" }}
               >
-                <MenuItem onClick={archiveJob}>{jobData.archived ? "Restore" : "Archive"} Job</MenuItem>
+                <MenuItem onClick={archiveJob}>{job.archived ? "Restore" : "Archive"} Job</MenuItem>
                 <MenuItem onClick={deleteJob}>Delete Job</MenuItem>
               </Menu>
             </Grid>
@@ -181,18 +182,18 @@ const Job = () => {
         </CardHeader>
         <CardBody>
           <Box mb={2}>
-            <Typography variant="h6">{jobData.salary ?? "Unknown Salary"}</Typography>
-            <Typography variant="subtitle1">Posted {dayjs.utc(jobData.posted).local().format("DD/MM/YYYY HH:mm")}</Typography>
-            <Typography variant="subtitle2">{jobData.source ? `From "${jobData.source.displayName}"` : "Created manually"}</Typography>
+            <Typography variant="h6">{job.salary ?? "Unknown Salary"}</Typography>
+            <Typography variant="subtitle1">Posted {dayjs.utc(job.posted).local().format("DD/MM/YYYY HH:mm")}</Typography>
+            <Typography variant="subtitle2">{job.source ? `From "${job.source.displayName}"` : "Created manually"}</Typography>
             <Box mt={1}>
               <Categories
-                initialValue={jobData.jobCategories}
+                initialValue={job.jobCategories}
                 fetchUrl="/api/jobs/categories"
                 createUrl="/api/odata/jobCategory"
                 getDeleteUrl={getCategoryDeleteUrl}
                 getEntity={getCategoryEntity}
               >
-                {jobData.company?.recruiter ? <Grid item><Chip label="Recruiter" color="secondary"/></Grid> : null}
+                {job.company?.recruiter ? <Grid item><Chip label="Recruiter" color="secondary"/></Grid> : null}
               </Categories>
             </Box>
 
@@ -203,7 +204,7 @@ const Job = () => {
                     <InputLabel id="status-select-label">Status</InputLabel>
                     <Select
                       labelId="status-select-label"
-                      value={jobData.status}
+                      value={job.status}
                       onChange={updateStatus}
                       label="Status"
                     >
@@ -220,12 +221,12 @@ const Job = () => {
 
             <Box my={2}>
               <Grid container spacing={2}>
-                { jobData.url &&
+                { job.url &&
                   <Grid item>
-                    <Button variant="contained" color="secondary" startIcon={<Subject/>} endIcon={<OpenInNew/>} component="a" href={jobData.url} target="_blank">View Listing</Button>
+                    <Button variant="contained" color="secondary" startIcon={<Subject/>} endIcon={<OpenInNew/>} component="a" href={job.url} target="_blank">View Listing</Button>
                   </Grid>
                 }
-                {jobData.latitude && jobData.longitude &&
+                {job.latitude && job.longitude &&
                   <Grid item>
                     <Button
                       variant="contained"
@@ -233,7 +234,7 @@ const Job = () => {
                       startIcon={<Map />}
                       endIcon={<OpenInNew />}
                       component="a"
-                      href={`https://www.google.com/maps/search/?api=1&query=${jobData.latitude},${jobData.longitude}`}
+                      href={`https://www.google.com/maps/search/?api=1&query=${job.latitude},${job.longitude}`}
                       target="_blank"
                     >
                       View Location
@@ -245,12 +246,12 @@ const Job = () => {
 
             <Tabs labels={["Description", "Notes"]}>
               <Tab>
-                <ExpandableSnippet hidden={!jobData.description}>
-                  <ReactMarkdown skipHtml>{jobData.description ? jobData.description : "_No description available_"}</ReactMarkdown>
+                <ExpandableSnippet hidden={!job.description}>
+                  <ReactMarkdown skipHtml>{job.description ? job.description : "_No description available_"}</ReactMarkdown>
                 </ExpandableSnippet>
               </Tab>
               <Tab>
-                <EditableMarkdown value={jobData.notes} emptyText="_No notes added_" label="Notes" onSave={onNotesSave}/>
+                <EditableMarkdown value={job.notes} emptyText="_No notes added_" label="Notes" onSave={onNotesSave}/>
               </Tab>
             </Tabs>
 

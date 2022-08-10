@@ -1,5 +1,6 @@
 import CompanyCategory from "./CompanyCategory";
 import CompanyName from "./CompanyName";
+import WatchedPage from "./WatchedPage";
 
 type Company = {
   id: number,
@@ -18,7 +19,8 @@ type Company = {
   recruiter: boolean,
 
   companyCategories: CompanyCategory[],
-  alternateNames: CompanyName[]
+  alternateNames: CompanyName[],
+  watchedPages: WatchedPage[]
 }
 
 export default Company;

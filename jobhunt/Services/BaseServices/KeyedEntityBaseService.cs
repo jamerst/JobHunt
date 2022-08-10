@@ -7,7 +7,7 @@ public class KeyedEntityBaseService<T> : BaseService<T>, IKeyedEntityBaseService
 {
     public KeyedEntityBaseService(JobHuntContext context) : base(context) { }
 
-    public async Task<T?> FindByIdAsync(int id)
+    public virtual async Task<T?> FindByIdAsync(int id)
     {
         return await _context.Set<T>().FirstOrDefaultAsync(x => x.Id == id);
     }
