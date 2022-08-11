@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 
+using JobHunt.PageWatcher;
+
 namespace JobHunt.Controllers;
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -75,6 +77,21 @@ public class WatchedPagesController : ControllerBase
         else
         {
             return new NotFoundResult();
+        }
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> Refresh([FromRoute] int id, [FromServices] IPageWatcher pageWatcher)
+    {
+        WatchedPage? page = await _wpService.FindByIdAsync(id);
+        if (page != default)
+        {
+            await pageWatcher.RefreshAsync(page, new CancellationToken());
+            return Ok();
+        }
+        else
+        {
+            return NotFound();
         }
     }
 }

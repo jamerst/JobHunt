@@ -38,7 +38,9 @@ const Tabs = (props: TabsProps) => {
       </MuiTabs>
       {React.Children.map(props.children, (tab, i) => (
         <TabPanel keepMounted={tab.props.keepMounted} current={current} index={i} id={ToKebabCase(props.labels[i])}>
-          {tab.props.children}
+          <Fragment>
+            {tab.props.children}
+          </Fragment>
         </TabPanel>
       ))}
     </Fragment>

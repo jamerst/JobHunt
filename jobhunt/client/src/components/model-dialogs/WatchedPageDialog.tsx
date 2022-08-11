@@ -17,14 +17,16 @@ type WatchedPageDialogProps = {
   onCancel: () => void
 }
 
-type FormPage = Omit<WatchedPage, "enabled"> & {
-  enabled: 0 | 1
+type FormPage = Omit<WatchedPage, "requiresJS"> & {
+  requiresJS: 0 | 1
 }
 
 const WatchedPageDialog = ({ mode, companyId, watchedPage, open, onSave, onCancel }: WatchedPageDialogProps) => {
-  const formPage: FormPage | undefined = useMemo(
-    () => watchedPage ? ({ ...watchedPage, enabled: watchedPage.enabled ? 1 : 0 }) : undefined,
-    [watchedPage]
+  const formPage: FormPage = useMemo(
+    () => watchedPage
+      ? { ...watchedPage, requiresJS: watchedPage.requiresJS ? 1 : 0 }
+      : { id: 0, companyId: companyId, url: "", enabled: true, requiresJS: 0 },
+    [watchedPage, companyId]
   );
 
   const { showLoading, showSuccess, showError, clear } = useFeedback();
@@ -32,7 +34,7 @@ const WatchedPageDialog = ({ mode, companyId, watchedPage, open, onSave, onCance
   const onSubmit = useCallback(async (values: FormPage) => {
     showLoading();
 
-    const requestData: WatchedPage = { ...values, enabled: !!values.enabled };
+    const requestData: WatchedPage = { ...values, requiresJS: !!values.requiresJS };
 
     if (mode === "create") {
       requestData.companyId = companyId;
@@ -89,23 +91,28 @@ const WatchedPageDialog = ({ mode, companyId, watchedPage, open, onSave, onCance
           <form onSubmit={handleSubmit}>
             <DialogContent>
               <Grid container spacing={2}>
-                <Grid item xs={12} mb={2}>
-                  <Switches label="Enabled" name="enabled" data={{ label: "Enabled", value: "enabled" }} />
+                <Grid item xs={12}>
+                  <Switches name="enabled" data={{ label: "Enabled", value: "enabled" }} />
                 </Grid>
 
-                <Grid item container xs={12} spacing={1}>
+                <Grid item xs={12} mb={2}>
+                    <TextField label="URL" name="url" fullWidth required />
+                  </Grid>
+
+                <Grid item container xs={12} spacing={1} mb={2}>
                   <Grid item xs={12}>
-                    <TextField label="CSS Selector" name="cssSelector" fullWidth required />
+                    <TextField label="CSS Selector" name="cssSelector" fullWidth />
                   </Grid>
                   <Grid item xs={12}>
-                    <TextField label="CSS Blacklist" name="cssBlacklist" fullWidth required />
+                    <TextField label="CSS Blacklist" name="cssBlacklist" fullWidth />
                   </Grid>
-                  <Grid item xs={12}>
-                    <Select name="requiresJS" label="Requires JavaScript">
-                      <MenuItem value={1}>Yes</MenuItem>
-                      <MenuItem value={0}>No</MenuItem>
-                    </Select>
-                  </Grid>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Select name="requiresJS" label="Requires JavaScript" required>
+                    <MenuItem value={1}>Yes</MenuItem>
+                    <MenuItem value={0}>No</MenuItem>
+                  </Select>
                 </Grid>
               </Grid>
             </DialogContent>

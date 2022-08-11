@@ -1,10 +1,10 @@
-import React, { useCallback, useEffect, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
 import { Box, Button, Container, Chip, IconButton, Menu, MenuItem, TextField, Tooltip, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Link, PopoverOrigin } from "@mui/material"
 import Grid from "components/Grid";
-import { AccountBalance, Block,  LinkedIn, Map, MoreHoriz, OpenInNew, RateReview, Visibility, VisibilityOff, Web } from "@mui/icons-material";
+import { AccountBalance, Add, Block,  Delete,  Edit,  LinkedIn, Map, MoreHoriz, OpenInNew, RateReview, Refresh, Visibility, VisibilityOff, Web } from "@mui/icons-material";
 import makeStyles from "makeStyles";
 import  { AutocompleteRenderInputParams } from '@mui/material/Autocomplete';
-import { DataGrid, GridColDef, GridRowParams, GridSortModel } from "@mui/x-data-grid"
+import { DataGrid, GridActionsCellItem, GridColDef, GridColumns, GridRowParams, GridSortModel } from "@mui/x-data-grid"
 import { ODataColumnVisibilityModel } from "o-data-grid";
 import ODataGrid from "components/odata/ODataGrid";
 
@@ -29,6 +29,9 @@ import EditableMarkdown from "components/forms/EditableMarkdown";
 import ApiAutocomplete from "components/forms/ApiAutocomplete";
 import CompanyCategory from "types/models/CompanyCategory";
 import ICategoryLink from "types/models/ICategoryLink";
+import WatchedPage from "types/models/WatchedPage";
+import WatchedPageDialog from "components/model-dialogs/WatchedPageDialog";
+import DeleteDialog from "components/forms/DeleteDialog";
 
 dayjs.extend(relativeTime);
 
@@ -72,6 +75,11 @@ const isOptionEqualToValue = (o: any, v: any) => o.id === v.id;
 const Company = () => {
   const [company, setCompany] = useState<CompanyEntity>();
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+  const [pageDialogMode, setPageDialogMode] = useState<"edit" | "create">("create");
+  const [pageDialogOpen, setPageDialogOpen] = useState(false);
+  const [editingPage, setEditingPage] = useState<WatchedPage>();
+  const [deletePageOpen, setDeletePageOpen] = useState(false);
+  const [deletePageId, setDeletePageId] = useState<number>();
   const [mergeCompany, setMergeCompany] = useState<CompanyOption | null>(null);
   const [mergeOpen, setMergeOpen] = useState<boolean>(false);
 
@@ -166,6 +174,116 @@ const Company = () => {
       console.error(`API request failed: PATCH api/odata/company(${id}), HTTP ${response.status}`);
     }
   }, [id, company?.watched, showError]);
+  //#endregion
+
+  //#region Watched Pages
+  //#region Page editing
+  const onPageSave = useCallback(() => {
+    fetchData();
+    setPageDialogOpen(false);
+    setEditingPage(undefined);
+  }, [fetchData]);
+
+  const onPageCancel = useCallback(() => {
+    setPageDialogOpen(false);
+    setEditingPage(undefined);
+  }, []);
+  //#endregion
+
+  //#region Page deleting
+  const deletePageUrl = useMemo(() => `/api/odata/watchedpage(${deletePageId})`, [deletePageId]);
+
+  const onPageDeleteConfirm = useCallback(() => {
+    setCompany((c) => c ? ({ ...c, watchedPages: c.watchedPages.filter(p => p.id !== deletePageId) }) : undefined);
+  }, [deletePageId]);
+
+  const onPageDeleteClose = useCallback(() => {
+    setDeletePageId(undefined);
+    setDeletePageOpen(false);
+  }, []);
+  //#endregion
+  const onAddPageClick = useCallback(() => {
+    setPageDialogMode("create");
+    setPageDialogOpen(true);
+  }, []);
+
+  const onEditPageClick = useCallback((page: WatchedPage) => () => {
+    setEditingPage(page);
+    setPageDialogMode("edit");
+    setPageDialogOpen(true);
+  }, []);
+
+  const onDeletePageClick = useCallback((id: number) => () => {
+    setDeletePageId(id);
+    setDeletePageOpen(true);
+  }, []);
+
+  const onRefreshPageClick = useCallback((id: number) => async () => {
+    showLoading();
+
+    const response = await fetch(`/api/watchedpages/refresh/${id}`);
+    if (response.ok) {
+      showSuccess();
+      fetchData();
+    } else {
+      showError();
+      console.error(`API request failed, GET /api/watchedpages/refresh/${id}, HTTP ${response.status}`);
+    }
+  }, [showLoading, showSuccess, showError, fetchData]);
+
+  const watchedPageColumns: GridColumns<WatchedPage> = useMemo(() => [
+    {
+      field: "url",
+      headerName: "URL",
+      flex: 2,
+      renderCell: (params) => <Link href={params.value} target="_blank" rel="noreferrer">{params.value}</Link>
+    },
+    {
+      field: "lastScraped",
+      headerName: "Last Scraped",
+      flex: 1,
+      valueFormatter: (params) => params.value ? dayjs.utc(params.value).fromNow() : "Never"
+    },
+    {
+      field: "lastUpdated",
+      headerName: "Last Updated",
+      flex: 1,
+      valueFormatter: (params) => params.value ? dayjs.utc(params.value).fromNow() : "Never"
+    },
+    {
+      field: "status",
+      headerName: "Status",
+      flex: 1,
+      valueGetter: (params) => params.row.enabled ? params.value : "Disabled"
+    },
+    {
+      field: "actions",
+      type: "actions",
+      getActions: (params) => [
+        <GridActionsCellItem
+          label="Edit"
+          icon={<Edit />}
+          onClick={onEditPageClick(params.row)}
+          showInMenu
+        />,
+        <GridActionsCellItem
+          label="Delete"
+          icon={<Delete />}
+          onClick={onDeletePageClick(params.row.id)}
+          showInMenu
+        />,
+        <GridActionsCellItem
+          label="Refresh now"
+          icon={<Tooltip title="Refresh now" placement="right"><Refresh /></Tooltip>}
+          onClick={onRefreshPageClick(params.row.id)}
+          disabled={!params.row.enabled}
+        />
+      ],
+      renderHeader: () => (<Tooltip title="Add watched page" placement="top">
+        <IconButton onClick={onAddPageClick}><Add /></IconButton>
+      </Tooltip>)
+    }
+  ], [onEditPageClick, onDeletePageClick]);
   //#endregion
 
   //#region Merging
@@ -364,6 +482,22 @@ const Company = () => {
                 disableSelectionOnClick
                 autoHeight
               />
+
+              <WatchedPageDialog
+                companyId={company.id}
+                open={pageDialogOpen}
+                mode={pageDialogMode}
+                onSave={onPageSave}
+                onCancel={onPageCancel}
+                watchedPage={editingPage}
+              />
+              <DeleteDialog
+                open={deletePageOpen}
+                entityName="page"
+                onConfirm={onPageDeleteConfirm}
+                onClose={onPageDeleteClose}
+                deleteUrl={deletePageUrl}
+              />
             </Tab>
 
             <Tab>
@@ -381,6 +515,7 @@ const Company = () => {
           </Tabs>
         </CardBody>
       </Card>
+
       <Dialog open={mergeOpen} onClose={onMergeClose} aria-labelledby="add-dialog-title">
         <DialogTitle id="add-dialog-title">Merge Company</DialogTitle>
         <form onSubmit={onMergeSubmit}>
@@ -416,32 +551,5 @@ const Company = () => {
     </Container>
   );
 }
-
-const watchedPageColumns: GridColDef[] = [
-  {
-    field: "url",
-    headerName: "URL",
-    flex: 2,
-    renderCell: (params) => <Link href={params.value} target="_blank" rel="noreferrer">{params.value}</Link>
-  },
-  {
-    field: "lastScraped",
-    headerName: "Last Scraped",
-    flex: 1,
-    valueFormatter: (params) => params.value ? dayjs.utc(params.value).fromNow() : "Never"
-  },
-  {
-    field: "lastUpdated",
-    headerName: "Last Updated",
-    flex: 1,
-    valueFormatter: (params) => params.value ? dayjs.utc(params.value).fromNow() : "Never"
-  },
-  {
-    field: "status",
-    headerName: "Status",
-    flex: 1,
-    valueGetter: (params) => params.row["enabled"] ? params.value : "Disabled"
-  }
-]
 
 export default Company;

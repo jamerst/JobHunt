@@ -1,12 +1,13 @@
-import React from "react"
+import React, { FunctionComponent, PropsWithChildren } from "react"
 import { TabProps as MuiTabProps } from "@mui/material";
 
-export type TabProps = {
-  children?: React.ReactElement,
+type ActualTabProps = {
   keepMounted?: boolean,
   tabProps?: MuiTabProps
 }
 
-const Tab = (props: TabProps) => null;
+export type TabProps = PropsWithChildren<ActualTabProps>;
+
+const Tab: FunctionComponent<TabProps> = (props: TabProps) => null;
 
 export default Tab;

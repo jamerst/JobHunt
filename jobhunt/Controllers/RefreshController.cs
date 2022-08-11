@@ -15,13 +15,21 @@ public class RefreshController : ControllerBase
     private readonly ISearchRefreshWorker _refreshWorker;
     private readonly IPageScreenshotWorker _screenshotWorker;
     private readonly IJobService _jobService;
-    public RefreshController(IIndeedApiSearchProvider indeed, IPageWatcher pageWatcher, ISearchRefreshWorker refreshWorker, IPageScreenshotWorker screenshotWorker, IJobService jobService)
+    private readonly IWatchedPageService _wpService;
+    public RefreshController(
+        IIndeedApiSearchProvider indeed,
+        IPageWatcher pageWatcher,
+        ISearchRefreshWorker refreshWorker,
+        IPageScreenshotWorker screenshotWorker,
+        IJobService jobService,
+        IWatchedPageService wpService)
     {
         _indeed = indeed;
         _pageWatcher = pageWatcher;
         _refreshWorker = refreshWorker;
         _screenshotWorker = screenshotWorker;
         _jobService = jobService;
+        _wpService = wpService;
     }
 
     [HttpGet]
