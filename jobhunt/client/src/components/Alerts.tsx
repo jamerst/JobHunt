@@ -1,5 +1,5 @@
 import React, { Fragment, useState, useCallback, useEffect, useMemo } from "react"
-import { Badge, IconButton, List, ListItem, Paper, Popover, Tooltip, Typography, Link, PopoverOrigin } from "@mui/material"
+import { Badge, IconButton, List, ListItem, Paper, Popover, Tooltip, Typography, Link, PopoverOrigin, tooltipClasses } from "@mui/material"
 import Grid from "components/Grid";
 import { Notifications, ClearAll  } from "@mui/icons-material";
 import makeStyles from "makeStyles";
@@ -7,6 +7,7 @@ import { Link as RouterLink } from "react-router-dom";
 
 import dayjs, { Dayjs } from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
+import Date, { DateTooltipProps } from "./Date";
 
 type AlertProps = {
   onAlertClick?: () => void,
@@ -20,8 +21,7 @@ type Alert = {
   title: string,
   message?: string,
   url?: string,
-  created: Dayjs,
-  createdString: string
+  created: Dayjs
 }
 
 const useStyles = makeStyles()((theme) => ({
@@ -73,6 +73,11 @@ const useStyles = makeStyles()((theme) => ({
       height: theme.spacing(2),
       background: theme.palette.primary.main
     }
+  },
+  tooltip: {
+    [`& .${tooltipClasses.tooltip}`]: {
+      background: theme.palette.mode === "dark" ? theme.palette.background.default : ""
+    }
   }
 }));
 
@@ -85,8 +90,9 @@ const Alerts = ({onAlertClick, setAlertCount}: AlertProps) => {
   const [alertAnchor, setAlertAnchor] = useState<null | HTMLElement>(null);
 
   const { classes, cx } = useStyles();
+  const dateTooltipProps: DateTooltipProps = useMemo(() => ({ classes: { popper: classes.tooltip } }), [classes]);
 
-  const onClick = useCallback(async (id: number) => {
+  const onClick = useCallback((id: number) => async () => {
     const response = await fetch(`/api/alerts/read/${id}`, { method: "PATCH" });
     if (response.ok) {
       setAlerts((a) => {
@@ -147,11 +153,6 @@ const Alerts = ({onAlertClick, setAlertCount}: AlertProps) => {
         const data = await response.json() as Alert[];
         data.forEach(a => {
           a.created = dayjs.utc(a.created);
-          if (a.created.isBefore(dayjs.utc().subtract(1, "day"), "day")) {
-            a.createdString = a.created.local().format("DD/MM/YYYY HH:mm");
-          } else {
-            a.createdString = a.created.fromNow();
-          }
         });
 
         setAlerts(data);
@@ -202,18 +203,18 @@ const Alerts = ({onAlertClick, setAlertCount}: AlertProps) => {
           </Grid>
           <List className={classes.list}>
             {alerts.map(a => (
-              <ListItem key={a.id} className={getClasses(a)} onClick={() => onClick(a.id)}>
+              <ListItem key={a.id} className={getClasses(a)} onClick={onClick(a.id)}>
                 {a.url ? (
                   <Link component={RouterLink} to={a.url}>
                     <Typography>{a.title}</Typography>
                     <Typography variant="body2">{a.message}</Typography>
-                    <Typography variant="caption">{a.createdString}</Typography>
+                    <Typography variant="caption"><Date date={a.created} tooltipProps={dateTooltipProps} /></Typography>
                   </Link>
                 ) : (
                   <Fragment>
                     <Typography>{a.title}</Typography>
                     <Typography variant="body2">{a.message}</Typography>
-                    <Typography variant="caption">{a.createdString}</Typography>
+                      <Typography variant="caption"><Date date={a.created} tooltipProps={dateTooltipProps} /></Typography>
                   </Fragment>
                 )}
               </ListItem>

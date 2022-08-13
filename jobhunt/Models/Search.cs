@@ -14,7 +14,7 @@ public class Search : KeyedEntity
     public bool Enabled { get; set; } = true;
     public bool EmployerOnly { get; set; }
     public string? JobType { get; set; }
-    public DateTime? LastRun { get; set; }
+    public DateTimeOffset? LastRun { get; set; }
     public IList<Job> FoundJobs { get; set; } = null!;
     public IList<SearchRun> Runs { get; set; } = null!;
 

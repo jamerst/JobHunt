@@ -26,6 +26,7 @@ type Job = {
   actualCompanyId?: number,
 
   company?: Company,
+  duplicateJob?: Job,
   actualCompany?: Company,
   jobCategories: JobCategory[],
   source?: Search

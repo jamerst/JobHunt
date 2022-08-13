@@ -38,7 +38,7 @@ const Job = () => {
   const navigate = useNavigate();
 
   const fetchData = useCallback(async () => {
-    const response = await fetch(`/api/odata/job(${id})?$expand=company,actualCompany,jobCategories($expand=category)`, { method: "GET" });
+    const response = await fetch(`/api/odata/job(${id})?$expand=company,actualCompany,jobCategories($expand=category),duplicateJob`, { method: "GET" });
     if (response.ok) {
       const data = await response.json() as JobEntity;
 
@@ -149,6 +149,9 @@ const Job = () => {
           <Grid container alignItems="center" spacing={1}>
             <Grid item xs>
               <Typography variant="h4">{job.title}</Typography>
+              {job.duplicateJob && <Typography variant="body1">
+                <em>Duplicate of <Link sx={{ textDecoration: "underline" }} component={RouterLink} to={`/job/${job.duplicateJobId}`}>{job.duplicateJob.title}</Link></em>
+              </Typography>}
               <Typography variant="h6">
                 {
                   job.actualCompanyId

@@ -5,7 +5,7 @@ namespace JobHunt.Searching.Indeed;
 public interface IIndeedPublisherApi
 {
     [Get("/ads/apisearch")]
-    Task<JobSearchResponse> SearchAsync(JobSearchParams searchParams);
+    Task<ApiResponse<JobSearchResponse>> SearchAsync(JobSearchParams searchParams);
 }
 
 public class JobSearchParams

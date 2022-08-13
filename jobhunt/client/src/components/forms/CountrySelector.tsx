@@ -1,39 +1,51 @@
-import React, { FunctionComponent } from "react"
-import Autocomplete from '@mui/material/Autocomplete'
+import React, { useCallback, useMemo } from "react"
 import data from "utils/countries.json"
-import { TextField } from "@mui/material"
+import { Autocomplete } from "mui-rff"
 
 type CountrySelectorProps = {
-  value: string,
-  onChange: (code: string) => void,
+  name: string,
+  label: string,
   required?: boolean,
   allowedCountries?: string[],
   hideForbiddenCountries?: boolean
 }
 
-const CountrySelector: FunctionComponent<CountrySelectorProps> = (props) => {
-  return (
-    <Autocomplete
-      options={data.filter(d => !props.allowedCountries || !props.hideForbiddenCountries || props.allowedCountries.includes(d.countryShortCode.toLowerCase()))}
-      getOptionLabel={(option) => option.countryName}
-      renderInput={(params) => <TextField {...params} label={`Country${props.required ? " *" : ""}`} variant="outlined" />}
-      fullWidth
-      value={getCountry(props.value)}
-      onChange={(_, val) => props.onChange(val?.countryShortCode ?? "")}
-      disableClearable
-      getOptionDisabled={(option) => props.allowedCountries !== undefined && !props.allowedCountries.includes(option.countryShortCode.toLowerCase())}
-    />
-  )
+type Country = {
+  countryName: string,
+  countryShortCode: string
 }
 
-const getCountry = (code: string) => {
-  const result = data.find(c => c.countryShortCode.toLowerCase() === code.toLowerCase());
+const getOptionValue = (option: Country) => option.countryShortCode;
+const getOptionLabel = (option: Country | string) => (option as Country)?.countryName ?? option;
 
-  if (!result) {
-    console.error(`CountrySelector Error: code '${code}' not found`);
-  }
+const CountrySelector = ({ name, label, required, allowedCountries, hideForbiddenCountries }: CountrySelectorProps) => {
+  const options: Country[] = useMemo(() => data.filter(d =>
+    !allowedCountries
+    || !hideForbiddenCountries
+    || allowedCountries.includes(d.countryShortCode.toLowerCase())
+  ), [allowedCountries, hideForbiddenCountries]);
 
-  return result;
+  const getOptionDisabled = useCallback((option: Country) => {
+    if (!allowedCountries) {
+      return false;
+    } else {
+      return !allowedCountries.some(c => c.toLowerCase() === option.countryShortCode.toLowerCase());
+    }
+  }, [allowedCountries]);
+
+  return (
+    <Autocomplete
+      options={options}
+      getOptionValue={getOptionValue}
+      getOptionLabel={getOptionLabel}
+      name={name}
+      label={label}
+      required={required}
+      fullWidth
+      disableClearable={required}
+      getOptionDisabled={getOptionDisabled}
+    />
+  )
 }
 
 export default CountrySelector;

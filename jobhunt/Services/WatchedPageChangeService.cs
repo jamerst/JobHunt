@@ -25,19 +25,6 @@ public class WatchedPageChangeService : KeyedEntityBaseService<WatchedPageChange
             .FirstOrDefaultAsync();
     }
 
-    public async Task<List<WatchedPageChangeDto>> FindAllChangesAsync(int watchedPageId)
-    {
-        return await _context.WatchedPageChanges
-            .Where(c => c.WatchedPageId == watchedPageId)
-            .OrderByDescending(c => c.Created)
-            .Select(c => new WatchedPageChangeDto
-            {
-                Id = c.Id,
-                Created = c.Created
-            })
-            .ToListAsync();
-    }
-
     public async Task<Stream?> GetScreenshotAsync(int changeId)
     {
         WatchedPageChange? change = await _context.WatchedPageChanges.FirstOrDefaultAsync(c => c.Id == changeId);
@@ -115,7 +102,6 @@ public class WatchedPageChangeService : KeyedEntityBaseService<WatchedPageChange
 public interface IWatchedPageChangeService : IKeyedEntityBaseService<WatchedPageChange>
 {
     Task<WatchedPageChange?> GetLatestChangeOrDefaultAsync(int watchedPageId);
-    Task<List<WatchedPageChangeDto>> FindAllChangesAsync(int watchedPageId);
     Task<Stream?> GetScreenshotAsync(int changeId);
     Task<(string?, string?)> GetDiffHtmlAsync(int changeId);
 }

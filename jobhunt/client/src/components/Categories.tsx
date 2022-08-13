@@ -84,6 +84,12 @@ const Categories: FunctionComponent<CategoriesProps> = ({ children, initialValue
     }
   }, [allCategories, fetchUrl]);
 
+  const onClickAdd = useCallback(() => {
+    fetchCategories(false);
+    setOpen(o => !o);
+    addCategory(false);
+  }, []);
+
   const addCategory = useCallback(async (keepOpen: boolean) => {
     if (!newCategory) {
       return;
@@ -135,7 +141,7 @@ const Categories: FunctionComponent<CategoriesProps> = ({ children, initialValue
     }
   }, [createUrl, newCategory, allCategories, getEntity])
 
-  const removeCategory = useCallback(async (id?: number) => {
+  const removeCategory = useCallback((id?: number) => async () => {
     if (!id) {
       return;
     }
@@ -198,7 +204,7 @@ const Categories: FunctionComponent<CategoriesProps> = ({ children, initialValue
     <Grid container spacing={1} alignItems="center">
       {children}
       {categories.map(c =>
-        (<Grid item key={`category-${c.categoryId}`}><Chip label={c.category.name} onDelete={() => removeCategory(c.categoryId)}/></Grid>)
+        (<Grid item key={`category-${c.categoryId}`}><Chip label={c.category.name} onDelete={removeCategory(c.categoryId)}/></Grid>)
       )}
 
       {
@@ -221,7 +227,7 @@ const Categories: FunctionComponent<CategoriesProps> = ({ children, initialValue
 
       <Grid item>
         <Tooltip title="Add category" placement="right">
-          <IconButton size="small" onClick={() => { fetchCategories(false); setOpen(!open); addCategory(false); }}><Add/></IconButton>
+          <IconButton size="small" onClick={onClickAdd}><Add/></IconButton>
         </Tooltip>
       </Grid>
     </Grid>

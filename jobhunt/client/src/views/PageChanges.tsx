@@ -8,26 +8,11 @@ import { Link as RouterLink } from "react-router-dom"
 import Grid from "components/Grid";
 import makeStyles from "makeStyles";
 import { Helmet } from "react-helmet";
+import WatchedPage from "types/models/WatchedPage";
 
 type WatchedPageResponse = {
   watchedPage: WatchedPage,
   changes: WatchedPageChange[]
-}
-
-type WatchedPage = {
-  id: number,
-  url: string,
-  lastScraped?: string,
-  lastUpdated?: string,
-  statusMessage?: string,
-  enabled: boolean,
-  requiresJS: boolean,
-  company: Company
-}
-
-type Company = {
-  id: number,
-  name: string
 }
 
 type WatchedPageChange = {
@@ -109,12 +94,12 @@ const PageChanges = () => {
     }
   }), [watchedPage]);
 
-  const handleTimelineChange = useCallback((id: number, index: number) => {
+  const handleTimelineChange = useCallback((id: number, index: number) => () => {
     setCurrent(id);
     setCurrentIndex(index);
   }, []);
 
-  const handleViewChange = useCallback((event: React.MouseEvent<HTMLElement>, newView: string) => {
+  const handleViewChange = useCallback((_: React.MouseEvent<HTMLElement>, newView: string) => {
     setView(newView);
   }, []);
 
@@ -148,10 +133,10 @@ const PageChanges = () => {
             {changes.map((c, i) => (
               <TimelineItem className={classes.timelineItem} key={`watchedpagechange-${c.id}`}>
                 <TimelineSeparator>
-                  <TimelineDot color={c.id === current ? "secondary" : "grey"} onClick={() => handleTimelineChange(c.id, i)} />
+                  <TimelineDot color={c.id === current ? "secondary" : "grey"} onClick={handleTimelineChange(c.id, i)} />
                   {c?.hasPrevious && (<TimelineConnector />)}
                 </TimelineSeparator>
-                <TimelineContent onClick={() => handleTimelineChange(c.id, i)}>{c.date}</TimelineContent>
+                <TimelineContent onClick={handleTimelineChange(c.id, i)}>{c.date}</TimelineContent>
               </TimelineItem>
             ))}
           </Timeline>

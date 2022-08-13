@@ -42,18 +42,18 @@ public class JobService : ODataBaseService<Job>, IJobService
         await _context.SaveChangesAsync();
     }
 
-    public async Task<JobCount> GetJobCountsAsync(DateTime date)
+    public async Task<JobCount> GetJobCountsAsync(DateTimeOffset date)
     {
         JobCount counts = new JobCount();
 
-        DateTime dailyDate = date.Date.ToUniversalTime().AddDays(-1);
-        counts.Daily = await _context.Jobs.CountAsync(j => j.Posted.HasValue && j.Posted.Value.Date >= dailyDate);
+        DateTimeOffset dailyDate = date.Date.AddDays(-1);
+        counts.Daily = await _context.Jobs.CountAsync(j => j.Posted.Date >= dailyDate);
 
-        DateTime weeklyDate = date.Date.ToUniversalTime().AddDays(-7);
-        counts.Weekly = await _context.Jobs.CountAsync(j => j.Posted.HasValue && j.Posted.Value.Date >= weeklyDate);
+        DateTimeOffset weeklyDate = date.Date.AddDays(-7);
+        counts.Weekly = await _context.Jobs.CountAsync(j => j.Posted.Date >= weeklyDate);
 
-        DateTime monthlyDate = date.Date.ToUniversalTime().AddMonths(-1);
-        counts.Monthly = await _context.Jobs.CountAsync(j => j.Posted.HasValue && j.Posted.Value.Date >= monthlyDate);
+        DateTimeOffset monthlyDate = date.Date.AddMonths(-1);
+        counts.Monthly = await _context.Jobs.CountAsync(j => j.Posted.Date >= monthlyDate);
 
         return counts;
     }
@@ -67,143 +67,6 @@ public class JobService : ODataBaseService<Job>, IJobService
             job.Seen = true;
             await _context.SaveChangesAsync();
         }
-    }
-
-    public async Task<IEnumerable<Category>?> UpdateCategoriesAsync(int id, CategoryDto[] categories)
-    {
-        Job? job = await _context.Jobs
-            .Include(j => j.JobCategories)
-            .FirstOrDefaultAsync(j => j.Id == id);
-
-        if (job == default(Job))
-        {
-            return null;
-        }
-
-        job.JobCategories.RemoveAll(jc => !categories.Any(c => c.Id == jc.CategoryId));
-
-        List<Category> allCategories = await _context.Categories.ToListAsync();
-        foreach (var cat in categories)
-        {
-            Category? existing = allCategories.FirstOrDefault(c => c.Id == cat.Id || c.Name == cat.Name);
-            // if category already exists
-            if (existing != null)
-            {
-                // if not already added
-                if (!job.JobCategories.Any(jc => jc.CategoryId == existing.Id))
-                {
-                    job.JobCategories.Add(new JobCategory { JobId = id, CategoryId = existing.Id });
-                }
-            }
-            else
-            {
-                job.JobCategories.Add(new JobCategory
-                {
-                    JobId = id,
-                    Category = new Category
-                    {
-                        Name = cat.Name
-                    }
-                });
-            }
-        }
-
-        await _context.SaveChangesAsync();
-
-        _context.Categories.RemoveRange(_context.Categories.Where(c => !c.CompanyCategories.Any() && !c.JobCategories.Any()));
-        await _context.SaveChangesAsync();
-
-        // return new list of categories
-        return await _context.JobCategories
-            .Include(jc => jc.Category)
-            .Where(jc => jc.JobId == id)
-            .Select(jc => jc.Category)
-            .ToListAsync();
-    }
-
-    public async Task<bool> UpdateAsync(int id, JobDto details)
-    {
-        Job? job = await _context.Jobs
-            .SingleOrDefaultAsync(j => j.Id == id);
-
-        if (job == default(Job))
-        {
-            return false;
-        }
-
-        job.Title = details.Title;
-        job.Salary = details.Salary;
-        job.AvgYearlySalary = details.AvgYearlySalary;
-        job.Description = details.Description;
-        job.Notes = details.Notes;
-        job.Latitude = details.Latitude;
-        job.Longitude = details.Longitude;
-
-        await _context.SaveChangesAsync();
-
-        return true;
-    }
-
-    public async Task<int?> CreateAsync(NewJobDto details)
-    {
-        Job job = new Job();
-
-        Company? company = await _context.Companies.SingleOrDefaultAsync(c => c.Id == details.CompanyId);
-
-        job.Location = "";
-
-        if (company != default(Company))
-        {
-            job.CompanyId = company.Id;
-            job.Latitude = company.Latitude;
-            job.Longitude = company.Longitude;
-
-            if (string.IsNullOrEmpty(details.Location))
-            {
-                job.Location = company.Location;
-            }
-        }
-
-        if (!string.IsNullOrEmpty(details.Location))
-        {
-            job.Location = details.Location;
-
-            Coordinate? coord = await _geocoder.GeocodeAsync(details.Location);
-            job.Latitude = coord?.Latitude;
-            job.Longitude = coord?.Longitude;
-        }
-
-        job.Title = details.Title;
-        job.Salary = details.Salary;
-        job.AvgYearlySalary = details.AvgYearlySalary;
-        job.Url = details.Url;
-
-        if (details.Posted.HasValue)
-        {
-            job.Posted = details.Posted;
-        }
-        else
-        {
-            job.Posted = DateTime.UtcNow;
-        }
-
-        if (!string.IsNullOrEmpty(details.Description))
-        {
-            (bool success, string output) = await PandocConverter.ConvertAsync("html", "markdown_strict", details.Description);
-            if (success)
-            {
-                job.Description = output;
-            }
-        }
-        else
-        {
-            job.Description = "";
-        }
-
-        _context.Jobs.Add(job);
-        await _context.SaveChangesAsync();
-
-        return job.Id;
     }
 
     public async Task ArchiveAsync(int id, bool toggle)
@@ -252,15 +115,15 @@ public class JobService : ODataBaseService<Job>, IJobService
     public async Task<Job?> FindDuplicateAsync(Job job)
     {
         IQueryable<Job> jobs = _context.Jobs
-            .Where(j => j.Id != job.Id)
+            .Where(j => j.Id != job.Id && j.Posted <= job.Posted)
             .Include(j => j.JobCategories);
 
-        if (_options.DuplicateCheckMonths.HasValue && job.Posted.HasValue)
+        if (_options.DuplicateCheckMonths.HasValue)
         {
-            DateTime lower = job.Posted.Value.AddMonths(-_options.DuplicateCheckMonths.Value).Date;
-            DateTime upper = job.Posted.Value.AddMonths(_options.DuplicateCheckMonths.Value).Date;
+            DateTimeOffset lower = job.Posted.AddMonths(-_options.DuplicateCheckMonths.Value).Date;
+            DateTimeOffset upper = job.Posted.AddMonths(_options.DuplicateCheckMonths.Value).Date;
 
-            jobs = jobs.Where(j => !j.Posted.HasValue || (j.Posted > lower && j.Posted < upper));
+            jobs = jobs.Where(j => j.Posted > lower && j.Posted < upper);
         }
 
         // Inner join each job with the job we are checking for
@@ -311,6 +174,7 @@ public class JobService : ODataBaseService<Job>, IJobService
         }
     }
 
+
     private async Task _setThreshold(string thresholdType, double threshold)
     {
         await _context.Database.ExecuteSqlRawAsync($"SET pg_trgm.{thresholdType} = {threshold};");
@@ -358,15 +222,15 @@ public class JobService : ODataBaseService<Job>, IJobService
         }
 
         // workaround for stupid OData bug where all dates are parsed as Unspecified
-        if (entity.Posted?.Kind == DateTimeKind.Unspecified)
-        {
-            entity.Posted = DateTime.SpecifyKind(entity.Posted.Value, DateTimeKind.Utc);
-        }
+        // if (entity.Posted?.Kind == DateTimeKind.Unspecified)
+        // {
+        //     entity.Posted = DateTime.SpecifyKind(entity.Posted.Value, DateTimeKind.Utc);
+        // }
 
-        if (entity.DateApplied?.Kind == DateTimeKind.Unspecified)
-        {
-            entity.Posted = DateTime.SpecifyKind(entity.DateApplied.Value, DateTimeKind.Utc);
-        }
+        // if (entity.DateApplied?.Kind == DateTimeKind.Unspecified)
+        // {
+        //     entity.Posted = DateTime.SpecifyKind(entity.DateApplied.Value, DateTimeKind.Utc);
+        // }
 
         return entity;
     }
@@ -377,14 +241,17 @@ public interface IJobService : IODataBaseService<Job>
     Task<Job?> GetByIdAsync(int id);
     Task<bool> AnyWithProviderIdAsync(string provider, string id);
     Task CreateAllAsync(IEnumerable<Job> jobs);
-    Task<JobCount> GetJobCountsAsync(DateTime date);
+    Task<JobCount> GetJobCountsAsync(DateTimeOffset date);
     Task MarkAsSeenAsync(int id);
-    Task<IEnumerable<Category>?> UpdateCategoriesAsync(int id, CategoryDto[] categories);
-    Task<bool> UpdateAsync(int id, JobDto details);
-    Task<int?> CreateAsync(NewJobDto details);
     Task ArchiveAsync(int id, bool toggle);
     Task<IEnumerable<Category>> GetJobCategoriesAsync();
     Task<bool> UpdateStatusAsync(int id, string status);
     DbSet<Job> GetSet();
+
+    /// <summary>
+    /// Find the newest duplicate posted before a given job
+    /// </summary>
+    /// <param name="job">Job to find duplicate of</param>
+    /// <returns>Job which is a likely duplicate, null if none found</returns>
     Task<Job?> FindDuplicateAsync(Job job);
 }

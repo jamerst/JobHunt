@@ -140,13 +140,13 @@ const Search = () => {
                     />
                 </Grid>
                 <Grid item xs={12}>
-                  <CountrySelector
+                  {/* <CountrySelector
                     value={search.country}
                     onChange={(code: string) => { setEdited(true); setSearch({...search, country: code}); }}
                     required
                     allowedCountries={search.provider === "Indeed" ? IndeedSupportedCountries : undefined}
                     hideForbiddenCountries
-                  />
+                  /> */}
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <FormControl fullWidth variant="outlined">

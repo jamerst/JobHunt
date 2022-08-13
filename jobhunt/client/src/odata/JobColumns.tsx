@@ -13,6 +13,7 @@ import { ODataGridColDef, escapeODataString } from "o-data-grid";
 
 import LocationFilter from "types/odata/LocationFilter";
 import { createCategoryColumn } from "./ColumnDefinitions";
+import Date from "components/Date";
 
 export const getJobColumns = (): ODataGridColDef[] => {
   dayjs.extend(relativeTime);
@@ -96,6 +97,7 @@ export const getJobColumns = (): ODataGridColDef[] => {
     {
       field: "company/name",
       headerName: "Company",
+      label: "Company Name",
       flex: 2,
       renderCell: (params) => (
         <Link
@@ -120,6 +122,14 @@ export const getJobColumns = (): ODataGridColDef[] => {
         { navigationField: "company", select: "id,name,recruiter,blacklisted,watched" },
         { navigationField: "actualCompany", select: "id,name" }
       ],
+      filterOperators: ["eq", "ne", "contains"],
+      getCustomFilterString: (op, v) => {
+        if (op === "contains") {
+          return `(contains(tolower(company/name), tolower('${escapeODataString(v)}')) or contains(tolower(actualCompany/name), tolower('${escapeODataString(v)}')))`;
+        } else {
+          return `(tolower(company/name) ${op} tolower('${escapeODataString(v)}') or tolower(actualCompany/name) ${op} tolower('${escapeODataString(v)}'))`;
+        }
+      },
       autocompleteGroup: "Company"
     },
     {
@@ -167,8 +177,7 @@ export const getJobColumns = (): ODataGridColDef[] => {
       type: "date",
       flex: .9,
       renderCell: (params) => {
-        let date = dayjs.utc(params.value as string);
-        let dateComponent;
+        const date = dayjs.utc(params.value as string);
         let chip;
 
         if (params.row.seen === false) {
@@ -179,22 +188,9 @@ export const getJobColumns = (): ODataGridColDef[] => {
           chip = (<Chip label="Archived" />);
         }
 
-        if (date.isBefore(dayjs.utc().subtract(14, "day"), "day")) {
-          dateComponent = (<Fragment>{date.local().format("DD/MM/YYYY HH:mm")}</Fragment>);
-        } else {
-          dateComponent = (
-            <Tooltip
-              title={<Typography variant="body2">{date.local().format("DD/MM/YYYY HH:mm")}</Typography>}
-              placement="right"
-            >
-              <span>{date.fromNow()}</span>
-            </Tooltip>
-          );
-        }
-
         return (
           <Grid container justifyContent="space-between" alignItems="center">
-            <Grid item>{dateComponent}</Grid>
+            <Grid item><Date date={date} /></Grid>
             <Grid item>{chip}</Grid>
           </Grid>
         )

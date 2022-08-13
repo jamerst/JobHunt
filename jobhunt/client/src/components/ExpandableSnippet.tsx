@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useCallback, useState } from "react"
 import makeStyles from "makeStyles";
 import { IconButton } from "@mui/material";
 import Grid from "components/Grid";
@@ -9,7 +9,7 @@ type ExpandableSnippetProps = {
   hidden?: boolean
 }
 
-const useStyles = makeStyles<ExpandableSnippetProps>()((theme, props) => ({
+const useStyles = makeStyles<ExpandableSnippetProps>()((_, props) => ({
   collapsed: {
     maxHeight: props.maxHeight ?? "30em",
     overflow: "hidden",
@@ -18,9 +18,13 @@ const useStyles = makeStyles<ExpandableSnippetProps>()((theme, props) => ({
 }));
 
 const ExpandableSnippet = (props:  React.PropsWithChildren<ExpandableSnippetProps>) => {
+  const [collapsed, setCollapsed] = useState<boolean>(true);
+
   const { classes } = useStyles(props);
 
-  const [collapsed, setCollapsed] = useState<boolean>(true);
+  const onClick = useCallback(() => {
+    setCollapsed(c => !c);
+  }, []);
 
   return (
     <Grid container>
@@ -29,7 +33,7 @@ const ExpandableSnippet = (props:  React.PropsWithChildren<ExpandableSnippetProp
       </Grid>
       <Grid item container justifyContent="center">
         {!props.hidden ? (
-          <IconButton onClick={() => setCollapsed(!collapsed)} size="large">
+          <IconButton onClick={onClick} size="large">
             {collapsed ?
               (<ExpandMore fontSize="large"/>)
               :

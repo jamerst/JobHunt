@@ -5,7 +5,7 @@ namespace JobHunt.Searching.Indeed;
 public interface IIndeedSalaryApi
 {
     [Get("/viewjob?vjs=1&jk={jobKey}")]
-    Task<SalaryResponse> GetSalaryAsync(string jobKey);
+    Task<ApiResponse<SalaryResponse>> GetSalaryAsync(string jobKey);
 }
 
 // need to use a factory to create these since the domain depends on the job location and the base address for a HTTPClient cannot be changed

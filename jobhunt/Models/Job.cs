@@ -15,14 +15,14 @@ public class Job : KeyedEntity
     public double? Longitude { get; set; }
     public string? Url { get; set; }
     [Required]
-    public int? CompanyId { get; set; }
-    public Company? Company { get; set; }
-    public DateTime? Posted { get; set; }
+    public int CompanyId { get; set; }
+    public Company Company { get; set; } = null!;
+    public DateTimeOffset Posted { get; set; }
     public string? Notes { get; set; }
     public bool Seen { get; set; } = false;
     public bool Archived { get; set; } = false;
     public string Status { get; set; } = JobStatus.NotApplied;
-    public DateTime? DateApplied { get; set; }
+    public DateTimeOffset? DateApplied { get; set; }
     public List<JobCategory> JobCategories { get; set; } = null!;
     public string? Provider { get; set; }
     public string? ProviderId { get; set; }

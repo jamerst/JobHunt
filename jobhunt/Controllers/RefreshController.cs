@@ -33,36 +33,32 @@ public class RefreshController : ControllerBase
     }
 
     [HttpGet]
-    public async Task Indeed()
+    public async Task Indeed(CancellationToken token)
     {
-        CancellationToken token = new CancellationToken();
         await _indeed.SearchAllAsync(token);
     }
 
     [HttpGet]
-    public async Task PageWatcher()
+    public async Task PageWatcher(CancellationToken token)
     {
-        CancellationToken token = new CancellationToken();
         await _pageWatcher.RefreshAllAsync(token);
     }
 
     [HttpGet]
-    public async Task All()
+    public async Task All(CancellationToken token)
     {
-        CancellationToken token = new CancellationToken();
         await _refreshWorker.DoRefreshAsync(token);
     }
 
     [HttpGet]
-    public async Task<IActionResult> Screenshot()
+    public async Task<IActionResult> Screenshot(CancellationToken token)
     {
-        CancellationToken token = new CancellationToken();
         int numScreenshots = await _screenshotWorker.TakeScreenshotsAsync(token);
         return new JsonResult(numScreenshots);
     }
 
     [HttpGet]
-    public async Task FindDuplicates()
+    public async Task FindDuplicates(CancellationToken token)
     {
         var jobs = _jobService.Set
             .Where(j => !j.DuplicateJobId.HasValue)
@@ -71,6 +67,11 @@ public class RefreshController : ControllerBase
 
         await foreach (var job in jobs)
         {
+            if (token.IsCancellationRequested)
+            {
+                break;
+            }
+
             var duplicate = await _jobService.FindDuplicateAsync(job);
             if (duplicate != default)
             {

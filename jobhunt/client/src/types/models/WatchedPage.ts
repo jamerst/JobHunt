@@ -1,3 +1,5 @@
+import Company from "./Company";
+
 type WatchedPage = {
   id: number,
   companyId: number,
@@ -8,7 +10,9 @@ type WatchedPage = {
   lastUpdated?: string,
   statusMessage?: string,
   enabled: boolean,
-  requiresJS: boolean
+  requiresJS: boolean,
+
+  company: Company
 }
 
 export default WatchedPage;

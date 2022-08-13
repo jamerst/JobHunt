@@ -17,7 +17,7 @@ type WatchedPageDialogProps = {
   onCancel: () => void
 }
 
-type FormPage = Omit<WatchedPage, "requiresJS"> & {
+type FormPage = Omit<WatchedPage, "requiresJS" | "company"> & {
   requiresJS: 0 | 1
 }
 
@@ -34,7 +34,7 @@ const WatchedPageDialog = ({ mode, companyId, watchedPage, open, onSave, onCance
   const onSubmit = useCallback(async (values: FormPage) => {
     showLoading();
 
-    const requestData: WatchedPage = { ...values, requiresJS: !!values.requiresJS };
+    const requestData: Omit<WatchedPage, "company"> = { ...values, requiresJS: !!values.requiresJS };
 
     if (mode === "create") {
       requestData.companyId = companyId;

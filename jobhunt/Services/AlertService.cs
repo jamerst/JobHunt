@@ -11,7 +11,7 @@ public class AlertService : IAlertService
     }
     public async Task CreateAsync(Alert alert)
     {
-        alert.Created = DateTime.UtcNow;
+        alert.Created = DateTimeOffset.UtcNow;
         _context.Alerts.Add(alert);
         await _context.SaveChangesAsync();
     }

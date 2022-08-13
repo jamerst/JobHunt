@@ -507,7 +507,7 @@ const Company = () => {
                 columnVisibilityModel={columnVisibility}
                 alwaysSelect={alwaysSelect}
                 defaultSortModel={defaultSort}
-                $filter={`CompanyId eq ${id}`}
+                $filter={`companyId eq ${id} or actualCompanyId eq ${id}`}
                 disableFilterBuilder
                 getRowClassName={getClass}
               />

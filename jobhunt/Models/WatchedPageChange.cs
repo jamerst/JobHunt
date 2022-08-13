@@ -5,7 +5,7 @@ public class WatchedPageChange : KeyedEntity
     public int Id { get; set; }
     public int WatchedPageId { get; set; }
     public WatchedPage WatchedPage { get; set; } = null!;
-    public DateTime Created { get; set; }
+    public DateTimeOffset Created { get; set; }
     public string Html { get; set; } = null!;
     public string? ScreenshotFileName { get; set; }
 }

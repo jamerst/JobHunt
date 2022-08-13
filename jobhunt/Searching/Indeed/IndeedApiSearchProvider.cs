@@ -77,7 +77,7 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
         sw.Start();
         var query = new JobSearchParams(_options.IndeedPublisherId, search);
 
-        DateTime maxAge = DateTime.MinValue;
+        DateTime? maxAge = null;
         if (search.MaxAge.HasValue)
         {
             maxAge = DateTime.UtcNow.Date.AddDays(-1 * search.MaxAge.Value);
@@ -96,31 +96,31 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
 
         while (!existingFound && !token.IsCancellationRequested)
         {
-            JobSearchResponse? response = null;
-
+            ApiResponse<JobSearchResponse> response;
             query.Start = start;
             try
             {
                 response = await _publisherApi.SearchAsync(query);
             }
-            catch (ApiException ex)
+            catch (Exception ex)
             {
+                sw.Stop();
                 _logger.LogError(ex, "Indeed Publisher API request exception");
                 await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", $"Indeed Publisher API error");
                 await _searchService.CreateSearchRunAsync(search.Id!, false, $"Indeed Publisher API error", 0, 0, (int) sw.Elapsed.TotalSeconds);
                 return;
             }
 
-            if (response?.Results == null)
+            if (!response.IsSuccessStatusCode || response.Content == null)
             {
                 sw.Stop();
-                _logger.LogError("Indeed Publisher API request deserialisation failed");
+                _logger.LogError("Indeed Publisher API request failed {@response}", response);
                 await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", "Indeed Publisher API error");
                 await _searchService.CreateSearchRunAsync(search.Id!, false, "Indeed Publisher API error", 0, 0, (int) sw.Elapsed.TotalSeconds);
                 return;
             }
 
-            foreach (var job in response.Results)
+            foreach (var job in response.Content.Results)
             {
                 if (token.IsCancellationRequested)
                 {
@@ -137,52 +137,19 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
                 {
                     newJobs++;
 
-                    // get the hostname of the job view URL to allow salary to be fetched in local currency
+                    // get the hostname of the job view URL to allow creating link without tracking to correct domain
                     // returns "https://uk.indeed.com" for a UK job
                     string jobBaseUri = new Uri(job.Url).GetLeftPart(UriPartial.Authority);
-
-                    string? salary = null;
-                    int? avgYearlySalary = null;
-                    if (_options.IndeedFetchSalary && salaryFailCount <= 10)
-                    {
-                        var api = _salaryApiFactory.CreateApi(jobBaseUri);
-                        SalaryResponse? salaryResponse = null;
-                        try
-                        {
-                            salaryResponse = await api.GetSalaryAsync(job.JobKey);
-                        }
-                        catch (ApiException ex)
-                        {
-                            _logger.LogError(ex, "Indeed Salary API request exception");
-                            await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", "Indeed Salary API error");
-                            salaryFailCount++;
-                        }
-
-                        if (salaryResponse != null)
-                        {
-                            (salary, avgYearlySalary) = salaryResponse.GetSalary();
-
-                            salaryFailCount = 0;
-                        }
-                        else
-                        {
-                            _logger.LogError("Indeed Salary API deserialisation failed");
-                            await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", "Indeed Salary API error");
-                            salaryFailCount++;
-                        }
-                    }
 
                     Job newJob = new Job
                     {
                         Title = job.JobTitle,
                         Description = job.Snippet,
-                        Salary = salary,
-                        AvgYearlySalary = avgYearlySalary,
                         Location = job.FormattedLocation,
                         Latitude = job.Latitude,
                         Longitude = job.Longitude,
                         Url = $"{jobBaseUri}/viewjob?jk={job.JobKey}",
-                        Posted = job.Date,
+                        Posted = new DateTimeOffset(job.Date, TimeSpan.Zero),
                         Provider = SearchProviderName.Indeed,
                         ProviderId = job.JobKey,
                         SourceId = search.Id!
@@ -231,7 +198,7 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
                 }
             }
 
-            if (start + PageSize < response.TotalResults)
+            if (start + PageSize < response.Content.TotalResults)
             {
                 start += PageSize;
             }
@@ -253,14 +220,62 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
 
         var allJobs = jobs.Concat(companies.SelectMany(c => c.Jobs));
 
+        if (_options.IndeedFetchSalary)
+        {
+            foreach (var domain in allJobs.GroupBy(j => new Uri(j.Url!).GetLeftPart(UriPartial.Authority)))
+            {
+                if (token.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                var api = _salaryApiFactory.CreateApi(domain.Key);
+                foreach (var job in domain)
+                {
+                    if (salaryFailCount >= 10 || token.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
+                    ApiResponse<SalaryResponse> response;
+                    try
+                    {
+                        response = await api.GetSalaryAsync(job.ProviderId!);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Indeed Salary API request exception");
+                        await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", "Indeed Salary API error");
+                        salaryFailCount++;
+                        continue;
+                    }
+
+                    if (response.IsSuccessStatusCode && response.Content != null)
+                    {
+                        (string? salary, int? avgYearlySalary) = response.Content.GetSalary();
+                        job.Salary = salary;
+                        job.AvgYearlySalary = avgYearlySalary;
+
+                        salaryFailCount = 0;
+                    }
+                    else
+                    {
+                        _logger.LogError("Indeed Salary API request failed {@response}", response);
+                        await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", "Indeed Salary API error");
+                        salaryFailCount++;
+                    }
+                }
+            }
+        }
+
         // Indeed doesn't provide full job descriptions through their official API, so use an undocumented endpoint to get them
         // You have no idea how difficult it was to find this endpoint
-        Dictionary<string, string>? jobDescs = null;
+        ApiResponse<Dictionary<string, string>>? descResponse = null;
         try
         {
-            jobDescs = await _descApi.GetJobDescriptionsAsync(allJobs.Select(j => j.ProviderId!));
+            descResponse = await _descApi.GetJobDescriptionsAsync(allJobs.Select(j => j.ProviderId!));
         }
-        catch (ApiException ex)
+        catch (Exception ex)
         {
             _logger.LogError(ex, "Indeed Job Description API request exception");
             await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", $"Indeed Job Description API error");
@@ -269,11 +284,11 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
             descMessage = "Indeed Job Description API error";
         }
 
-        if (jobDescs != null && jobDescs.Keys.Count > 0)
+        if (descResponse != null && descResponse.IsSuccessStatusCode && descResponse.Content != null && descResponse.Content.Keys.Any())
         {
             foreach (Job job in allJobs)
             {
-                if (jobDescs.TryGetValue(job.ProviderId!, out string? desc))
+                if (descResponse.Content.TryGetValue(job.ProviderId!, out string? desc))
                 {
                     try
                     {
@@ -296,7 +311,7 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
         }
         else if (descSuccess)
         {
-            _logger.LogError("Indeed Job Description API request deserialisation failed");
+            _logger.LogError("Indeed Job Description API request failed {@response}", descResponse);
             await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", "Indeed Job Descriptions API error");
 
             descSuccess = false;

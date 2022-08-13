@@ -148,7 +148,7 @@ public class PageWatcher : IPageWatcher
             await _wpcService.CreateAsync(new WatchedPageChange
             {
                 WatchedPageId = page.Id,
-                Created = DateTime.UtcNow,
+                Created = DateTimeOffset.UtcNow,
                 Html = response
             });
 
@@ -166,7 +166,7 @@ public class PageWatcher : IPageWatcher
             await _wpcService.CreateAsync(new WatchedPageChange
             {
                 WatchedPageId = page.Id,
-                Created = DateTime.UtcNow,
+                Created = DateTimeOffset.UtcNow,
                 Html = response
             });
 

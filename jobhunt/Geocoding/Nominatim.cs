@@ -26,33 +26,41 @@ public class Nominatim : IGeocoder
         }
         else
         {
-            Location? nominatimResult = null;
-
+            ApiResponse<IEnumerable<Location>> response;
             try
             {
-                nominatimResult = (await _api.SearchAsync(
+                response = (await _api.SearchAsync(
                     new GeocodeParams
                     {
                         Query = location,
                         CountryCodes = _options.NominatimCountryCodes,
                         Limit = 1
                     })
-                ).FirstOrDefault();
+                );
             }
-            catch (ApiException ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Nominatim request exception for {location}", location);
                 return null;
             }
 
             Coordinate? coord = null;
-            if (double.TryParse(nominatimResult?.Latitude, out double lat) && double.TryParse(nominatimResult?.Longitude, out double lng))
+            if (response.IsSuccessStatusCode && response.Content != null)
             {
-                coord = new Coordinate
+                var nominatimResult = response.Content.FirstOrDefault();
+
+                if (double.TryParse(nominatimResult?.Latitude, out double lat) && double.TryParse(nominatimResult?.Longitude, out double lng))
                 {
-                    Latitude = lat,
-                    Longitude = lng
-                };
+                    coord = new Coordinate
+                    {
+                        Latitude = lat,
+                        Longitude = lng
+                    };
+                }
+            }
+            else
+            {
+                _logger.LogError("Nominatim request failed {@response}", response);
             }
 
             _cache.Set($"Nominatim.GeocodeAsync_{location.ToLower()}", coord);

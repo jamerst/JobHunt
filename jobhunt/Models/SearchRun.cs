@@ -5,7 +5,7 @@ public class SearchRun
     public int Id { get; set; }
     public int SearchId { get; set; }
     public Search Search { get; set; } = null!;
-    public DateTime Time { get; set; }
+    public DateTimeOffset Time { get; set; }
     public bool Success { get; set; }
     public string? Message { get; set; }
     public int NewJobs { get; set; }

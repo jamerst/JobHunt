@@ -8,7 +8,7 @@ namespace JobHunt.Geocoding;
 public interface INominatimApi
 {
     [Get("/search")]
-    Task<IEnumerable<Location>> SearchAsync(GeocodeParams geocodeParams);
+    Task<ApiResponse<IEnumerable<Location>>> SearchAsync(GeocodeParams geocodeParams);
 }
 
 public class GeocodeParams

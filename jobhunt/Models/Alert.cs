@@ -8,5 +8,5 @@ public class Alert
     public string Title { get; set; } = null!;
     public string? Message { get; set; }
     public string? Url { get; set; }
-    public DateTime Created { get; set; }
+    public DateTimeOffset Created { get; set; }
 }

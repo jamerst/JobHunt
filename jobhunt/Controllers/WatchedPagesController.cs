@@ -16,16 +16,17 @@ public class WatchedPagesController : ControllerBase
         _wpcService = wpcService;
     }
 
-    [HttpGet]
-    [Route("~/api/watchedpages/{id}")]
-    public async Task<IActionResult> Get([FromRoute] int id)
-    {
-        return new JsonResult(new
-        {
-            WatchedPage = await _wpService.FindByIdAsync(id),
-            Changes = await _wpcService.FindAllChangesAsync(id)
-        });
-    }
+    // [HttpGet]
+    // [Route("~/api/watchedpages/{id}")]
+    // public async Task<IActionResult> Get([FromRoute] int id)
+    // {
+    //     return new JsonResult(new
+    //     {
+    //         WatchedPage = await _wpService.FindByIdAsync(id),
+    //         Changes = await _wpcService.FindAllChangesAsync(id)
+    //     });
+    // }
+
     [HttpGet]
     [Route("{id}")]
     public async Task<IActionResult> Diff([FromRoute] int id)

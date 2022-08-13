@@ -22,7 +22,7 @@ public class WatchedPageService : ODataBaseService<WatchedPage>, IWatchedPageSer
             return;
         }
 
-        page.LastScraped = DateTime.UtcNow;
+        page.LastScraped = DateTimeOffset.UtcNow;
 
         if (!string.IsNullOrEmpty(statusMessage))
         {
@@ -30,7 +30,7 @@ public class WatchedPageService : ODataBaseService<WatchedPage>, IWatchedPageSer
         }
         else if (changed)
         {
-            page.LastUpdated = DateTime.UtcNow;
+            page.LastUpdated = DateTimeOffset.UtcNow;
             page.StatusMessage = null;
         }
 

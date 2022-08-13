@@ -27,12 +27,12 @@ public class SearchService : ODataBaseService<Search>, ISearchService
         Search search = await _context.Searches.SingleAsync(s => s.Id == searchId);
         search.LastResultCount = newJobs;
         search.LastFetchSuccess = success;
-        search.LastRun = DateTime.UtcNow;
+        search.LastRun = DateTimeOffset.UtcNow;
 
         _context.SearchRuns.Add(new SearchRun
         {
             SearchId = searchId,
-            Time = DateTime.UtcNow,
+            Time = DateTimeOffset.UtcNow,
             Success = success,
             Message = message,
             NewJobs = newJobs,
@@ -53,7 +53,7 @@ public class SearchService : ODataBaseService<Search>, ISearchService
 
         IEnumerable<Search> results = await _context.Searches
             .AsNoTracking()
-            .OrderByDescending(s => s.LastRun ?? DateTime.MinValue)
+            .OrderByDescending(s => s.LastRun)
             .Skip(pageNum * pageSize)
             .Take(pageSize)
             .ToListAsync();
