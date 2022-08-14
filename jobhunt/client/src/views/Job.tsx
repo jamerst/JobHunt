@@ -37,18 +37,27 @@ const Job = () => {
 
   const navigate = useNavigate();
 
+  const markAsSeen = useCallback(async () => {
+    const response = await fetch(`/api/odata/job(${id})`, {
+      method: "PATCH",
+      body: JSON.stringify({ seen: true }),
+      headers: {
+        "Content-Type": "application/json"
+      }}
+    );
+
+    if (!response.ok) {
+      console.error(`API request failed: PATCH /api/odata/job(${id}), HTTP ${response.status}`);
+    }
+  }, [id]);
+
   const fetchData = useCallback(async () => {
-    const response = await fetch(`/api/odata/job(${id})?$expand=company,actualCompany,jobCategories($expand=category),duplicateJob`, { method: "GET" });
+    const response = await fetch(`/api/odata/job(${id})?$expand=company,actualCompany,jobCategories($expand=category),duplicateJob,source`, { method: "GET" });
     if (response.ok) {
       const data = await response.json() as JobEntity;
 
       if (!data.seen) {
-        const response = await fetch(`/api/jobs/seen/${id}`, { method: "PATCH" });
-        if (response.ok) {
-          data.seen = true;
-        } else {
-          console.error(`API request failed: PATCH /api/jobs/seen/${id}, HTTP ${response.status}`);
-        }
+        markAsSeen();
       }
 
       clear();
@@ -57,39 +66,46 @@ const Job = () => {
       showError();
       console.error(`API request failed: GET /api/odata/job(${id})?$expand=company,actualCompany,jobCategories($expand=category), HTTP ${response.status}`);
     }
-  }, [id, showError, clear]);
+  }, [id, showError, clear, markAsSeen]);
 
   const updateStatus = useCallback(async (e: SelectChangeEvent<string>) => {
     showLoading()
     const status = e.target.value;
-    const response = await fetch(`/api/jobs/status/${id}`, {
+    const response = await fetch(`/api/odata/job(${id})`, {
       method: "PATCH",
-      body: JSON.stringify(status),
+      body: JSON.stringify({ status: status }),
       headers: {
         "Content-Type": "application/json"
-      }
-    });
+      }}
+    );
 
     if (response.ok) {
       setJob(data => data ? ({...data, status: status}) : undefined);
       showSuccess();
     } else {
       showError();
-      console.error(`API request failed: PATCH /api/jobs/status/${id}, HTTP ${response.status}`);
+      console.error(`API request failed: PATCH /api/odata/job(${id}), HTTP ${response.status}`);
     }
   }, [id, showLoading, showSuccess, showError]);
 
   const archiveJob = useCallback(async () => {
-    const response = await fetch(`/api/jobs/archive/${id}?toggle=true`, { method: "PATCH" });
+    const response = await fetch(`/api/odata/job(${id})`, {
+      method: "PATCH",
+      body: JSON.stringify({ archived: !job!.archived }),
+      headers: {
+        "Content-Type": "application/json"
+      }}
+    );
+
     if (response.ok) {
       setJob(data => data ? ({ ...data, archived: !data.archived }) : undefined);
     } else {
       showError();
-      console.error(`API request failed: /api/jobs/archive/${id}, HTTP ${response.status}`);
+      console.error(`API request failed: /api/odata/job(${id}), HTTP ${response.status}`);
     }
 
     setMenuAnchor(null);
-  }, [id, showError]);
+  }, [id, showError, job]);
 
   const getCategoryDeleteUrl = useCallback(
     (catId: number) => `/api/odata/jobCategory(categoryId=${catId},jobId=${id})`,

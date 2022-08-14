@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useCallback, useMemo, useState } from "react"
+import React, { PropsWithChildren, useCallback, useMemo, useState } from "react"
 import { IconButton, Chip, Tooltip, InputBase, Autocomplete, createFilterOptions, autocompleteClasses, chipClasses, AutocompleteRenderInputParams, FilterOptionsState } from "@mui/material"
 import Grid from "components/Grid";
 import { Add } from "@mui/icons-material"
@@ -15,13 +15,13 @@ type CategoryRequest = Partial<Omit<ICategoryLink, "category">> & {
   category?: Partial<Category>
 }
 
-type CategoriesProps = {
+type CategoriesProps = PropsWithChildren<{
   initialValue: ICategoryLink[],
   fetchUrl: string,
   createUrl: string,
   getDeleteUrl: (categoryId: number) => string,
   getEntity: (c: Partial<ICategoryLink>) => Partial<ICategoryLink>
-}
+}>
 
 const useStyles = makeStyles()((theme) => ({
   input: {
@@ -60,7 +60,7 @@ const filterOptions = (options: CategoryOption[], params: FilterOptionsState<Cat
   return filtered
 };
 
-const Categories: FunctionComponent<CategoriesProps> = ({ children, initialValue, fetchUrl, createUrl, getDeleteUrl, getEntity }) => {
+const Categories = ({ children, initialValue, fetchUrl, createUrl, getDeleteUrl, getEntity }: CategoriesProps) => {
   const [open, setOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [categories, setCategories] = useState(initialValue);
@@ -83,12 +83,6 @@ const Categories: FunctionComponent<CategoriesProps> = ({ children, initialValue
       console.error(`API request failed: GET ${fetchUrl}, HTTP ${response.status}`);
     }
   }, [allCategories, fetchUrl]);
-
-  const onClickAdd = useCallback(() => {
-    fetchCategories(false);
-    setOpen(o => !o);
-    addCategory(false);
-  }, []);
 
   const addCategory = useCallback(async (keepOpen: boolean) => {
     if (!newCategory) {
@@ -139,7 +133,13 @@ const Categories: FunctionComponent<CategoriesProps> = ({ children, initialValue
     if (!keepOpen) {
       setOpen(false);
     }
-  }, [createUrl, newCategory, allCategories, getEntity])
+  }, [createUrl, newCategory, allCategories, getEntity]);
+
+  const onClickAdd = useCallback(() => {
+    fetchCategories(false);
+    setOpen(o => !o);
+    addCategory(false);
+  }, [fetchCategories, addCategory]);
 
   const removeCategory = useCallback((id?: number) => async () => {
     if (!id) {

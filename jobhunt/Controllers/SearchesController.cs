@@ -1,4 +1,8 @@
+using System.Net;
+
 using Microsoft.AspNetCore.Mvc;
+
+using JobHunt.Searching.Indeed;
 
 namespace JobHunt.Controllers;
 [ApiController]
@@ -6,116 +10,35 @@ namespace JobHunt.Controllers;
 public class SearchesController : ControllerBase
 {
     private readonly ISearchService _searchService;
-    public SearchesController(ISearchService searchService)
+    private readonly IJobService _jobService;
+    private readonly IIndeedApiSearchProvider _indeed;
+    public SearchesController(ISearchService searchService, IJobService jobService, IIndeedApiSearchProvider indeed)
     {
         _searchService = searchService;
+        _jobService = jobService;
+        _indeed = indeed;
     }
 
-    [HttpGet]
-    [Route("~/api/searches/{id}")]
-    public async Task<IActionResult> Get([FromRoute] int id)
+    [HttpGet("{id}")]
+    public async Task<IActionResult> Refresh([FromRoute] int id, CancellationToken token)
     {
-        var result = await _searchService.GetByIdAsync(id);
-        if (result == default(Search))
+        Search? search = await _searchService.FindByIdAsync(id);
+        if (search != default)
         {
-            return NotFound();
-        }
-        else
-        {
-            return new JsonResult(new
+            bool success = await _indeed.SearchAsync(search, token);
+            if (success)
             {
-                result.Id,
-                result.Provider,
-                result.Query,
-                result.Country,
-                result.Location,
-                result.Distance,
-                result.MaxAge,
-                result.Enabled,
-                result.EmployerOnly,
-                result.JobType,
-                result.LastRun,
-                Runs = result.Runs.Select(sr => new
-                {
-                    sr.Id,
-                    sr.Time,
-                    sr.Success,
-                    sr.Message,
-                    sr.NewJobs,
-                    sr.NewCompanies,
-                    sr.TimeTaken
-                }),
-                Description = result.ToString()
-            });
-        }
-    }
-
-    [HttpGet("~/api/searches")]
-    public async Task<IActionResult> GetAll([FromQuery] int page, [FromQuery] int size, [FromQuery] bool count = false)
-    {
-        (var results, int? total) = await _searchService.GetPagedAsync(page, size, count);
-        return new JsonResult(new
-        {
-            total = total,
-            results = results.Select(j => new
+                await _jobService.CheckForDuplicatesAsync(false, token);
+                return Ok();
+            }
+            else
             {
-                Id = j.Id,
-                Enabled = j.Enabled,
-                Description = j.ToString(),
-                LastRun = j.LastRun,
-                LastRunSuccess = j.LastFetchSuccess
-            })
-        });
-    }
-
-    [HttpPatch]
-    [Route("~/api/searches/{id}")]
-    public async Task<IActionResult> Update([FromRoute] int id, [FromBody] SearchDto details)
-    {
-        (bool result, string msg) = await _searchService.UpdateAsync(details);
-
-        if (result)
-        {
-            return Ok();
-        }
-        else
-        {
-            return BadRequest(msg);
-        }
-    }
-
-    [HttpDelete]
-    [Route("~/api/searches/{id}")]
-    public async Task<IActionResult> Delete([FromRoute] int id)
-    {
-        if (await _searchService.RemoveAsync(id))
-        {
-            return Ok();
+                return StatusCode((int) HttpStatusCode.InternalServerError);
+            }
         }
         else
         {
             return NotFound();
-        }
-    }
-
-    [HttpPatch("{id}")]
-    public async Task Enable([FromRoute] int id)
-    {
-        await _searchService.ToggleEnabledAsync(id);
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> Create([FromBody] SearchDto details)
-    {
-        (int? id, string msg) = await _searchService.CreateAsync(details);
-
-        if (id.HasValue)
-        {
-            return new JsonResult(id);
-        }
-        else
-        {
-            return BadRequest(msg);
         }
     }
 }

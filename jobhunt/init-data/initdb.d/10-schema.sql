@@ -267,3 +267,12 @@ INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
 VALUES ('20220813150214_Company_Posted_Required', '6.0.6');
 
 COMMIT;
+
+START TRANSACTION;
+
+ALTER TABLE "Jobs" ADD "CheckedForDuplicate" boolean NOT NULL DEFAULT FALSE;
+
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20220814175931_Job_CheckedForDuplicate', '6.0.6');
+
+COMMIT;

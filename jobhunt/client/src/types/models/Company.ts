@@ -1,5 +1,6 @@
 import CompanyCategory from "./CompanyCategory";
 import CompanyName from "./CompanyName";
+import Job from "./Job";
 import WatchedPage from "./WatchedPage";
 
 type Company = {
@@ -18,6 +19,7 @@ type Company = {
   endole?: string,
   recruiter: boolean,
 
+  jobs: Job[],
   companyCategories: CompanyCategory[],
   alternateNames: CompanyName[],
   watchedPages: WatchedPage[]

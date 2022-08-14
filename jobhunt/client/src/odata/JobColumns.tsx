@@ -1,6 +1,6 @@
-import React, { Fragment } from "react";
+import React from "react";
 
-import { Chip, Slider, TextField, Tooltip, Typography, Link } from "@mui/material";
+import { Chip, Slider, TextField, Typography, Link } from "@mui/material";
 import { Visibility } from "@mui/icons-material";
 import Grid from "components/Grid";
 import { Link as RouterLink } from "react-router-dom";
@@ -9,13 +9,14 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime"
 import utc from "dayjs/plugin/utc"
 
-import { ODataGridColDef, escapeODataString } from "o-data-grid";
+import { escapeODataString, ODataGridColumns } from "o-data-grid";
 
 import LocationFilter from "types/odata/LocationFilter";
 import { createCategoryColumn } from "./ColumnDefinitions";
 import Date from "components/Date";
+import Job from "types/models/Job";
 
-export const getJobColumns = (): ODataGridColDef[] => {
+export const getJobColumns = (): ODataGridColumns<Job> => {
   dayjs.extend(relativeTime);
   dayjs.extend(utc);
 
@@ -28,7 +29,7 @@ export const getJobColumns = (): ODataGridColDef[] => {
       renderCell: (params) => <Link component={RouterLink} to={`/job/${params.id}`}>
         <Grid container spacing={1} alignItems="center" wrap="nowrap">
           <Grid item>{params.value}</Grid>
-          {params.row.DuplicateJobId && <Grid item><Chip sx={{ cursor: "pointer" }} label="Duplicate" size="small" /></Grid>}
+          {params.row.result.duplicateJobId && <Grid item><Chip sx={{ cursor: "pointer" }} label="Duplicate" size="small" /></Grid>}
         </Grid>
 
       </Link>,
@@ -43,8 +44,10 @@ export const getJobColumns = (): ODataGridColDef[] => {
       },
       headerName: "Duplicate Job",
       flex: 1.5,
-      renderCell: (params) => <Link component={RouterLink} to={`/job/${params.row.duplicateJobId}`}>{params.value}</Link>,
-      filterOperators: ["eq", "ne"],
+      renderCell: (params) => params.row.result.duplicateJobId
+        ? <Link component={RouterLink} to={`/job/${params.row.result.duplicateJobId}`}>{params.value}</Link>
+        : null,
+      filterOperators: ["eq"],
       filterType: "boolean",
       autocompleteGroup: "Job",
       getCustomFilterString: (_, value) => value === "true" ? "duplicateJobId ne null" : "duplicateJobId eq null"
@@ -91,7 +94,7 @@ export const getJobColumns = (): ODataGridColDef[] => {
           }
         };
       },
-      valueGetter: (params) => `${params.row.location}${params.row.distance ? ` (${params.row.distance.toFixed(1)}mi away)` : ""}`,
+      valueGetter: (params) => `${params.row["location"]}${params.row["distance"] ? ` (${params.row["distance"].toFixed(1)}mi away)` : ""}`,
       autocompleteGroup: "Job"
     },
     {
@@ -112,9 +115,9 @@ export const getJobColumns = (): ODataGridColDef[] => {
                   </Grid>
                 : <Grid item>{params.value}</Grid>
             }
-            {params.row["company/recruiter"] && <Grid item><Chip sx={{ cursor: "pointer" }} label="Recruiter" size="small" /></Grid>}
-            {params.row["company/blacklisted"] && <Grid item><Chip sx={{ cursor: "pointer" }} label="Blacklisted" size="small" color="error" /></Grid>}
-            {params.row["company/watched"] && <Grid item sx={{ display: "flex", alignItems: "center" }}><Visibility fontSize="small" /></Grid>}
+            {params.row.result.company.recruiter && <Grid item><Chip sx={{ cursor: "pointer" }} label="Recruiter" size="small" /></Grid>}
+            {params.row.result.company.blacklisted && <Grid item><Chip sx={{ cursor: "pointer" }} label="Blacklisted" size="small" color="error" /></Grid>}
+            {params.row.result.company.watched && <Grid item sx={{ display: "flex", alignItems: "center" }}><Visibility fontSize="small" /></Grid>}
           </Grid>
         </Link>
       ),

@@ -1,4 +1,5 @@
 import Company from "./Company";
+import { WatchedPageChange } from "./WatchedPageChange";
 
 type WatchedPage = {
   id: number,
@@ -12,7 +13,8 @@ type WatchedPage = {
   enabled: boolean,
   requiresJS: boolean,
 
-  company: Company
+  company: Company,
+  changes: WatchedPageChange[]
 }
 
 export default WatchedPage;

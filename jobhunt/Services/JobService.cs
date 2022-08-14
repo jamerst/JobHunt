@@ -17,17 +17,6 @@ public class JobService : ODataBaseService<Job>, IJobService
         _logger = logger;
     }
 
-    public async Task<Job?> GetByIdAsync(int id)
-    {
-        return await _context.Jobs
-            .AsNoTracking()
-            .Include(j => j.Company)
-            .Include(j => j.JobCategories)
-                .ThenInclude(jc => jc.Category)
-            .Include(j => j.Source)
-            .FirstOrDefaultAsync(j => j.Id == id);
-    }
-
     public async Task<bool> AnyWithProviderIdAsync(string provider, string id)
     {
         return await _context.Jobs
@@ -58,58 +47,44 @@ public class JobService : ODataBaseService<Job>, IJobService
         return counts;
     }
 
-    public async Task MarkAsSeenAsync(int id)
+    public IAsyncEnumerable<Category> GetJobCategories()
     {
-        Job? job = await _context.Jobs.FirstOrDefaultAsync(j => j.Id == id);
-
-        if (job != default(Job))
-        {
-            job.Seen = true;
-            await _context.SaveChangesAsync();
-        }
+        return _context.Categories
+            .Where(c => c.JobCategories.Any())
+            .AsAsyncEnumerable();
     }
 
-    public async Task ArchiveAsync(int id, bool toggle)
+    public async Task CheckForDuplicatesAsync(bool force, CancellationToken token)
     {
-        Job? job = await _context.Jobs.FirstOrDefaultAsync(j => j.Id == id);
+        var jobs = _context.Jobs
+            .Where(j => !j.CheckedForDuplicate || force)
+            .Include(j => j.JobCategories)
+            .AsAsyncEnumerable();
 
-        if (job != default)
+        await foreach (var job in jobs)
         {
-            job.Archived = !(toggle && job.Archived);
-            await _context.SaveChangesAsync();
+            if (token.IsCancellationRequested)
+            {
+                break;
+            }
+
+            var duplicate = await FindDuplicateAsync(job);
+            if (duplicate != default)
+            {
+                job.DuplicateJobId = duplicate.Id;
+                job.ActualCompanyId = duplicate.ActualCompanyId;
+
+                job.JobCategories.AddRange(
+                        duplicate.JobCategories
+                            .Where(c1 => ! job.JobCategories.Any(c2 => c1.CategoryId == c2.CategoryId))
+                            .Select(c => new JobCategory { CategoryId = c.CategoryId })
+                    );
+            }
+
+            job.CheckedForDuplicate = true;
         }
-    }
-
-    public async Task<IEnumerable<Category>> GetJobCategoriesAsync()
-    {
-        return await _context.JobCategories
-            .Include(jc => jc.Category)
-            .GroupBy(jc => new { jc.Category.Id, jc.Category.Name })
-            .OrderByDescending(g => g.Count())
-            .Select(g => new Category { Id = g.Key.Id, Name = g.Key.Name })
-            .ToListAsync();
-    }
-
-    public async Task<bool> UpdateStatusAsync(int id, string status)
-    {
-        Job? job = await _context.Jobs
-            .SingleOrDefaultAsync(j => j.Id == id);
-
-        if (job == default(Job))
-        {
-            return false;
-        }
-
-        job.Status = status;
 
         await _context.SaveChangesAsync();
-
-        return true;
-    }
-
-    public DbSet<Job> GetSet()
-    {
-        return _context.Jobs;
     }
 
     public async Task<Job?> FindDuplicateAsync(Job job)
@@ -132,12 +107,13 @@ public class JobService : ODataBaseService<Job>, IJobService
         // so must be re-computed every time, leading to a significant performance penalty.
         // This way reduces the query time from 300ms to <1ms
         var joinedJobs = jobs.Join(
-            _context.Jobs,
+            _context.Jobs.Where(j => j.Id == job.Id),
             j1 => job.Id,
             j2 => j2.Id,
             (j1, j2) => new { Job1 = j1, Job2 = j2 }
         );
 
+        Job? result;
         // set threshold values for similarity operations
 
         // this must be done because the similarity() function cannot use indexes, but the % operator can and using
@@ -145,11 +121,15 @@ public class JobService : ODataBaseService<Job>, IJobService
 
         // unfortunately we can't use the same similarity measure for both the Title and Description since you can only
         // set one threshold value, but that doesn't really matter
+
+        // this may not work in some contexts, there appears to be some EF weirdness where these command don't take
+        // effect - maybe they're being run in a separate connection? They do work when called from
+        // CheckForDuplicatesAsync though, so no idea why the behaviour changes depending on where it is called from
         await _setThreshold("word_similarity_threshold", _options.TitleSimilarityThreshold);
         await _setThreshold("similarity_threshold", _options.DescriptionSimilarityThreshold);
 
         // check for similarity based on Title and Description first
-        Job? result = await joinedJobs
+        result = await joinedJobs
             .Where(x => EF.Functions.TrigramsAreWordSimilar(x.Job1.Title, x.Job2.Title)
                 && EF.Functions.TrigramsAreSimilar(x.Job1.Description, x.Job2.Description)
             )
@@ -221,32 +201,18 @@ public class JobService : ODataBaseService<Job>, IJobService
             }
         }
 
-        // workaround for stupid OData bug where all dates are parsed as Unspecified
-        // if (entity.Posted?.Kind == DateTimeKind.Unspecified)
-        // {
-        //     entity.Posted = DateTime.SpecifyKind(entity.Posted.Value, DateTimeKind.Utc);
-        // }
-
-        // if (entity.DateApplied?.Kind == DateTimeKind.Unspecified)
-        // {
-        //     entity.Posted = DateTime.SpecifyKind(entity.DateApplied.Value, DateTimeKind.Utc);
-        // }
-
         return entity;
     }
 }
 
 public interface IJobService : IODataBaseService<Job>
 {
-    Task<Job?> GetByIdAsync(int id);
     Task<bool> AnyWithProviderIdAsync(string provider, string id);
     Task CreateAllAsync(IEnumerable<Job> jobs);
     Task<JobCount> GetJobCountsAsync(DateTimeOffset date);
-    Task MarkAsSeenAsync(int id);
-    Task ArchiveAsync(int id, bool toggle);
-    Task<IEnumerable<Category>> GetJobCategoriesAsync();
-    Task<bool> UpdateStatusAsync(int id, string status);
-    DbSet<Job> GetSet();
+    IAsyncEnumerable<Category> GetJobCategories();
+
+    Task CheckForDuplicatesAsync(bool force, CancellationToken token);
 
     /// <summary>
     /// Find the newest duplicate posted before a given job

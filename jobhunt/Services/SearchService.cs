@@ -1,7 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 
-using JobHunt.Searching;
-using JobHunt.Searching.Indeed;
 using JobHunt.Services.BaseServices;
 
 namespace JobHunt.Services;
@@ -22,14 +20,14 @@ public class SearchService : ODataBaseService<Search>, ISearchService
         return await _context.Searches.Where(s => s.Provider == provider && s.Enabled).ToListAsync();
     }
 
-    public async Task CreateSearchRunAsync(int searchId, bool success, string? message, int newJobs, int newCompanies, int timeTaken)
+    public async Task<SearchRun> CreateSearchRunAsync(int searchId, bool success, string? message, int newJobs, int newCompanies, int timeTaken)
     {
         Search search = await _context.Searches.SingleAsync(s => s.Id == searchId);
         search.LastResultCount = newJobs;
         search.LastFetchSuccess = success;
         search.LastRun = DateTimeOffset.UtcNow;
 
-        _context.SearchRuns.Add(new SearchRun
+        SearchRun run = new SearchRun
         {
             SearchId = searchId,
             Time = DateTimeOffset.UtcNow,
@@ -38,168 +36,18 @@ public class SearchService : ODataBaseService<Search>, ISearchService
             NewJobs = newJobs,
             NewCompanies = newCompanies,
             TimeTaken = timeTaken
-        });
+        };
 
-        await _context.SaveChangesAsync();
-    }
-
-    public async Task<(IEnumerable<Search>, int?)> GetPagedAsync(int pageNum, int pageSize, bool count)
-    {
-        int? total = null;
-        if (count)
-        {
-            total = await _context.Searches.CountAsync();
-        }
-
-        IEnumerable<Search> results = await _context.Searches
-            .AsNoTracking()
-            .OrderByDescending(s => s.LastRun)
-            .Skip(pageNum * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
-
-        return (results, total);
-    }
-
-    public async Task ToggleEnabledAsync(int searchId)
-    {
-        Search search = await _context.Searches.SingleAsync(s => s.Id == searchId);
-        search.Enabled = !search.Enabled;
-        await _context.SaveChangesAsync();
-    }
-
-    public async Task<(int?, string)> CreateAsync(SearchDto details)
-    {
-        Search search = new Search();
-
-        if (SearchProviderName.AllProviders.Contains(details.Provider))
-        {
-            search.Provider = details.Provider;
-        }
-        else
-        {
-            return (null, "Unknown provider");
-        }
-
-        search.Query = details.Query;
-        search.Location = details.Location;
-        search.Distance = details.Distance;
-        search.MaxAge = details.MaxAge;
-        search.EmployerOnly = details.EmployerOnly;
-
-        if (search.Provider == SearchProviderName.Indeed)
-        {
-            if (IndeedApiSearchProvider.SupportedCountries.Contains(details.Country.ToLower()))
-            {
-                search.Country = details.Country;
-            }
-            else
-            {
-                return (null, "Country not supported");
-            }
-        }
-
-        if (!string.IsNullOrEmpty(search.JobType) && search.Provider == SearchProviderName.Indeed)
-        {
-            if (IndeedApiSearchProvider.JobTypes.Contains(details.JobType))
-            {
-                search.JobType = details.JobType;
-            }
-            else
-            {
-                return (null, "Unknown job type");
-            }
-        }
-
-        _context.Searches.Add(search);
-        await _context.SaveChangesAsync();
-
-        return (search.Id, "");
-    }
-
-    public async Task<(bool, string)> UpdateAsync(SearchDto details)
-    {
-        Search? search = await _context.Searches.SingleOrDefaultAsync(s => s.Id == details.Id);
-
-        if (search == default(Search))
-        {
-            return (false, "Search not found");
-        }
-
-        if (SearchProviderName.AllProviders.Contains(details.Provider))
-        {
-            search.Provider = details.Provider;
-        }
-        else
-        {
-            return (false, "Unknown provider");
-        }
-
-        search.Query = details.Query;
-        search.Location = details.Location;
-        search.Distance = details.Distance;
-        search.MaxAge = details.MaxAge;
-        search.EmployerOnly = details.EmployerOnly;
-        search.Enabled = details.Enabled;
-
-        if (search.Provider == SearchProviderName.Indeed)
-        {
-            if (IndeedApiSearchProvider.SupportedCountries.Contains(details.Country.ToLower()))
-            {
-                search.Country = details.Country;
-            }
-            else
-            {
-                return (false, "Country not supported");
-            }
-        }
-
-        if (!string.IsNullOrEmpty(search.JobType) && search.Provider == SearchProviderName.Indeed)
-        {
-            if (IndeedApiSearchProvider.JobTypes.Contains(details.JobType))
-            {
-                search.JobType = details.JobType;
-            }
-            else
-            {
-                return (false, "Unknown job type");
-            }
-        }
+        _context.SearchRuns.Add(run);
 
         await _context.SaveChangesAsync();
 
-        return (true, "");
-    }
-
-    public async Task<bool> RemoveAsync(int id)
-    {
-        Search? search = await _context.Searches.SingleOrDefaultAsync(s => s.Id == id);
-
-        if (search == default(Search))
-        {
-            return false;
-        }
-
-        _context.Searches.Remove(search);
-        await _context.SaveChangesAsync();
-        return true;
-    }
-
-    public DbSet<Search> GetSet()
-    {
-        return _context.Searches;
+        return run;
     }
 }
 
 public interface ISearchService : IODataBaseService<Search>
 {
     Task<IEnumerable<Search>> FindEnabledByProviderAsync(string provider);
-    Task CreateSearchRunAsync(int searchId, bool success, string? message, int newJobs, int newCompanies, int timeTaken);
-    Task<(IEnumerable<Search>, int?)> GetPagedAsync(int pageNum, int pageSize, bool count);
-    Task ToggleEnabledAsync(int searchId);
-    Task<(int?, string)> CreateAsync(SearchDto details);
-    Task<Search?> GetByIdAsync(int id);
-    Task<(bool, string)> UpdateAsync(SearchDto details);
-    Task<bool> RemoveAsync(int id);
-    DbSet<Search> GetSet();
+    Task<SearchRun> CreateSearchRunAsync(int searchId, bool success, string? message, int newJobs, int newCompanies, int timeTaken);
 }

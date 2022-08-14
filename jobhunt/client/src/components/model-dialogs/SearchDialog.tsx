@@ -1,8 +1,7 @@
 import React, { Fragment, useCallback, useMemo, useState } from "react";
-import { useNavigate } from "react-router";
 
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Fab, MenuItem } from "@mui/material";
-import { Add, Edit } from "@mui/icons-material";
+import { Add } from "@mui/icons-material";
 
 import { Checkboxes, Select, Switches, TextField } from "mui-rff";
 import { Form } from "react-final-form";
@@ -22,7 +21,9 @@ import { Search } from "types/models/Search";
 type SearchDialogProps = {
   mode: "edit" | "create",
   search?: Search,
-  onUpdate?: () => any
+  open: boolean,
+  onSave: () => void,
+  onCancel: () => void
 }
 
 type FormSearch = Omit<Search, "employerOnly"> & {
@@ -40,13 +41,12 @@ const useStyles = makeStyles()(theme => ({
 const enabledData = { label: "Enabled", value: "enabled" };
 const recruiterData = { label: "Include jobs from recruiters", value: "recruiter" };
 
-const SearchDialog = ({ mode, search, onUpdate }: SearchDialogProps) => {
-  const [open, setOpen] = useState<boolean>(false);
+const SearchDialog = ({ mode, search, open, onSave, onCancel }: SearchDialogProps) => {
+  const [createOpen, setCreateOpen] = useState(false);
 
   const { showLoading, showSuccess, showError, clear } = useFeedback();
 
   const { classes } = useStyles();
-  const navigate = useNavigate();
 
   const formSearch: FormSearch | undefined = useMemo(() => search
     ? { ...search, recruiter: !search.employerOnly, jobType: search.jobType ? search.jobType : "any" }
@@ -54,8 +54,11 @@ const SearchDialog = ({ mode, search, onUpdate }: SearchDialogProps) => {
     [search]
   );
 
-  const onFabClick = useCallback(() => setOpen(true), []);
-  const onClose = useCallback(() => setOpen(false), []);
+  const onFabClick = useCallback(() => setCreateOpen(true), []);
+  const onClose = useCallback(() => {
+    setCreateOpen(false);
+    onCancel();
+  }, [onCancel]);
 
   const onSubmit = useCallback(async (values: FormSearch) => {
     showLoading();
@@ -76,11 +79,8 @@ const SearchDialog = ({ mode, search, onUpdate }: SearchDialogProps) => {
       });
 
       if (response.ok) {
-        const responseData = await response.json() as Search;
         showSuccess();
-        if (responseData) {
-          navigate(`/search/${responseData.id}`);
-        }
+        onSave();
       } else {
         showError();
         console.error(`API request failed: POST /api/odata/search, HTTP ${response.status}`);
@@ -99,33 +99,28 @@ const SearchDialog = ({ mode, search, onUpdate }: SearchDialogProps) => {
 
         if (response.ok) {
           showSuccess();
-          if (onUpdate) {
-            onUpdate();
-          }
+          onSave();
         } else {
           showError();
           console.error(`API request failed: PATCH /api/odata/search(${search.id}), HTTP ${response.status}`);
         }
       } else {
+        onCancel();
         clear();
       }
     }
+  }, [mode, search, onSave, onCancel, showLoading, showSuccess, showError, clear]);
 
-    setOpen(false);
-  }, [mode, search, onUpdate, navigate, showLoading, showSuccess, showError, clear]);
-
-  const onCancel = useCallback(() => {
-    setOpen(false);
-  }, []);
+  const actuallyOpen = useMemo(() => open || createOpen, [open, createOpen]);
 
   return (
     <Fragment>
       <HideOnScroll>
-        <Fab className={classes.fab} color="secondary" aria-label={mode === "edit" ? "Edit Search" : "Add New Search"} onClick={onFabClick}>
-          {mode === "edit" ? <Edit/> : <Add/>}
+        <Fab className={classes.fab} color="secondary" aria-label="Add New Search" onClick={onFabClick}>
+           <Add />
         </Fab>
       </HideOnScroll>
-      <Dialog open={open} onClose={onClose} aria-labelledby="search-modal-title" fullWidth>
+      <Dialog open={actuallyOpen} onClose={onClose} aria-labelledby="search-modal-title" fullWidth>
         <DialogTitle id="search-modal-title">{mode === "edit" ? "Edit Search" : "Add New Search"}</DialogTitle>
         <Form
           onSubmit={onSubmit}
@@ -149,7 +144,7 @@ const SearchDialog = ({ mode, search, onUpdate }: SearchDialogProps) => {
                     </Select>
                   </Grid>
 
-                  <Grid item container spacing={1}>
+                  <Grid item container spacing={2}>
                     <Grid item xs={12}>
                       <TextField label="Location" name="location" fullWidth required />
                     </Grid>
@@ -161,7 +156,7 @@ const SearchDialog = ({ mode, search, onUpdate }: SearchDialogProps) => {
                     </Grid>
                   </Grid>
 
-                  <Grid item container spacing={1} mb={2}>
+                  <Grid item container spacing={2} mb={2}>
                     <Grid item xs={12}>
                       <Checkboxes name="recruiter" data={recruiterData} />
                     </Grid>
@@ -184,7 +179,7 @@ const SearchDialog = ({ mode, search, onUpdate }: SearchDialogProps) => {
                 </Grid>
               </DialogContent>
               <DialogActions>
-                <Button type="reset" onClick={onCancel}>Cancel</Button>
+                <Button type="reset" onClick={onClose}>Cancel</Button>
                 <Button type="submit" disabled={submitting}>Save</Button>
               </DialogActions>
             </form>

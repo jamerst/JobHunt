@@ -32,8 +32,8 @@ type JobDialogProps = {
   onUpdate?: () => any
 }
 
-type FormJob = Omit<Job, "Posted"> & {
-  Posted: Dayjs
+type FormJob = Omit<Job, "posted"> & {
+  posted: Dayjs
 }
 
 const useStyles = makeStyles()(theme => ({
@@ -64,7 +64,7 @@ const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
 
   const formJob: FormJob | undefined = useMemo(
     () => job ?
-      ({ ...job, Posted: dayjs.utc(job.posted) })
+      ({ ...job, posted: dayjs.utc(job.posted) })
       : undefined,
     [job]
   );
@@ -72,7 +72,7 @@ const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
   const onSubmit = useCallback(async (values: FormJob) => {
     showLoading();
 
-    const requestData: Job = { ...values, posted: values.Posted.format("YYYY-MM-DDTHH:mm:ss") + "Z" };
+    const requestData: Job = { ...values, posted: values.posted.format("YYYY-MM-DDTHH:mm:ss") + "Z" };
 
     if (mode === "create") {
       const response = await fetch("/api/odata/job", {
@@ -216,7 +216,7 @@ const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
                     </Grid>
                   </Grid>
                   <Grid item xs={12} mb={2}>
-                    <TextField label="Job Description" name="description" fullWidth multiline rows={10} />
+                    <TextField label="Job Description" name="description" required fullWidth multiline rows={10} />
                   </Grid>
                   <Grid item xs={12} mb={2}>
                     <TextField label="URL" name="url" fullWidth />

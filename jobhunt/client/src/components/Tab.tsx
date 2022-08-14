@@ -1,4 +1,4 @@
-import React, { FunctionComponent, PropsWithChildren } from "react"
+import { PropsWithChildren } from "react"
 import { TabProps as MuiTabProps } from "@mui/material";
 
 type ActualTabProps = {
@@ -8,6 +8,6 @@ type ActualTabProps = {
 
 export type TabProps = PropsWithChildren<ActualTabProps>;
 
-const Tab: FunctionComponent<TabProps> = (props: TabProps) => null;
+const Tab = (props: TabProps) => null;
 
 export default Tab;

@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react"
 import { Box, Button, Container, Chip, IconButton, Menu, MenuItem, TextField, Tooltip, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Link, PopoverOrigin } from "@mui/material"
 import Grid from "components/Grid";
-import { AccountBalance, Add, Block,  Delete,  Edit,  LinkedIn, Map, MoreHoriz, OpenInNew, RateReview, Refresh, Visibility, VisibilityOff, Web } from "@mui/icons-material";
+import { AccountBalance, Add, Block,  Delete,  Edit,  History,  LinkedIn, Map, MoreHoriz, OpenInNew, RateReview, Refresh, Visibility, VisibilityOff, Web } from "@mui/icons-material";
 import makeStyles from "makeStyles";
 import  { AutocompleteRenderInputParams } from '@mui/material/Autocomplete';
-import { DataGrid, GridActionsCellItem, GridColDef, GridColumns, GridRowParams, GridSortModel } from "@mui/x-data-grid"
+import { DataGrid, GridActionsCellItem, GridColumns, GridRowParams, GridSortModel } from "@mui/x-data-grid"
 import { ODataColumnVisibilityModel } from "o-data-grid";
 import ODataGrid from "components/odata/ODataGrid";
 
@@ -98,7 +98,7 @@ const Company = () => {
       clear();
     } else {
       showError();
-      console.error(`API request failed: GET /api/jobs/${id}, HTTP ${response.status}`);
+      console.error(`API request failed: GET /api/odata/company(${id})?$expand=alternateNames,companyCategories($expand=category),watchedPages, HTTP ${response.status}`);
     }
   }, [id, showError, clear]);
 
@@ -259,6 +259,7 @@ const Company = () => {
     {
       field: "actions",
       type: "actions",
+      flex: .7,
       getActions: (params) => [
         <GridActionsCellItem
           label="Edit"
@@ -272,18 +273,21 @@ const Company = () => {
           onClick={onDeletePageClick(params.row.id)}
           showInMenu
         />,
+        <Tooltip title="View change history" placement="bottom">
+          <IconButton component={RouterLink} to={`/page-changes/${params.row.id}`}><History /></IconButton>
+        </Tooltip>,
         <GridActionsCellItem
           label="Refresh now"
-          icon={<Tooltip title="Refresh now" placement="right"><Refresh /></Tooltip>}
+          icon={<Tooltip title="Refresh now" placement="bottom"><Refresh /></Tooltip>}
           onClick={onRefreshPageClick(params.row.id)}
           disabled={!params.row.enabled}
-        />
+        />,
       ],
       renderHeader: () => (<Tooltip title="Add watched page" placement="top">
         <IconButton onClick={onAddPageClick}><Add /></IconButton>
-      </Tooltip>)
+      </Tooltip>),
     }
-  ], [onEditPageClick, onDeletePageClick]);
+  ], [onEditPageClick, onDeletePageClick, onAddPageClick, onRefreshPageClick]);
   //#endregion
 
   //#region Merging

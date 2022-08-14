@@ -7,7 +7,4 @@ public class CompanyNameService : ODataBaseService<CompanyName>, ICompanyNameSer
     public CompanyNameService(JobHuntContext context) : base(context) { }
 }
 
-public interface ICompanyNameService : IODataBaseService<CompanyName>
-{
-
-}
+public interface ICompanyNameService : IODataBaseService<CompanyName> { }

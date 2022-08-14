@@ -9,11 +9,11 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
 
-import { numericOperators, ODataGridColDef, escapeODataString } from "o-data-grid";
+import { numericOperators, escapeODataString, ODataGridColumns } from "o-data-grid";
 import { getCategoryFilterString } from "components/odata/ODataCategoryFilter";
 import LocationFilter from "types/odata/LocationFilter";
 import { createCategoryColumn } from "./ColumnDefinitions";
-import Job from "types/models/Job";
+import Company from "types/models/Company";
 
 const currencyFormatter = new Intl.NumberFormat(undefined, {
   style: "currency",
@@ -21,7 +21,7 @@ const currencyFormatter = new Intl.NumberFormat(undefined, {
   maximumFractionDigits: 0
 })
 
-export const getCompanyColumns = (): ODataGridColDef[] => {
+export const getCompanyColumns = (): ODataGridColumns<Company> => {
   dayjs.extend(relativeTime);
   dayjs.extend(utc);
 
@@ -40,9 +40,9 @@ export const getCompanyColumns = (): ODataGridColDef[] => {
             <Grid item>
               {params.value}
             </Grid>
-            {params.row["recruiter"] && <Grid item><Chip sx={{ cursor: "pointer" }} label="Recruiter" size="small" /></Grid>}
-            {params.row["blacklisted"] && <Grid item><Chip sx={{ cursor: "pointer" }} label="Blacklisted" size="small" color="error" /></Grid>}
-            {params.row["watched"] && <Grid item sx={{ display: "flex", alignItems: "center" }}><Visibility fontSize="small" /></Grid>}
+            {params.row.result.recruiter && <Grid item><Chip sx={{ cursor: "pointer" }} label="Recruiter" size="small" /></Grid>}
+            {params.row.result.blacklisted && <Grid item><Chip sx={{ cursor: "pointer" }} label="Blacklisted" size="small" color="error" /></Grid>}
+            {params.row.result.watched && <Grid item sx={{ display: "flex", alignItems: "center" }}><Visibility fontSize="small" /></Grid>}
           </Grid>
         </Link>
       )
@@ -90,7 +90,7 @@ export const getCompanyColumns = (): ODataGridColDef[] => {
           }
         };
       },
-      valueGetter: (params) => `${params.row.location}${params.row.distance ? ` (${params.row.distance.toFixed(1)}mi away)` : ""}`,
+      valueGetter: (params) => `${params.row["location"]}${params.row["distance"] ? ` (${params.row["distance"].toFixed(1)}mi away)` : ""}`,
     },
     {
       // This field has to be calculated clientside - $apply doesn't appear to work for collections
@@ -101,7 +101,7 @@ export const getCompanyColumns = (): ODataGridColDef[] => {
       filterable: false,
       sortable: false,
       valueGetter: (params) => {
-        const jobs = (params.row["jobs"] as Job[]).filter(j => j.avgYearlySalary);
+        const jobs = params.row.result.jobs.filter(j => j.avgYearlySalary);
         if (jobs && jobs.length > 0) {
           return currencyFormatter.format(jobs.map(j => j.avgYearlySalary!).reduce((a, b) => a + b) / jobs.length);
         } else {
@@ -128,9 +128,8 @@ export const getCompanyColumns = (): ODataGridColDef[] => {
       filterable: false,
       sortable: false,
       renderCell: (params) => {
-        const jobs = params.row["jobs"] as Job[];
-        if (jobs && jobs.length > 0) {
-          return dayjs.utc(jobs[0].posted).local().format("DD/MM/YYYY HH:mm");
+        if (params.row.result.jobs?.length) {
+          return dayjs.utc(params.row.result.jobs[0].posted).local().format("DD/MM/YYYY HH:mm");
         } else {
           return "";
         }
@@ -140,15 +139,14 @@ export const getCompanyColumns = (): ODataGridColDef[] => {
     {
       field: "latestPageUpdate",
       headerName: "Latest Page Updated",
-      expand: { navigationField: "watchedPages", select: "lastUpdated", orderBy: "lastUpdated desc" },
+      expand: { navigationField: "watchedPages", select: "lastUpdated", orderBy: "lastUpdated desc", top: 1 },
       filterable: false,
       sortable: false,
       type: "dateTime",
       flex: .5,
       renderCell: (params) => {
-        const pages = params.row["watchedPages"] as ({ lastUpdated: string })[];
-        if (pages && pages.length > 0) {
-          return dayjs.utc(pages[0].lastUpdated).local().format("DD/MM/YYYY HH:mm");
+        if (params.row.result.watchedPages?.length) {
+          return dayjs.utc(params.row.result.watchedPages[0].lastUpdated).local().format("DD/MM/YYYY HH:mm");
         } else {
           return "";
         }

@@ -58,33 +58,8 @@ public class RefreshController : ControllerBase
     }
 
     [HttpGet]
-    public async Task FindDuplicates(CancellationToken token)
+    public async Task FindDuplicates(CancellationToken token, bool force = false)
     {
-        var jobs = _jobService.Set
-            .Where(j => !j.DuplicateJobId.HasValue)
-            .Include(j => j.JobCategories)
-            .AsAsyncEnumerable();
-
-        await foreach (var job in jobs)
-        {
-            if (token.IsCancellationRequested)
-            {
-                break;
-            }
-
-            var duplicate = await _jobService.FindDuplicateAsync(job);
-            if (duplicate != default)
-            {
-                job.DuplicateJobId = duplicate.Id;
-
-                job.JobCategories.AddRange(
-                        duplicate.JobCategories
-                            .Where(c1 => ! job.JobCategories.Any(c2 => c1.CategoryId == c2.CategoryId))
-                            .Select(c => new JobCategory { CategoryId = c.CategoryId })
-                    );
-            }
-        }
-
-        await _jobService.SaveChangesAsync();
+        await _jobService.CheckForDuplicatesAsync(force, token);
     }
 }

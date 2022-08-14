@@ -44,26 +44,10 @@ public class WatchedPageService : ODataBaseService<WatchedPage>, IWatchedPageSer
             .Where(wp => wp.Enabled)
             .ToListAsync();
     }
-
-    public async Task<List<WatchedPage>> GetActiveUnfetchedAsync(int companyId)
-    {
-        return await _context.WatchedPages
-            .Where(wp => wp.CompanyId == companyId && wp.Enabled && !wp.Changes.Any())
-            .ToListAsync();
-    }
-
-    public async Task<List<WatchedPage>> GetActiveByCompanyAsync(int companyId)
-    {
-        return await _context.WatchedPages
-            .Where(wp => wp.CompanyId == companyId && wp.Enabled)
-            .ToListAsync();
-    }
 }
 
 public interface IWatchedPageService : IODataBaseService<WatchedPage>
 {
     Task UpdateStatusAsync(int id, bool changed = false, string? statusMessage = null);
     Task<List<WatchedPage>> GetAllActiveAsync();
-    Task<List<WatchedPage>> GetActiveUnfetchedAsync(int companyId);
-    Task<List<WatchedPage>> GetActiveByCompanyAsync(int companyId);
 }

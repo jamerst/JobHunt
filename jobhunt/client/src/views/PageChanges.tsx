@@ -10,16 +10,6 @@ import makeStyles from "makeStyles";
 import { Helmet } from "react-helmet";
 import WatchedPage from "types/models/WatchedPage";
 
-type WatchedPageResponse = {
-  watchedPage: WatchedPage,
-  changes: WatchedPageChange[]
-}
-
-type WatchedPageChange = {
-  id: number,
-  created: string
-}
-
 const useStyles = makeStyles()((theme) => ({
   root: {
     flexGrow: "1"
@@ -55,7 +45,7 @@ const useStyles = makeStyles()((theme) => ({
 }));
 
 const PageChanges = () => {
-  const [watchedPage, setWatchedPage] = useState<WatchedPageResponse | undefined>();
+  const [watchedPage, setWatchedPage] = useState<WatchedPage>();
   const [current, setCurrent] = useState(0);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [view, setView] = useState("image");
@@ -65,9 +55,9 @@ const PageChanges = () => {
 
   useEffect(() => {
     const fetchPage = async () => {
-      const response = await fetch(`/api/watchedpages/${id}`);
+      const response = await fetch(`/api/odata/watchedpage(${id})?$expand=changes($select=id,created),company`);
       if (response.ok) {
-        const data = await response.json() as WatchedPageResponse;
+        const data = await response.json() as WatchedPage;
         setWatchedPage(data);
 
         if (data.changes.length > 0) {
@@ -110,11 +100,11 @@ const PageChanges = () => {
   return (
     <Grid container direction="column" className={classes.root}>
       <Helmet>
-        <title>Changes to {watchedPage.watchedPage.url} | JobHunt</title>
+        <title>Changes to {watchedPage.url} | JobHunt</title>
       </Helmet>
       <Grid item>
         <Typography variant="h6" marginBottom={1}>
-          <Link component={RouterLink} to={`/company/${watchedPage.watchedPage.company.id}`} target="_blank">{watchedPage.watchedPage.company.name}</Link> - <Link href={watchedPage.watchedPage.url} target="_blank">{watchedPage.watchedPage.url}</Link>
+          <Link component={RouterLink} to={`/company/${watchedPage.company.id}`} target="_blank">{watchedPage.company.name}</Link> - <Link href={watchedPage.url} target="_blank">{watchedPage.url}</Link>
         </Typography>
       </Grid>
       <Grid item container spacing={2} className={classes.root}>
@@ -146,7 +136,7 @@ const PageChanges = () => {
             <Grid item container direction="column" xs={12} lg>
               <Typography variant="h6">{dayjs.utc(watchedPage.changes[currentIndex + 1].created).local().format("DD/MM/YYYY HH:mm")}</Typography>
               <Paper className={classes.iframePaper}>
-                {view === "html" && (<iframe src={`/api/watchedpages/previoushtml/${current}`} sandbox={watchedPage.watchedPage.requiresJS ? "" : undefined} title="Before" />)}
+                {view === "html" && (<iframe src={`/api/watchedpages/previoushtml/${current}`} sandbox={watchedPage.requiresJS ? "" : undefined} title="Before" />)}
                 {view === "image" && (<img src={`/api/watchedpages/screenshot/${watchedPage.changes[currentIndex + 1].id}`} className={classes.screenshot} alt="Before"/>)}
               </Paper>
             </Grid>
@@ -157,7 +147,7 @@ const PageChanges = () => {
             <Grid item container direction="column" xs={12} lg>
               <Typography variant="h6">{dayjs.utc(watchedPage.changes[currentIndex].created).local().format("DD/MM/YYYY HH:mm")}</Typography>
               <Paper className={classes.iframePaper}>
-                {view === "html" && (<iframe src={`/api/watchedpages/html/${current}`} sandbox={watchedPage.watchedPage.requiresJS ? "" : undefined} title="After" />)}
+                {view === "html" && (<iframe src={`/api/watchedpages/html/${current}`} sandbox={watchedPage.requiresJS ? "" : undefined} title="After" />)}
                 {view === "image" && (<img src={`/api/watchedpages/screenshot/${watchedPage.changes[currentIndex].id}`} className={classes.screenshot} alt="After"/>)}
               </Paper>
             </Grid>

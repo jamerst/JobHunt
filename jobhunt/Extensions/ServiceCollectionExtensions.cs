@@ -23,7 +23,6 @@ public static class ServiceCollectionExtensions
                 configuration.GetConnectionString("DefaultConnection"),
                 o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
             )
-            // .EnableSensitiveDataLogging()
         );
 
         services.Configure<ScreenshotOptions>(configuration.GetSection(ScreenshotOptions.Section));
@@ -32,7 +31,6 @@ public static class ServiceCollectionExtensions
         services.AddHttpClient();
 
         services.AddScoped<IAlertService, AlertService>();
-        services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<ICompanyService, CompanyService>();
         services.AddScoped<ICompanyCategoryService, CompanyCategoryService>();
         services.AddScoped<ICompanyNameService, CompanyNameService>();

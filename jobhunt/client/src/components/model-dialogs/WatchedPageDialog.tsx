@@ -17,7 +17,7 @@ type WatchedPageDialogProps = {
   onCancel: () => void
 }
 
-type FormPage = Omit<WatchedPage, "requiresJS" | "company"> & {
+type FormPage = Omit<WatchedPage, "requiresJS" | "company" | "changes"> & {
   requiresJS: 0 | 1
 }
 
@@ -34,7 +34,7 @@ const WatchedPageDialog = ({ mode, companyId, watchedPage, open, onSave, onCance
   const onSubmit = useCallback(async (values: FormPage) => {
     showLoading();
 
-    const requestData: Omit<WatchedPage, "company"> = { ...values, requiresJS: !!values.requiresJS };
+    const requestData: Omit<WatchedPage, "company" | "changes"> = { ...values, requiresJS: !!values.requiresJS };
 
     if (mode === "create") {
       requestData.companyId = companyId;
@@ -78,7 +78,7 @@ const WatchedPageDialog = ({ mode, companyId, watchedPage, open, onSave, onCance
         clear();
       }
     }
-  }, [companyId, watchedPage, onSave, onCancel, showLoading, showSuccess, showError, clear]);
+  }, [companyId, watchedPage, mode, onSave, onCancel, showLoading, showSuccess, showError, clear]);
 
   return (
     <Dialog open={open} aria-labelledby="wp-modal-title" fullWidth>

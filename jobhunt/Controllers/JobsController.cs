@@ -12,20 +12,6 @@ namespace JobHunt.Controllers
             _jobService = jobService;
         }
 
-        [HttpPatch]
-        [Route("{id}")]
-        public async Task Seen([FromRoute] int id)
-        {
-            await _jobService.MarkAsSeenAsync(id);
-        }
-
-        [HttpPatch]
-        [Route("{id}")]
-        public async Task Archive([FromRoute] int id, [FromQuery] bool toggle = false)
-        {
-            await _jobService.ArchiveAsync(id, toggle);
-        }
-
         [HttpGet]
         public async Task<IActionResult> Counts()
         {
@@ -33,29 +19,9 @@ namespace JobHunt.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Categories()
+        public IActionResult Categories()
         {
-            var categories = await _jobService.GetJobCategoriesAsync();
-            return new JsonResult(categories.Select(c => new CategoryDto
-            {
-                Id = c.Id,
-                Name = c.Name
-            }));
-        }
-
-        [HttpPatch("{id}")]
-        public async Task<IActionResult> Status([FromRoute] int id, [FromBody] string status)
-        {
-            bool result = await _jobService.UpdateStatusAsync(id, status);
-
-            if (!result)
-            {
-                return NotFound();
-            }
-            else
-            {
-                return Ok();
-            }
+            return Ok(_jobService.GetJobCategories());
         }
     }
 }

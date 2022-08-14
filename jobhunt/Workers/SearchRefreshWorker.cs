@@ -94,6 +94,25 @@ public class SearchRefreshWorker : BackgroundService, ISearchRefreshWorker
 
             await Task.WhenAll(tasks);
         }
+
+        // check for duplicates after all searches complete
+        // ensures that any duplicates from different providers can be detected (if I ever add more providers...)
+        // also avoids a very strange issue where checking for duplicates straight after they were created didn't work
+        if (_options.CheckForDuplicateJobs)
+        {
+            using (IServiceScope duplicateScope = _provider.CreateScope())
+            {
+                IJobService? jobService = duplicateScope.ServiceProvider.GetService<IJobService>();
+                if (jobService != null)
+                {
+                    await jobService.CheckForDuplicatesAsync(false, token);
+                }
+                else
+                {
+                    _logger.LogError("SearchRefreshWorker: failed to get instance of JobService");
+                }
+            }
+        }
     }
 }
 

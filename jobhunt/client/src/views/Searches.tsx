@@ -13,23 +13,50 @@ import SearchDialog from "components/model-dialogs/SearchDialog";
 import { GridActionsCellItem } from "@mui/x-data-grid";
 import { Search } from "types/models/Search";
 import { SearchRun } from "types/models/SearchRun";
+import { useFeedback } from "utils/hooks";
 
 
 const columnVisibility: ODataColumnVisibilityModel = {
   "lastRun": { xs: false, md: true }
 }
 
-const alwaysSelect = ["id", "displayName"];
+const alwaysSelect = ["id", "displayName", "query", "distance", "location", "country", "provider", "employerOnly", "jobType", "maxAge"];
 
 const Searches = () => {
   const [editSearch, setEditSearch] = useState<Search>();
+  const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [searchRuns, setSearchRuns] = useState<SearchRun[]>();
+
+  const { showLoading, showError } = useFeedback();
 
   const onHistoryClick = useCallback((runs: SearchRun[]) => () => {
     setSearchRuns(runs);
   }, []);
 
   const onHistoryDialogClose = useCallback(() => setSearchRuns(undefined), []);
+
+  const onRefreshClick = useCallback((search: Search) => async () => {
+    showLoading();
+
+    const response = await fetch(`/api/searches/refresh/${search.id}`);
+    if (response.ok) {
+      window.location.reload();
+    } else {
+      showError();
+      console.error(`API request failed: GET /api/searches/refresh/${search.id}, HTTP ${response.status}`);
+    }
+  }, [showLoading, showError]);
+
+  const onEditClick = useCallback((search: Search) => async () => {
+    setEditSearch(search);
+    setDialogMode("edit");
+  }, []);
+
+  const onDialogSave = useCallback(() => window.location.reload(), []);
+  const onDialogCancel = useCallback(() => {
+    setEditSearch(undefined);
+    setDialogMode("create");
+  }, []);
 
   const columns: ODataGridColumns<Search> = useMemo(() => [
     {
@@ -69,6 +96,7 @@ const Searches = () => {
         <GridActionsCellItem
           label="Edit"
           icon={<Edit />}
+          onClick={onEditClick(params.row.result)}
           showInMenu
         />,
         <GridActionsCellItem
@@ -80,10 +108,11 @@ const Searches = () => {
         <GridActionsCellItem
           label="Refresh now"
           icon={<Tooltip title="Refresh now" placement="right"><Refresh /></Tooltip>}
+          onClick={onRefreshClick(params.row.result)}
         />
       ]
     }
-  ], []);
+  ], [onEditClick, onHistoryClick, onRefreshClick]);
 
 
   return (
@@ -107,9 +136,9 @@ const Searches = () => {
         </CardBody>
       </Card>
 
-      <SearchDialog mode="create" />
+      <SearchDialog mode={dialogMode} open={!!editSearch} search={editSearch} onSave={onDialogSave} onCancel={onDialogCancel} />
 
-      <Dialog open={!!searchRuns} onClose={onHistoryDialogClose} aria-labelled-by="runs-modal-title" fullWidth maxWidth="md">
+      <Dialog open={!!searchRuns} onClose={onHistoryDialogClose} aria-labelledby="runs-modal-title" fullWidth maxWidth="md">
         <DialogTitle id="runs-modal-title">Search Runs</DialogTitle>
         <DialogContent>
           <TableContainer>
@@ -130,7 +159,7 @@ const Searches = () => {
                     <TableCell><Date date={r.time} disableRelative /></TableCell>
                     <TableCell>{r.newJobs}</TableCell>
                     <TableCell>{r.newCompanies}</TableCell>
-                    <TableCell>{r.timeTaken >= 60 ? `${Math.floor(r.timeTaken / 60)}m ${r.timeTaken % 60}s` : `${r.timeTaken}s` }</TableCell>
+                    <TableCell>{getTimeString(r.timeTaken)}</TableCell>
                     <TableCell>{!r.success && <Chip color="default" label="Failed"/>}{r.message}</TableCell>
                   </TableRow>
                   ))
@@ -147,5 +176,7 @@ const Searches = () => {
     </Container>
   );
 }
+
+const getTimeString = (seconds: number) => seconds >= 60 ? `${Math.floor(seconds / 60)}m ${seconds % 60}s` : `${seconds}s`
 
 export default Searches;

@@ -33,4 +33,5 @@ public class Job : KeyedEntity
     public int? ActualCompanyId { get; set; }
     public Company? ActualCompany { get; set; }
     public bool Deleted { get; set; }
+    public bool CheckedForDuplicate { get; set; }
 }

@@ -71,7 +71,7 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
         }
     }
 
-    public async Task SearchAsync(Search search, CancellationToken token)
+    public async Task<bool> SearchAsync(Search search, CancellationToken token)
     {
         Stopwatch sw = new Stopwatch();
         sw.Start();
@@ -108,7 +108,7 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
                 _logger.LogError(ex, "Indeed Publisher API request exception");
                 await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", $"Indeed Publisher API error");
                 await _searchService.CreateSearchRunAsync(search.Id!, false, $"Indeed Publisher API error", 0, 0, (int) sw.Elapsed.TotalSeconds);
-                return;
+                return false;
             }
 
             if (!response.IsSuccessStatusCode || response.Content == null)
@@ -117,7 +117,7 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
                 _logger.LogError("Indeed Publisher API request failed {@response}", response);
                 await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", "Indeed Publisher API error");
                 await _searchService.CreateSearchRunAsync(search.Id!, false, "Indeed Publisher API error", 0, 0, (int) sw.Elapsed.TotalSeconds);
-                return;
+                return false;
             }
 
             foreach (var job in response.Content.Results)
@@ -152,7 +152,7 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
                         Posted = new DateTimeOffset(job.Date, TimeSpan.Zero),
                         Provider = SearchProviderName.Indeed,
                         ProviderId = job.JobKey,
-                        SourceId = search.Id!
+                        SourceId = search.Id
                     };
 
                     Company? company = await _companyService.FindByNameAsync(job.Company);
@@ -212,7 +212,7 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
         {
             sw.Stop();
             await _searchService.CreateSearchRunAsync(search.Id!, true, null, 0, 0, (int) sw.Elapsed.TotalSeconds);
-            return;
+            return true;
         }
 
         bool descSuccess = true;
@@ -321,28 +321,6 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
         await _jobService.CreateAllAsync(jobs);
         await _companyService.CreateAllAsync(companies);
 
-        // check for duplicates after saving in DB so that any duplicates within the new jobs are detected
-        if (_options.CheckForDuplicateJobs)
-        {
-            foreach (var job in allJobs)
-            {
-                Job? duplicate = await _jobService.FindDuplicateAsync(job);
-
-                if (duplicate != default)
-                {
-                    job.DuplicateJobId = duplicate.Id;
-                    job.ActualCompanyId = duplicate.ActualCompanyId;
-
-                    job.JobCategories.AddRange(
-                        duplicate.JobCategories
-                            .Select(c => new JobCategory { CategoryId = c.CategoryId })
-                    );
-                }
-            }
-
-            await _jobService.SaveChangesAsync();
-        }
-
         sw.Stop();
 
         await _searchService.CreateSearchRunAsync(search.Id!, descSuccess, descMessage, newJobs, companies.Count, (int) sw.Elapsed.TotalSeconds);
@@ -361,6 +339,8 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
                 });
             }
         }
+
+        return true;
     }
 
     private class JobAlertData

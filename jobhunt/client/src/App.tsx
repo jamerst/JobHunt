@@ -13,7 +13,6 @@ import Company from 'views/Company';
 import Dashboard from "views/Dashboard"
 import Job from 'views/Job';
 import Jobs from 'views/Jobs';
-import Search from 'views/Search';
 import Searches from 'views/Searches';
 import PageChanges from 'views/PageChanges';
 import FeedbackBackdrop from 'components/FeedbackBackdrop';
@@ -138,12 +137,6 @@ function App() {
             <Route path="/searches" element={
               <MainLayout>
                 <Searches/>
-              </MainLayout>
-            } />
-
-            <Route path="/search/:id" element={
-              <MainLayout>
-                <Search/>
               </MainLayout>
             } />
 

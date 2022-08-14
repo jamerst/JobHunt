@@ -182,36 +182,6 @@ public class PageWatcher : IPageWatcher
         await _wpService.UpdateStatusAsync(page.Id, changed);
     }
 
-    public async Task GetInitialAsync(int companyId, CancellationToken token)
-    {
-        List<WatchedPage> pages = await _wpService.GetActiveUnfetchedAsync(companyId);
-
-        foreach (WatchedPage page in pages)
-        {
-            if (token.IsCancellationRequested)
-            {
-                break;
-            }
-
-            await _refreshAsync(page, token, true);
-        }
-    }
-
-    public async Task RefreshCompanyAsync(int companyId, CancellationToken token)
-    {
-        List<WatchedPage> pages = await _wpService.GetActiveByCompanyAsync(companyId);
-
-        foreach (WatchedPage page in pages)
-        {
-            if (token.IsCancellationRequested)
-            {
-                break;
-            }
-
-            await _refreshAsync(page, token, true);
-        }
-    }
-
     private void SetUpWebDriver()
     {
         try
@@ -232,6 +202,4 @@ public interface IPageWatcher
 {
     Task RefreshAllAsync(CancellationToken token);
     Task RefreshAsync(WatchedPage page, CancellationToken token);
-    Task GetInitialAsync(int companyId, CancellationToken token);
-    Task RefreshCompanyAsync(int companyId, CancellationToken token);
 }
