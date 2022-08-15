@@ -134,7 +134,7 @@ const Searches = () => {
         />
       ]
     }
-  ], [onEditClick, onHistoryClick, onRefreshClick]);
+  ], [onEditClick, onHistoryClick, onDeleteClick, onRefreshClick]);
 
 
   return (
