@@ -52,7 +52,7 @@ const ODataCategoryFilter = ({ value, setValue, fetchUrl }: ODataCategoryFilterP
     }
   }, [val, setValue]);
 
-  const onCategoryChange = useCallback((_, v: any) => {
+  const onCategoryChange = useCallback((_: React.SyntheticEvent, v: any) => {
     const newVal = { ...val };
     newVal.categories = v as Category[];
     setValue(newVal);

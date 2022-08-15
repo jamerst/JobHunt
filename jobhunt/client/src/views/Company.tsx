@@ -302,7 +302,7 @@ const Company = () => {
     setMergeCompany(null);
   }, []);
 
-  const onMergeCompanyChange = useCallback((_, v: any) => {
+  const onMergeCompanyChange = useCallback((_: React.SyntheticEvent, v: any) => {
     setMergeCompany(v as CompanyOption);
   }, []);
 

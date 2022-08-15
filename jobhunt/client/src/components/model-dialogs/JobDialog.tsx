@@ -41,6 +41,13 @@ const useStyles = makeStyles()(theme => ({
     position: "fixed",
     bottom: theme.spacing(2),
     right: theme.spacing(2)
+  },
+  descField: {
+    "& textarea": {
+      fontFamily: "monospace",
+      fontSize: theme.typography.caption.fontSize,
+      lineHeight: theme.typography.caption.lineHeight
+    }
   }
 }));
 
@@ -154,7 +161,7 @@ const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
           {mode === "edit" ? <Edit/> : <Add/>}
         </Fab>
       </HideOnScroll>
-      <Dialog open={open} onClose={onClose} aria-labelledby="job-modal-title" fullWidth>
+      <Dialog open={open} onClose={onClose} aria-labelledby="job-modal-title" fullWidth maxWidth="md">
         <DialogTitle id="job-modal-title">{mode === "edit" ? "Edit Job" : "Add New Job"}</DialogTitle>
         <Form
           onSubmit={onSubmit}
@@ -216,7 +223,7 @@ const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
                     </Grid>
                   </Grid>
                   <Grid item xs={12} mb={2}>
-                    <TextField label="Job Description" name="description" required fullWidth multiline rows={10} />
+                    <TextField label="Job Description" name="description" required fullWidth multiline rows={15} className={classes.descField} />
                   </Grid>
                   <Grid item xs={12} mb={2}>
                     <TextField label="URL" name="url" fullWidth />

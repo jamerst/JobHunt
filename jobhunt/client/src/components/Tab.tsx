@@ -1,12 +1,10 @@
 import { PropsWithChildren } from "react"
 import { TabProps as MuiTabProps } from "@mui/material";
 
-type ActualTabProps = {
+export type TabProps = PropsWithChildren<{
   keepMounted?: boolean,
   tabProps?: MuiTabProps
-}
-
-export type TabProps = PropsWithChildren<ActualTabProps>;
+}>
 
 const Tab = (props: TabProps) => null;
 

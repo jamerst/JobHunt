@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { Button, TextField } from "@mui/material";
+import { Button, Link, Table, TableBody, TableCell, TableHead, TableRow, TextField } from "@mui/material";
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -28,7 +28,22 @@ const useStyles = makeStyles()(() => ({
       pointerEvents: "all"
     }
   },
+  textField: {
+    "& textarea": {
+      fontFamily: "monospace"
+    }
+  }
 }))
+
+const components = {
+  a: Link,
+  table: Table,
+  thead: TableHead,
+  tbody: TableBody,
+  tr: ({ isHeader: boolean, ...props }: any) => <TableRow {...props}/>,
+  th: ({ isHeader: boolean, ...props }: any) => <TableCell {...props}/>,
+  td: ({ isHeader: boolean, ...props }: any) => <TableCell {...props}/>
+}
 
 const EditableMarkdown = ({ value, emptyText, label, onSave }: EditableMarkdownProps) => {
   const [editing, setEditing] = useState(false);
@@ -65,8 +80,8 @@ const EditableMarkdown = ({ value, emptyText, label, onSave }: EditableMarkdownP
 
       {
         editing
-          ? <Grid item xs={12}><TextField rows={10} multiline fullWidth variant="outlined" label={label} value={editingValue} onChange={onChange} /></Grid>
-          : <Grid item xs={12}><ReactMarkdown remarkPlugins={remarkPlugins}>{value ? value : emptyText ?? ""}</ReactMarkdown></Grid>
+          ? <Grid item xs={12}><TextField rows={20} multiline fullWidth variant="outlined" label={label} value={editingValue} onChange={onChange} className={classes.textField} /></Grid>
+          : <Grid item xs={12}><ReactMarkdown remarkPlugins={remarkPlugins} components={components}>{value ? value : emptyText ?? ""}</ReactMarkdown></Grid>
       }
     </Grid>
   );

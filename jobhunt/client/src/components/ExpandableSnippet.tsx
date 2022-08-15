@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react"
+import React, { PropsWithChildren, useCallback, useState } from "react"
 import makeStyles from "makeStyles";
 import { IconButton } from "@mui/material";
 import Grid from "components/Grid";
@@ -17,7 +17,7 @@ const useStyles = makeStyles<ExpandableSnippetProps>()((_, props) => ({
   }
 }));
 
-const ExpandableSnippet = (props:  React.PropsWithChildren<ExpandableSnippetProps>) => {
+const ExpandableSnippet = (props: PropsWithChildren<ExpandableSnippetProps>) => {
   const [collapsed, setCollapsed] = useState<boolean>(true);
 
   const { classes } = useStyles(props);

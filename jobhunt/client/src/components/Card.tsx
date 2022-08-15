@@ -1,4 +1,4 @@
-import React, { Fragment, FunctionComponent } from "react"
+import React, { Fragment, PropsWithChildren } from "react"
 import makeStyles from "makeStyles";
 import { Paper } from "@mui/material";
 
@@ -17,13 +17,13 @@ const useStyles = makeStyles()((theme) => ({
   }
 }));
 
-const Card: FunctionComponent<CardProps> = (props) => {
-  const { classes } = useStyles();
+const Card = ({ className, children }: PropsWithChildren<CardProps>) => {
+  const { classes, cx } = useStyles();
 
   return (
     <Fragment>
-      <Paper className={classes.paper}>
-          {props.children}
+      <Paper className={cx(classes.paper, className)}>
+          {children}
       </Paper>
     </Fragment>
   );

@@ -16,13 +16,13 @@ type CategoryRequest = Partial<Omit<ICategoryLink, "category">> & {
   category?: Partial<Category>
 }
 
-type CategoriesProps = PropsWithChildren<{
+type CategoriesProps = {
   initialValue: ICategoryLink[],
   fetchUrl: string,
   createUrl: string,
   getDeleteUrl: (categoryId: number) => string,
   getEntity: (c: Partial<ICategoryLink>) => Partial<ICategoryLink>
-}>
+}
 
 const useStyles = makeStyles()((theme) => ({
   input: {
@@ -61,7 +61,7 @@ const filterOptions = (options: CategoryOption[], params: FilterOptionsState<Cat
   return filtered
 };
 
-const Categories = ({ children, initialValue, fetchUrl, createUrl, getDeleteUrl, getEntity }: CategoriesProps) => {
+const Categories = ({ children, initialValue, fetchUrl, createUrl, getDeleteUrl, getEntity }: PropsWithChildren<CategoriesProps>) => {
   const [open, setOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [categories, setCategories] = useState(initialValue);
@@ -162,7 +162,7 @@ const Categories = ({ children, initialValue, fetchUrl, createUrl, getDeleteUrl,
     }
   }, [getDeleteUrl]);
 
-  const onChange = useCallback((_, val: Category | string | null) => setNewCategory(val), []);
+  const onChange = useCallback((_: React.SyntheticEvent, val: Category | string | null) => setNewCategory(val), []);
 
   const handleKeyUp = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {

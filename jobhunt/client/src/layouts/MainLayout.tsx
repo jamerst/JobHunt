@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useMemo, useCallback } from "react"
+import React, { Fragment, PropsWithChildren, useState, useMemo, useCallback } from "react"
 import { Badge, Divider, Drawer, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Tooltip, Typography } from "@mui/material"
 import Grid from "components/Grid";
 import { BrightnessHigh, Brightness2, Work, Business, Search, Dashboard, Menu  } from "@mui/icons-material";
@@ -60,7 +60,7 @@ const useStyles = makeStyles()((theme) => ({
   }
 }));
 
-const MainLayout = (props: React.PropsWithChildren<MainLayoutProps>) => {
+const MainLayout = (props: PropsWithChildren<MainLayoutProps>) => {
   const { classes } = useStyles();
   const r = useResponsive();
   const [drawerOpen, setDrawerOpen] = useState(false);

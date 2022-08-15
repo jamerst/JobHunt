@@ -2,11 +2,11 @@ import React, { PropsWithChildren } from "react"
 import { Box } from "@mui/material";
 import makeStyles from "makeStyles";
 
-export type TabPanelProps = PropsWithChildren<{
+export type TabPanelProps = {
   current: number,
   index: number,
   id: string
-}>
+}
 
 const useStyles = makeStyles()((theme) => ({
   box: {
@@ -17,7 +17,7 @@ const useStyles = makeStyles()((theme) => ({
   }
 }));
 
-const TabPanel = ({ current, index, id, children }: TabPanelProps) => {
+const TabPanel = ({ current, index, id, children }: PropsWithChildren<TabPanelProps>) => {
   const { classes } = useStyles();
 
   return (

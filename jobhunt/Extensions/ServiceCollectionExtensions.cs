@@ -56,7 +56,7 @@ public static class ServiceCollectionExtensions
             .WaitAndRetryAsync(
                 5,
                 attempt => TimeSpan.FromSeconds(attempt),
-                (result, _, count, _) => Log.Logger.Warning(result.Exception, "HTTP request attempt {attempt} failed", count)
+                (result, _, count, _) => Log.Warning(result.Exception, "HTTP request attempt {attempt} failed", count)
             );
 
         services.AddRefitClient<IIndeedPublisherApi>()

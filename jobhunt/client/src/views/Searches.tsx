@@ -1,19 +1,21 @@
 import React, { useCallback, useMemo, useState } from "react"
 import { Chip, Container, Typography, Dialog, DialogTitle, DialogContent, DialogActions, Button, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Tooltip } from "@mui/material";
 import Grid from "components/Grid";
-import { Edit, History, Refresh } from "@mui/icons-material";
+import { Delete, Edit, History, Refresh } from "@mui/icons-material";
 import { Helmet } from "react-helmet";
 
 import Card from "components/Card";
 import CardBody from "components/CardBody";
 import CardHeader from "components/CardHeader";
-import { ODataColumnVisibilityModel, ODataGrid, ODataGridColumns } from "o-data-grid";
+import { ODataColumnVisibilityModel, ODataGridColumns } from "o-data-grid";
 import Date from "components/Date";
 import SearchDialog from "components/model-dialogs/SearchDialog";
 import { GridActionsCellItem } from "@mui/x-data-grid";
 import { Search } from "types/models/Search";
 import { SearchRun } from "types/models/SearchRun";
 import { useFeedback } from "utils/hooks";
+import DeleteDialog from "components/forms/DeleteDialog";
+import ODataGrid from "components/odata/ODataGrid";
 
 
 const columnVisibility: ODataColumnVisibilityModel = {
@@ -26,6 +28,8 @@ const Searches = () => {
   const [editSearch, setEditSearch] = useState<Search>();
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [searchRuns, setSearchRuns] = useState<SearchRun[]>();
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<number>();
 
   const { showLoading, showError } = useFeedback();
 
@@ -56,6 +60,18 @@ const Searches = () => {
   const onDialogCancel = useCallback(() => {
     setEditSearch(undefined);
     setDialogMode("create");
+  }, []);
+
+  const deleteUrl = useMemo(() => `/api/odata/search(${deleteId})`, [deleteId]);
+  const onDeleteConfirm = useCallback(() => window.location.reload(), []);
+  const onDeleteClose = useCallback(() => {
+    setDeleteId(undefined);
+    setDeleteOpen(false);
+  }, []);
+
+  const onDeleteClick = useCallback((id: number) => () => {
+    setDeleteId(id);
+    setDeleteOpen(true);
   }, []);
 
   const columns: ODataGridColumns<Search> = useMemo(() => [
@@ -106,6 +122,12 @@ const Searches = () => {
           showInMenu
         />,
         <GridActionsCellItem
+          label="Delete"
+          icon={<Delete />}
+          onClick={onDeleteClick(params.row.id)}
+          showInMenu
+        />,
+        <GridActionsCellItem
           label="Refresh now"
           icon={<Tooltip title="Refresh now" placement="right"><Refresh /></Tooltip>}
           onClick={onRefreshClick(params.row.result)}
@@ -137,6 +159,7 @@ const Searches = () => {
       </Card>
 
       <SearchDialog mode={dialogMode} open={!!editSearch} search={editSearch} onSave={onDialogSave} onCancel={onDialogCancel} />
+      <DeleteDialog open={deleteOpen} entityName="search" onConfirm={onDeleteConfirm} onClose={onDeleteClose} deleteUrl={deleteUrl} />
 
       <Dialog open={!!searchRuns} onClose={onHistoryDialogClose} aria-labelledby="runs-modal-title" fullWidth maxWidth="md">
         <DialogTitle id="runs-modal-title">Search Runs</DialogTitle>

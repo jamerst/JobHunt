@@ -1,4 +1,4 @@
-import React, { FunctionComponent, ReactElement } from "react"
+import React, { PropsWithChildren, ReactElement } from "react"
 import { Box, } from "@mui/material";
 import Grid from "components/Grid";
 import makeStyles from "makeStyles";
@@ -33,7 +33,7 @@ const useStyles = makeStyles<CardHeaderProps>()((theme, props) => ({
   }
 }));
 
-const CardHeader: FunctionComponent<CardHeaderProps> = (props) => {
+const CardHeader = (props: PropsWithChildren<CardHeaderProps>) => {
   const { classes, cx } = useStyles(props);
 
   if (props.variant === "text") {

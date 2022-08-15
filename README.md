@@ -9,6 +9,7 @@ JobHunt is a self-hosted web-app for easier job hunting. It allows jobs from mul
 - Blacklist employers (_looking at you Noir Consulting with your constant fake ads_)
 - Track application status and record notes (using Markdown syntax)
 - Comprehensive job and employer searching
+- Duplicate job detection using [trigrams](https://www.postgresql.org/docs/current/pgtrgm.html)
 
 ## About
 JobHunt started as a simple webscraper to somewhat automate my job searching after finishing university in summer 2020. After finding a job I decided to build it into a full web-app for friends to use, and to collect/archive interesting long-term data.
@@ -42,13 +43,19 @@ Logging with JobHunt is provided by Serilog, which means it can support logging 
 
 This is configured based on your ElasticSearch instance also being dockerised and part of the network `docker_logging`. If you use a non-dockerised instance simply remove all references to the `docker_logging` network and add in the appropriate Uri for your instance.
 
+#### Duplicate Detection
+There are a few options you can configure for duplicate job detection. You shouldn't need to change these values, but they are available if you want to tweak the thresholds. All these thresholds have a range of 0-1.
+
+- `Search__DescriptionSimilarityThreshold` - the threshold for a job description to be considered the same as another when the title is also considered the same (range 0-1)
+- `Search__TitleSimilarityThreshold` - the threshold for a job title to be considered the same as another (see above)
+- `Search__IdenticalDescriptionSimilarityThreshold` - the threshold for a job description to be considered the same as another **even if the titles are not similar**.
+
 #### Other Options
 - `Search__IndeedFetchSalary` - fetching accurate salary information from Indeed requires an extra request for every result, which may cause issues with rate limiting or IP blacklisting, especially for searches with a large number of results. You can disable this if you don't care about fetching salary.
 - `Search__GlassdoorPartnerId` and `Search__GlassdoorPartnerKey` - currently unused (I may add Glassdoor searching in the future, but from my experience Indeed is better)
 - `Search__NominatimCountryCodes` - country to return results from when geocoding locations. Set to your own country to get the most accurate results.
 - `Search__PageLoadWaitSeconds` - number of seconds to wait before capturing page source HTML for watched pages which require JavaScript support. This allows Single Page Applications without server-side rendering to initialise so that the actual page content can be compared.
 - `CultureName` - set the culture used for the application. This affects the currency symbol used when adding the formatted salary for a job if Indeed doesn't provide one. For a list of languages/countries and their codes can be found [here](https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-lcid/a9eac961-e77d-41a6-90a5-ce1a8b0cdb9c).
-
 
 ### Running JobHunt
 Simply run `docker-compose -f docker-compose-prod.yml up -d` in the jobhunt directory.
