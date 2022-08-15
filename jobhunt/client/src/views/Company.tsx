@@ -41,7 +41,7 @@ const columnVisibility: ODataColumnVisibilityModel = {
   "salary": { xs: false, xl: true },
   "duplicateJob/title": false,
   "status": false,
-  "categories": false,
+  "jobCategories": false,
   "source/displayName": false,
   "posted": { xs: false, sm: true }
 };
@@ -49,6 +49,8 @@ const columnVisibility: ODataColumnVisibilityModel = {
 const defaultSort: GridSortModel = [{ field: "posted", sort: "desc" }]
 
 const alwaysSelect = ["id"];
+
+const localeText = { noRowsLabel: "No pages found" };
 
 const useStyles = makeStyles()((theme) => ({
   unseen: {
@@ -387,7 +389,7 @@ const Company = () => {
           <Box mt={1}>
             <Categories
               initialValue={company.companyCategories}
-              fetchUrl="/api/companies/categories"
+              fetchUrl="/api/odata/category"
               createUrl="/api/odata/companyCategory"
               getDeleteUrl={getCategoryDeleteUrl}
               getEntity={getCategoryEntity}
@@ -485,6 +487,7 @@ const Company = () => {
                 disableColumnSelector
                 disableSelectionOnClick
                 autoHeight
+                localeText={localeText}
               />
 
               <WatchedPageDialog

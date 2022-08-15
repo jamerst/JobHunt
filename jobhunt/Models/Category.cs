@@ -1,5 +1,5 @@
 namespace JobHunt.Models;
-public class Category
+public class Category : KeyedEntity
 {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }

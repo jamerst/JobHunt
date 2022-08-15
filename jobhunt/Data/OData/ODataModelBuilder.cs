@@ -9,16 +9,20 @@ public static class ODataModelBuilder
         var builder = new ODataConventionModelBuilder();
         builder.EnableLowerCamelCase();
 
-        builder.EntitySet<Job>(nameof(Job));
+        builder.EntitySet<Category>(nameof(Category));
+
+        builder.EntitySet<CompanyCategory>(nameof(CompanyCategory));
+        builder.EntityType<CompanyCategory>()
+            .HasKey(cc => new { cc.CategoryId, cc.CompanyId });
+
         builder.EntitySet<JobCategory>(nameof(JobCategory));
         builder.EntityType<JobCategory>()
             .HasKey(jc => new { jc.CategoryId, jc.JobId });
 
         builder.EntitySet<Company>(nameof(Company));
-        builder.EntitySet<CompanyCategory>(nameof(CompanyCategory));
-        builder.EntityType<CompanyCategory>()
-            .HasKey(cc => new { cc.CategoryId, cc.CompanyId });
         builder.EntitySet<CompanyName>(nameof(CompanyName));
+
+        builder.EntitySet<Job>(nameof(Job));
 
         builder.EntitySet<Search>(nameof(Search));
         builder.AddUnmappedProperty<Search>(s => s.DisplayName);

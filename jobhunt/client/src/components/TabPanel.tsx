@@ -1,25 +1,35 @@
+import React, { PropsWithChildren } from "react"
 import { Box } from "@mui/material";
-import React from "react"
+import makeStyles from "makeStyles";
 
-export type TabPanelProps = {
+export type TabPanelProps = PropsWithChildren<{
   current: number,
   index: number,
-  keepMounted?: boolean,
-  children?: React.ReactElement,
   id: string
-}
+}>
 
-const TabPanel = (props:TabPanelProps) => {
+const useStyles = makeStyles()((theme) => ({
+  box: {
+    padding: [theme.spacing(3), theme.spacing(1)],
+    [`${theme.breakpoints.up("md")}`]: {
+      padding: theme.spacing(3)
+    }
+  }
+}));
+
+const TabPanel = ({ current, index, id, children }: TabPanelProps) => {
+  const { classes } = useStyles();
+
   return (
     <div
       role="tabpanel"
-      hidden={props.current !== props.index}
-      id={props.id}
-      aria-labelledby={`tab-${props.id}`}
+      hidden={current !== index}
+      id={id}
+      aria-labelledby={`tab-${id}`}
     >
-      {(props.current === props.index || props.keepMounted) && (
-        <Box py={3} sx={{px: { md: 3 }}}>
-          {props.children}
+      {current === index && (
+        <Box className={classes.box}>
+          {children}
         </Box>
       )}
     </div>

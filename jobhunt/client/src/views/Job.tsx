@@ -207,7 +207,7 @@ const Job = () => {
             <Box mt={1}>
               <Categories
                 initialValue={job.jobCategories}
-                fetchUrl="/api/jobs/categories"
+                fetchUrl="/api/odata/category"
                 createUrl="/api/odata/jobCategory"
                 getDeleteUrl={getCategoryDeleteUrl}
                 getEntity={getCategoryEntity}
@@ -218,7 +218,7 @@ const Job = () => {
 
             <Box my={2}>
               <Grid container>
-                <Grid item sm={2}>
+                <Grid item xs={6} sm={4} md={3} lg={2}>
                   <FormControl variant="outlined" fullWidth size="small">
                     <InputLabel id="status-select-label">Status</InputLabel>
                     <Select

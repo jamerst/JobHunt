@@ -191,7 +191,7 @@ export const getCompanyColumns = (): ODataGridColumns<Company> => {
     createCategoryColumn(
       "jobCategories",
       "",
-      "/api/jobs/categories",
+      "/api/odata/category",
       {
         filterOnly: true,
         label: "Job Categories",

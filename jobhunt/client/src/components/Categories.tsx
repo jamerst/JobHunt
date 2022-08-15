@@ -6,6 +6,7 @@ import makeStyles from "makeStyles";
 import ICategoryLink from "types/models/ICategoryLink";
 import Category from "types/models/Category";
 import { ODataSingleResult } from "types/odata/ODataSingleResult";
+import { ODataMultipleResult } from "types/odata/ODataMultipleResult";
 
 type CategoryOption = Category & {
   displayName?: string
@@ -76,8 +77,8 @@ const Categories = ({ children, initialValue, fetchUrl, createUrl, getDeleteUrl,
 
     const response = await fetch(fetchUrl);
     if (response.ok) {
-      const data = await response.json() as Category[];
-      setAllCategories(data);
+      const data = await response.json() as ODataMultipleResult<Category>;
+      setAllCategories(data.value);
       setLoading(false);
     } else {
       console.error(`API request failed: GET ${fetchUrl}, HTTP ${response.status}`);

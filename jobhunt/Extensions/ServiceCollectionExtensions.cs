@@ -31,6 +31,7 @@ public static class ServiceCollectionExtensions
         services.AddHttpClient();
 
         services.AddScoped<IAlertService, AlertService>();
+        services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<ICompanyService, CompanyService>();
         services.AddScoped<ICompanyCategoryService, CompanyCategoryService>();
         services.AddScoped<ICompanyNameService, CompanyNameService>();

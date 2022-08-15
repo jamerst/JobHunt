@@ -31,17 +31,19 @@ public class JobService : ODataBaseService<Job>, IJobService
         await _context.SaveChangesAsync();
     }
 
-    public async Task<JobCount> GetJobCountsAsync(DateTimeOffset date)
+    public async Task<JobCount> GetJobCountsAsync()
     {
         JobCount counts = new JobCount();
 
-        DateTimeOffset dailyDate = date.Date.AddDays(-1);
+        DateTime today = DateTime.UtcNow.Date;
+
+        DateTime dailyDate = today.AddDays(-1);
         counts.Daily = await _context.Jobs.CountAsync(j => j.Posted.Date >= dailyDate);
 
-        DateTimeOffset weeklyDate = date.Date.AddDays(-7);
+        DateTime weeklyDate = today.AddDays(-7);
         counts.Weekly = await _context.Jobs.CountAsync(j => j.Posted.Date >= weeklyDate);
 
-        DateTimeOffset monthlyDate = date.Date.AddMonths(-1);
+        DateTime monthlyDate = today.AddMonths(-1);
         counts.Monthly = await _context.Jobs.CountAsync(j => j.Posted.Date >= monthlyDate);
 
         return counts;
@@ -209,7 +211,7 @@ public interface IJobService : IODataBaseService<Job>
 {
     Task<bool> AnyWithProviderIdAsync(string provider, string id);
     Task CreateAllAsync(IEnumerable<Job> jobs);
-    Task<JobCount> GetJobCountsAsync(DateTimeOffset date);
+    Task<JobCount> GetJobCountsAsync();
     IAsyncEnumerable<Category> GetJobCategories();
 
     Task CheckForDuplicatesAsync(bool force, CancellationToken token);

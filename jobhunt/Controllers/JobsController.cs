@@ -15,7 +15,7 @@ namespace JobHunt.Controllers
         [HttpGet]
         public async Task<IActionResult> Counts()
         {
-            return new JsonResult(await _jobService.GetJobCountsAsync(DateTimeOffset.UtcNow));
+            return new JsonResult(await _jobService.GetJobCountsAsync());
         }
 
         [HttpGet]
