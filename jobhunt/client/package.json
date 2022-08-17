@@ -29,6 +29,7 @@
     "react-router-dom": "6.3.0",
     "react-swipeable-views": "^0.14.0",
     "react-swipeable-views-utils": "^0.14.0",
+    "react-use-error-boundary": "^3.0.0",
     "recoil": "0.7.5",
     "remark-gfm": "^3.0.1",
     "tss-react": "3.7.1",

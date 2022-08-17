@@ -32,6 +32,7 @@ import ICategoryLink from "types/models/ICategoryLink";
 import WatchedPage from "types/models/WatchedPage";
 import WatchedPageDialog from "components/model-dialogs/WatchedPageDialog";
 import DeleteDialog from "components/forms/DeleteDialog";
+import { ODataMultipleResult } from "types/odata/ODataMultipleResult";
 
 dayjs.extend(relativeTime);
 
@@ -69,7 +70,7 @@ type CompanyOption = {
   id: number,
   name: string
 }
-const getResponseOptions = (response: any) => response as CompanyOption[] ?? [];
+const getResponseOptions = (response: any) => (response as ODataMultipleResult<CompanyOption>)?.value ?? [];
 const renderInput = (params: AutocompleteRenderInputParams) => <TextField {...params} label="Company" />
 const getOptionLabel = (o: any) => (o as CompanyOption)?.name ?? "";
 const isOptionEqualToValue = (o: any, v: any) => o.id === v.id;
@@ -144,7 +145,7 @@ const Company = () => {
   const onMenuClose = useCallback(() => setMenuAnchor(null), []);
 
   const blacklistCompany = useCallback(async () => {
-    const response = await fetch(`api/odata/company(${id})`, {
+    const response = await fetch(`/api/odata/company(${id})`, {
       method: "PATCH",
       body: JSON.stringify({ blacklisted: !company?.blacklisted }),
       headers: {
@@ -156,12 +157,12 @@ const Company = () => {
       setCompany((c) => c ? ({ ...c, blacklisted: !c.blacklisted}) : undefined);
     } else {
       showError();
-      console.error(`API request failed: PATCH api/odata/company(${id}), HTTP ${response.status}`);
+      console.error(`API request failed: PATCH /api/odata/company(${id}), HTTP ${response.status}`);
     }
   }, [id, company?.blacklisted, showError]);
 
   const watchCompany = useCallback(async () => {
-    const response = await fetch(`api/odata/company(${id})`, {
+    const response = await fetch(`/api/odata/company(${id})`, {
       method: "PATCH",
       body: JSON.stringify({ watched: !company?.watched }),
       headers: {
@@ -338,7 +339,7 @@ const Company = () => {
         <title>{company.name} | JobHunt</title>
       </Helmet>
 
-      <CompanyDialog mode="edit" company={company} />
+      <CompanyDialog mode="edit" company={company} onUpdate={fetchData} />
 
       <Card>
         <CardHeader>
@@ -350,7 +351,7 @@ const Company = () => {
                 {company.blacklisted ? <Grid item><Tooltip title={<Typography variant="subtitle2">This company is blacklisted.</Typography>}><Block fontSize="large" /></Tooltip></Grid> : null}
               </Grid>
               <Grid item>
-                {company.alternateNames?.length ? <Typography variant="subtitle1">Also known as {company.alternateNames.join(", ")}</Typography> : null}
+                {company.alternateNames?.length ? <Typography variant="subtitle1">Also known as {company.alternateNames.map(a => a.name).join(", ")}</Typography> : null}
               </Grid>
               <Grid item>
                 <Typography variant="h6">{company.location}</Typography>
@@ -523,17 +524,17 @@ const Company = () => {
         </CardBody>
       </Card>
 
-      <Dialog open={mergeOpen} onClose={onMergeClose} aria-labelledby="add-dialog-title">
+      <Dialog open={mergeOpen} onClose={onMergeClose} aria-labelledby="add-dialog-title" fullWidth>
         <DialogTitle id="add-dialog-title">Merge Company</DialogTitle>
         <form onSubmit={onMergeSubmit}>
-          <DialogContent className={classes.dialog}>
+          <DialogContent>
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <Typography variant="body1">Select a company to merge with. All jobs, watched pages, categories, and names will be moved to the selected company.</Typography>
               </Grid>
               <Grid item xs={12}>
                 <ApiAutocomplete
-                  fetchUrl="/api/odata/company?$select=Id,Name"
+                  fetchUrl="/api/odata/company?$select=id,name&$orderby=name"
                   getResponseOptions={getResponseOptions}
                   renderInput={renderInput}
                   getOptionLabel={getOptionLabel}

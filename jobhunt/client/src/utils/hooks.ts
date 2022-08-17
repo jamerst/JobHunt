@@ -75,7 +75,7 @@ export const useFeedback = () => {
     showLoading: () => setState({ loading: true, success: false, error: false }),
     showSuccess: () => setState({ loading: false, success: true, error: false }),
     showError: () => setState({ loading: false, success: false, error: true }),
-    clear: () => setState({ loading: false, success: false, error: false })
+    clear: () => setState(s => ({ loading: false, success: s.success, error: false }))
   }), [setState]);
 
   return funcs;

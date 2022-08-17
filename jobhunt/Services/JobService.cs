@@ -98,9 +98,8 @@ public class JobService : ODataBaseService<Job>, IJobService
         if (_options.DuplicateCheckMonths.HasValue)
         {
             DateTimeOffset lower = job.Posted.AddMonths(-_options.DuplicateCheckMonths.Value).Date;
-            DateTimeOffset upper = job.Posted.AddMonths(_options.DuplicateCheckMonths.Value).Date;
 
-            jobs = jobs.Where(j => j.Posted > lower && j.Posted < upper);
+            jobs = jobs.Where(j => j.Posted > lower);
         }
 
         // Inner join each job with the job we are checking for

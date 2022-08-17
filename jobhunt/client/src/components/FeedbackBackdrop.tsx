@@ -28,7 +28,8 @@ const useStyles = makeStyles()((theme) => ({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    fontWeight: theme.typography.fontWeightBold
+    fontWeight: theme.typography.fontWeightBold,
+    marginBottom: theme.spacing(3)
   },
   errorPaper: {
     padding: theme.spacing(2),
@@ -61,7 +62,7 @@ const FeedbackBackdrop = () => {
       {state.success && <Grow in={state.success}><Check className={classes.check} /></Grow>}
       {state.error &&
         <Grow in={state.error}>
-          <Grid container direction="column" alignItems="center" spacing={3}>
+          <Grid container direction="column" alignItems="center">
             <Grid item><Typography variant="h1" className={classes.error}>!</Typography></Grid>
             <Grid item><Paper className={classes.errorPaper}><Typography variant="body1">An error has occurred. Please try again or report this problem if it continues.</Typography></Paper></Grid>
           </Grid>

@@ -1,1 +1,2 @@
-export const toBase64Json = (obj: any) => Buffer.from(JSON.stringify(obj), "utf-8").toString("base64");
+// btoa is only deprecated for Node.js, and the Buffer class alternative is not available in the browser
+export const toBase64Json = (obj: any) => window.btoa(JSON.stringify(obj));

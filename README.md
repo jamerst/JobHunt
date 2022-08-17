@@ -46,6 +46,8 @@ This is configured based on your ElasticSearch instance also being dockerised an
 #### Duplicate Detection
 There are a few options you can configure for duplicate job detection. You shouldn't need to change these values, but they are available if you want to tweak the thresholds. All these thresholds have a range of 0-1.
 
+- `Search__CheckForDuplicateJobs` - enable/disable duplicate checking
+- `Search__DuplicateCheckMonths` - window size to search for duplicate jobs in months (optional)
 - `Search__DescriptionSimilarityThreshold` - the threshold for a job description to be considered the same as another when the title is also considered the same (range 0-1)
 - `Search__TitleSimilarityThreshold` - the threshold for a job title to be considered the same as another (see above)
 - `Search__IdenticalDescriptionSimilarityThreshold` - the threshold for a job description to be considered the same as another **even if the titles are not similar**.

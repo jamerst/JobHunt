@@ -91,8 +91,15 @@ const CompanyDialog = ({ mode, company, onUpdate }: CompanyDialogProps) => {
       const batch: ODataBatchRequest = { requests: [] };
 
       const changed = getChangedProperties(company, requestData);
+
       // can't use PATCH with collections
-      changed.alternateNames = undefined;
+      if (changed.alternateNames !== undefined) {
+        delete changed.alternateNames;
+      }
+
+      if (changed.location === null) {
+        changed.location = ""
+      }
 
       // only send patch request if fields have actually changed
       if (hasDefined(changed)) {
@@ -211,7 +218,7 @@ const CompanyDialog = ({ mode, company, onUpdate }: CompanyDialogProps) => {
                     </Select>
                   </Grid>
                   <Grid item xs={12}>
-                    <TextField label="Location" name="location" fullWidth required />
+                    <TextField label="Location" name="location" fullWidth />
                   </Grid>
                   {
                     mode === "edit" &&

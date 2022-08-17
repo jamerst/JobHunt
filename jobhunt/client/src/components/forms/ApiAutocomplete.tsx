@@ -46,8 +46,10 @@ const ApiAutocomplete = <
 
       if (response.ok) {
         const data = getResponseOptions(await response.json());
-        window.localStorage.setItem(cacheKey, JSON.stringify({ fetched: dayjs(), options: data }));
-        setOptions(data);
+        if (Array.isArray(data)) {
+          window.localStorage.setItem(cacheKey, JSON.stringify({ fetched: dayjs(), options: data }));
+          setOptions(data);
+        }
       } else {
         console.error(`API request failed: GET ${fetchUrl}, HTTP ${response.status}`);
       }

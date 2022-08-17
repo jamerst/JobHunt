@@ -37,6 +37,7 @@ specifiers:
   react-scripts: 5.0.1
   react-swipeable-views: ^0.14.0
   react-swipeable-views-utils: ^0.14.0
+  react-use-error-boundary: ^3.0.0
   recoil: 0.7.5
   remark-gfm: ^3.0.1
   source-map-explorer: ^2.5.2
@@ -70,6 +71,7 @@ dependencies:
   react-router-dom: 6.3.0_biqbaboplfbrettd7655fr4n2y
   react-swipeable-views: 0.14.0_react@18.2.0
   react-swipeable-views-utils: 0.14.0_react@18.2.0
+  react-use-error-boundary: 3.0.0_react@18.2.0
   recoil: 0.7.5_biqbaboplfbrettd7655fr4n2y
   remark-gfm: 3.0.1
   tss-react: 3.7.1_g566eayvhbit5eqxocdac5mhdm
@@ -10404,6 +10406,14 @@ packages:
       prop-types: 15.8.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
+    dev: false
+
+  /react-use-error-boundary/3.0.0_react@18.2.0:
+    resolution: {integrity: sha512-5urkfyU3ZzInEMSHe1gxtDzlQAHs0krTt0V6h8H2L5nXhDKq3OYXnCs9lGHDkEkYvLmsphw8ap5g8uYfvrkJng==}
+    peerDependencies:
+      react: '>= 16.8'
+    dependencies:
+      react: 18.2.0
     dev: false
 
   /react/18.2.0:

@@ -4,20 +4,26 @@
  * @param modified Modified object
  * @returns Partial containing only properties of changed which have a different value to original
  */
-export const getChangedProperties = <T,>(original: T, modified: T) =>
-  Object.entries(modified).reduce(
-    (a: Partial<T>, b) => {
-      const key = b[0] as keyof T;
-      const value = b[1];
+export const getChangedProperties = <T,>(original: T, modified: T) => {
+  const keys = new Set<string>();
+  Object.keys(original).forEach(k => keys.add(k));
+  Object.keys(modified).forEach(k => keys.add(k));
 
-      if (key && original[key] !== value) {
-        return { ...a, [key]: value }
+  return Array.from(keys).reduce(
+    (a: Partial<T>, k) => {
+      const key = k as keyof T;
+      const oldValue = original[key];
+      const newValue = modified[key] !== undefined ? modified[key] : null;
+
+      if (key && oldValue !== newValue) {
+        return { ...a, [key]: newValue }
       } else {
         return a;
       }
     },
     {}
   );
+}
 
 /**
  * Check if a partial has any properties that are defined (i.e. !== undefined)
