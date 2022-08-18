@@ -36,17 +36,9 @@
     "typescript": "4.7.4"
   },
   "scripts": {
-    "start": "craco start",
-    "build": "craco build",
-    "test": "craco test",
-    "eject": "react-scripts eject",
+    "start": "vite",
+    "build": "vite build",
     "analyze": "source-map-explorer 'build/static/js/*.js'"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
   },
   "browserslist": {
     "production": [
@@ -61,16 +53,22 @@
     ]
   },
   "devDependencies": {
-    "@craco/craco": "6.4.5",
     "@types/react-helmet": "6.1.5",
     "@types/react-router-dom": "5.3.3",
     "@types/react-swipeable-views": "^0.13.0",
     "@types/react-swipeable-views-utils": "^0.13.2",
     "@types/uuid": "8.3.4",
-    "craco-esbuild": "0.5.1",
+    "@typescript-eslint/eslint-plugin": "^5.33.1",
+    "@typescript-eslint/parser": "^5.33.1",
+    "@vitejs/plugin-react": "^2.0.1",
+    "eslint": "^8.22.0",
+    "eslint-plugin-react": "^7.30.1",
+    "eslint-plugin-react-hooks": "^4.6.0",
     "react-audible-debug": "^1.0.3",
     "react-error-overlay": "6.0.11",
-    "react-scripts": "5.0.1",
-    "source-map-explorer": "^2.5.2"
+    "source-map-explorer": "^2.5.2",
+    "vite": "^3.0.8",
+    "vite-plugin-checker": "^0.4.9",
+    "vite-tsconfig-paths": "^3.5.0"
   }
 }

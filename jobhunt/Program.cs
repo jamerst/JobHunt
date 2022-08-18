@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.OData;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 
+using AspNetCore.SpaServices.ViteDevelopmentServer;
 using Serilog;
 
 using JobHunt.Filters;
@@ -86,7 +87,9 @@ try
 
         if (app.Environment.IsDevelopment())
         {
-            spa.UseReactDevelopmentServer("start");
+            spa.Options.DevServerPort = 5001;
+            spa.UseViteDevelopmentServer("start");
+            // spa.UseReactDevelopmentServer("start");
         }
     });
 

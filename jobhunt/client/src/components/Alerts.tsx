@@ -96,7 +96,7 @@ const Alerts = ({onAlertClick, setAlertCount}: AlertProps) => {
     const response = await fetch(`/api/alerts/read/${id}`, { method: "PATCH" });
     if (response.ok) {
       setAlerts((a) => {
-        let newAlerts = [...a];
+        const newAlerts = [...a];
         const alertIndex = newAlerts.findIndex(a => a.id === id);
         newAlerts[alertIndex].read = true;
         return newAlerts;
@@ -119,7 +119,7 @@ const Alerts = ({onAlertClick, setAlertCount}: AlertProps) => {
     const response = await fetch(`/api/alerts/allread`, { method: "PATCH" });
     if (response.ok) {
       setAlerts((a) => {
-        let newAlerts = [...a];
+        const newAlerts = [...a];
         newAlerts.forEach(a => a.read = true);
         return newAlerts;
       });

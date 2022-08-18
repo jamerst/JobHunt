@@ -36,7 +36,7 @@ const useStyles = makeStyles<GridProps>()((theme, props) => {
 const Grid = forwardRef((props:GridProps, ref:React.ForwardedRef<HTMLDivElement>) => {
   const { classes, cx } = useStyles(props);
   let className = props.className;
-  let muiProps = { ...props, xxl: undefined };
+  const muiProps = { ...props, xxl: undefined };
 
   if (props.item) {
     className = cx(className, classes.root);

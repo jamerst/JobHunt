@@ -40,9 +40,9 @@ const components = {
   table: Table,
   thead: TableHead,
   tbody: TableBody,
-  tr: ({ isHeader: boolean, ...props }: any) => <TableRow {...props}/>,
-  th: ({ isHeader: boolean, ...props }: any) => <TableCell {...props}/>,
-  td: ({ isHeader: boolean, ...props }: any) => <TableCell {...props}/>
+  tr: ({ isHeader, ...props }: any) => <TableRow {...props}/>,
+  th: ({ isHeader, ...props }: any) => <TableCell {...props}/>,
+  td: ({ isHeader, ...props }: any) => <TableCell {...props}/>
 }
 
 const EditableMarkdown = ({ value, emptyText, label, onSave }: EditableMarkdownProps) => {

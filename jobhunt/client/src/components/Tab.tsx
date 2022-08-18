@@ -6,6 +6,7 @@ export type TabProps = PropsWithChildren<{
   tabProps?: MuiTabProps
 }>
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const Tab = (props: TabProps) => null;
 
 export default Tab;

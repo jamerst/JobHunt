@@ -19,7 +19,7 @@ import PageChanges from 'views/PageChanges';
 import FeedbackBackdrop from 'components/FeedbackBackdrop';
 import { themeState } from 'state';
 import Grid from 'components/Grid';
-import { ErrorOutline, Error } from '@mui/icons-material';
+import { ErrorOutline } from '@mui/icons-material';
 
 export const muiCache = createCache({
   key: "mui",

@@ -114,23 +114,27 @@ const Searches = () => {
           icon={<Edit />}
           onClick={onEditClick(params.row.result)}
           showInMenu
+          key="SearchAction_1"
         />,
         <GridActionsCellItem
           label="View History"
           icon={<History />}
           onClick={onHistoryClick(params.row.result.runs)}
           showInMenu
+          key="SearchAction_2"
         />,
         <GridActionsCellItem
           label="Delete"
           icon={<Delete />}
           onClick={onDeleteClick(params.row.id)}
           showInMenu
+          key="SearchAction_3"
         />,
         <GridActionsCellItem
           label="Refresh now"
           icon={<Tooltip title="Refresh now" placement="right"><Refresh /></Tooltip>}
           onClick={onRefreshClick(params.row.result)}
+          key="SearchAction_4"
         />
       ]
     }

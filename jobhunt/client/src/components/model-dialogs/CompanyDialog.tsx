@@ -28,7 +28,9 @@ type CompanyDialogProps = {
   onUpdate?: () => any
 }
 
-type FormCompany = Omit<Company, "recruiter"> & {
+type RequestCompany = Omit<Company, "watched" | "blacklisted" | "jobs" | "companyCategories" | "watchedPages">
+
+type FormCompany = Omit<RequestCompany, "recruiter"> & {
   recruiter: 0 | 1
 }
 
@@ -51,8 +53,10 @@ const CompanyDialog = ({ mode, company, onUpdate }: CompanyDialogProps) => {
   const { classes } = useStyles();
   const navigate = useNavigate();
 
-  const formCompany: FormCompany | undefined = useMemo(
-    () => company ? ({ ...company, recruiter: company.recruiter ? 1 : 0 }) : undefined,
+  const formCompany: FormCompany = useMemo(
+    () => company
+      ? { ...company, recruiter: company.recruiter ? 1 : 0 }
+      : { id: 0, name: "", location: "", recruiter: 0, alternateNames: [] },
     [company]
   );
 
@@ -66,7 +70,7 @@ const CompanyDialog = ({ mode, company, onUpdate }: CompanyDialogProps) => {
   const onSubmit = useCallback(async (values: FormCompany) => {
     showLoading();
 
-    const requestData: Company = { ...values, recruiter: !!values.recruiter };
+    const requestData: RequestCompany = { ...values, recruiter: !!values.recruiter };
 
     if (mode === "create") {
       const response = await fetch("/api/odata/company", {

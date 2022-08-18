@@ -269,14 +269,16 @@ const Company = () => {
           icon={<Edit />}
           onClick={onEditPageClick(params.row)}
           showInMenu
+          key="CompanyAction_1"
         />,
         <GridActionsCellItem
           label="Delete"
           icon={<Delete />}
           onClick={onDeletePageClick(params.row.id)}
           showInMenu
+          key="CompanyAction_2"
         />,
-        <Tooltip title="View change history" placement="bottom">
+        <Tooltip title="View change history" placement="bottom" key="CompanyAction_3">
           <IconButton component={RouterLink} to={`/page-changes/${params.row.id}`}><History /></IconButton>
         </Tooltip>,
         <GridActionsCellItem
@@ -284,6 +286,7 @@ const Company = () => {
           icon={<Tooltip title="Refresh now" placement="bottom"><Refresh /></Tooltip>}
           onClick={onRefreshPageClick(params.row.id)}
           disabled={!params.row.enabled}
+          key="CompanyAction_4"
         />,
       ],
       renderHeader: () => (<Tooltip title="Add watched page" placement="top">

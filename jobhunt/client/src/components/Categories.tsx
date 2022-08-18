@@ -189,7 +189,7 @@ const Categories = ({ children, initialValue, fetchUrl, createUrl, getDeleteUrl,
     const { InputLabelProps, InputProps, ...rest } = params;
     return <InputBase
       {...rest}
-      {...params.InputProps}
+      {...InputProps}
       className={cx(classes.input, chipClasses.root, chipClasses.label)}
       autoFocus
       placeholder="Enter a category"
