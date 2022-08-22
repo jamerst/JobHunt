@@ -138,6 +138,20 @@ const Company = () => {
     (cat: Partial<ICategoryLink>) => ({ ...cat as CompanyCategory, companyId: id }),
     [id]
   );
+
+  const onCategoryAdded = useCallback(
+    (cat: ICategoryLink) => setCompany(c => c
+      ? ({ ...c, companyCategories: [...c.companyCategories, cat as CompanyCategory] })
+      : undefined),
+    []
+  );
+
+  const onCategoryDeleted = useCallback(
+    (id: number) => setCompany(c => c
+      ? ({ ...c, companyCategories: c.companyCategories.filter(cc => cc.categoryId !== id) })
+      : undefined),
+    []
+  );
   //#endregion
 
   //#region Menu Actions
@@ -392,11 +406,13 @@ const Company = () => {
         <CardBody>
           <Box mt={1}>
             <Categories
-              initialValue={company.companyCategories}
+              categories={company.companyCategories}
               fetchUrl="/api/odata/category"
               createUrl="/api/odata/companyCategory"
               getDeleteUrl={getCategoryDeleteUrl}
               getEntity={getCategoryEntity}
+              onCategoryAdded={onCategoryAdded}
+              onCategoryDeleted={onCategoryDeleted}
             />
           </Box>
           <Box my={2}>

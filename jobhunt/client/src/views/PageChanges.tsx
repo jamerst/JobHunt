@@ -55,7 +55,7 @@ const PageChanges = () => {
 
   useEffect(() => {
     const fetchPage = async () => {
-      const response = await fetch(`/api/odata/watchedpage(${id})?$expand=changes($select=id,created),company`);
+      const response = await fetch(`/api/odata/watchedpage(${id})?$expand=changes($select=id,created;$orderby=created desc),company`);
       if (response.ok) {
         const data = await response.json() as WatchedPage;
         setWatchedPage(data);

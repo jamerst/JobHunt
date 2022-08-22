@@ -117,6 +117,20 @@ const Job = () => {
     [id]
   );
 
+  const onCategoryAdded = useCallback(
+    (cat: ICategoryLink) => setJob(j => j
+      ? ({ ...j, jobCategories: [...j.jobCategories, cat as JobCategory] })
+      : undefined),
+    []
+  );
+
+  const onCategoryDeleted = useCallback(
+    (id: number) => setJob(j => j
+      ? ({ ...j, jobCategories: j.jobCategories.filter(jc => jc.categoryId !== id) })
+      : undefined),
+    []
+  );
+
   const openMenu = useCallback((e: React.MouseEvent) => setMenuAnchor(e.currentTarget), []);
   const closeMenu = useCallback(() => setMenuAnchor(null), []);
 
@@ -206,11 +220,13 @@ const Job = () => {
             <Typography variant="subtitle2">{job.source ? `From "${job.source.displayName}"` : "Created manually"}</Typography>
             <Box mt={1}>
               <Categories
-                initialValue={job.jobCategories}
+                categories={job.jobCategories}
                 fetchUrl="/api/odata/category"
                 createUrl="/api/odata/jobCategory"
                 getDeleteUrl={getCategoryDeleteUrl}
                 getEntity={getCategoryEntity}
+                onCategoryAdded={onCategoryAdded}
+                onCategoryDeleted={onCategoryDeleted}
               >
                 {job.company?.recruiter ? <Grid item><Chip label="Recruiter" color="secondary"/></Grid> : null}
               </Categories>

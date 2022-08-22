@@ -7,6 +7,7 @@ import ICategoryLink from "types/models/ICategoryLink";
 import Category from "types/models/Category";
 import { ODataSingleResult } from "types/odata/ODataSingleResult";
 import { ODataMultipleResult } from "types/odata/ODataMultipleResult";
+import { useFeedback } from "utils/hooks";
 
 type CategoryOption = Category & {
   displayName?: string
@@ -17,11 +18,13 @@ type CategoryRequest = Partial<Omit<ICategoryLink, "category">> & {
 }
 
 type CategoriesProps = {
-  initialValue: ICategoryLink[],
+  categories: ICategoryLink[],
   fetchUrl: string,
   createUrl: string,
   getDeleteUrl: (categoryId: number) => string,
-  getEntity: (c: Partial<ICategoryLink>) => Partial<ICategoryLink>
+  getEntity: (c: Partial<ICategoryLink>) => Partial<ICategoryLink>,
+  onCategoryAdded: (cat: ICategoryLink) => void,
+  onCategoryDeleted: (id: number) => void
 }
 
 const useStyles = makeStyles()((theme) => ({
@@ -48,30 +51,19 @@ const getOptionLabel = (o: string | CategoryOption) => {
 };
 
 const filter = createFilterOptions<CategoryOption>({ ignoreCase: true, trim: true });
-const filterOptions = (options: CategoryOption[], params: FilterOptionsState<CategoryOption>) => {
-  const filtered = filter(options, params);
-  if (params.inputValue && !options.some((c) => params.inputValue.toLowerCase() === c.name.toLowerCase())) {
-    filtered.push({
-      id: 0,
-      displayName: `Add "${params.inputValue}"`,
-      name: params.inputValue
-    });
-  }
 
-  return filtered
-};
-
-const Categories = ({ children, initialValue, fetchUrl, createUrl, getDeleteUrl, getEntity }: PropsWithChildren<CategoriesProps>) => {
+const Categories = ({ children, categories, fetchUrl, createUrl, getDeleteUrl, getEntity, onCategoryAdded, onCategoryDeleted }: PropsWithChildren<CategoriesProps>) => {
   const [open, setOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
-  const [categories, setCategories] = useState(initialValue);
   const [allCategories, setAllCategories] = useState<CategoryOption[]>([]);
   const [newCategory, setNewCategory] = useState<Category | string | null>(null);
 
   const { classes, cx } = useStyles();
 
-  const fetchCategories = useCallback(async (force: boolean = false) => {
-    if (allCategories.length > 0 && !force) {
+  const { showError, clear } = useFeedback();
+
+  const fetchCategories = useCallback(async () => {
+    if (allCategories.length > 0) {
       return;
     }
 
@@ -113,6 +105,7 @@ const Categories = ({ children, initialValue, fetchUrl, createUrl, getDeleteUrl,
     });
 
     if (response.ok) {
+      clear();
       const data = await response.json() as ICategoryLink;
 
       if (data) {
@@ -123,9 +116,10 @@ const Categories = ({ children, initialValue, fetchUrl, createUrl, getDeleteUrl,
           data.category = allCategories.find(c => c.id === data.categoryId)!;
         }
 
-        setCategories((c) => [...c, data]);
+        onCategoryAdded(data);
       }
     } else {
+      showError();
       console.error(`API request failed: POST ${createUrl}, HTTP ${response.status}`);
     }
 
@@ -134,10 +128,10 @@ const Categories = ({ children, initialValue, fetchUrl, createUrl, getDeleteUrl,
     if (!keepOpen) {
       setOpen(false);
     }
-  }, [createUrl, newCategory, allCategories, getEntity]);
+  }, [createUrl, newCategory, allCategories, getEntity, onCategoryAdded, clear, showError]);
 
   const onClickAdd = useCallback(() => {
-    fetchCategories(false);
+    fetchCategories();
     setOpen(o => !o);
     addCategory(false);
   }, [fetchCategories, addCategory]);
@@ -150,7 +144,8 @@ const Categories = ({ children, initialValue, fetchUrl, createUrl, getDeleteUrl,
     const url = getDeleteUrl(id);
     const response = await fetch(url, { method: "DELETE" });
     if (response.ok) {
-      setCategories((c1) => c1.filter(c2 => c2.categoryId !== id));
+      clear();
+      onCategoryDeleted(id);
 
       const data = await response.json() as ODataSingleResult<boolean>;
       if (data?.value === true) {
@@ -158,9 +153,10 @@ const Categories = ({ children, initialValue, fetchUrl, createUrl, getDeleteUrl,
         setAllCategories((c) => c.filter(x => x.id !== id));
       }
     } else {
+      showError();
       console.error(`API request failed: POST ${url}, HTTP ${response.status}`);
     }
-  }, [getDeleteUrl]);
+  }, [getDeleteUrl, onCategoryDeleted, clear, showError]);
 
   const onChange = useCallback((_: React.SyntheticEvent, val: Category | string | null) => setNewCategory(val), []);
 
@@ -195,6 +191,22 @@ const Categories = ({ children, initialValue, fetchUrl, createUrl, getDeleteUrl,
       placeholder="Enter a category"
     />
   }, [cx, classes]);
+
+  const filterOptions = useCallback((options: CategoryOption[], params: FilterOptionsState<CategoryOption>) => {
+    const filtered = filter(options, params);
+    if (params.inputValue
+      && !options.some((c) => params.inputValue.toLowerCase() === c.name.toLowerCase())
+      && !allCategories.some(c => params.inputValue.toLowerCase() === c.name.toLowerCase()))
+    {
+      filtered.push({
+        id: 0,
+        displayName: `Add "${params.inputValue}"`,
+        name: params.inputValue
+      });
+    }
+
+    return filtered
+  }, [allCategories]);
 
   const filteredOptions = useMemo(() =>
     allCategories.filter(c1 => !categories.some(c2 => c2.categoryId === c1.id)),
