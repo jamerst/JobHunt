@@ -19,6 +19,7 @@ services:
       Screenshots__PageLoadTimeoutSeconds: 10
       Search__IndeedPublisherId: YOUR_PUBLISHER_ID
       Search__IndeedFetchSalary: "true"
+      Search__IndeedGraphQLApiKey: YOUR_API_KEY
       Search__GlassdoorPartnerId: YOUR_PARTNER_ID
       Search__GlassdoorPartnerKey: YOUR_PARTNER_KEY
       Search__Schedules__0: 0 9 * * *

@@ -222,50 +222,50 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
 
         if (_options.IndeedFetchSalary)
         {
-            foreach (var domain in allJobs.GroupBy(j => new Uri(j.Url!).GetLeftPart(UriPartial.Authority)))
-            {
-                if (token.IsCancellationRequested)
-                {
-                    break;
-                }
+            // foreach (var domain in allJobs.GroupBy(j => new Uri(j.Url!).GetLeftPart(UriPartial.Authority)))
+            // {
+            //     if (token.IsCancellationRequested)
+            //     {
+            //         break;
+            //     }
 
-                var api = _salaryApiFactory.CreateApi(domain.Key);
-                foreach (var job in domain)
-                {
-                    if (salaryFailCount >= 10 || token.IsCancellationRequested)
-                    {
-                        break;
-                    }
+            //     var api = _salaryApiFactory.CreateApi(domain.Key);
+            //     foreach (var job in domain)
+            //     {
+            //         if (salaryFailCount >= 10 || token.IsCancellationRequested)
+            //         {
+            //             break;
+            //         }
 
-                    ApiResponse<SalaryResponse> response;
-                    try
-                    {
-                        response = await api.GetSalaryAsync(job.ProviderId!);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Indeed Salary API request exception");
-                        await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", "Indeed Salary API error");
-                        salaryFailCount++;
-                        continue;
-                    }
+            //         ApiResponse<SalaryResponse> response;
+            //         try
+            //         {
+            //             response = await api.GetSalaryAsync(job.ProviderId!);
+            //         }
+            //         catch (Exception ex)
+            //         {
+            //             _logger.LogError(ex, "Indeed Salary API request exception");
+            //             await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", "Indeed Salary API error");
+            //             salaryFailCount++;
+            //             continue;
+            //         }
 
-                    if (response.IsSuccessStatusCode && response.Content != null)
-                    {
-                        (string? salary, int? avgYearlySalary) = response.Content.GetSalary();
-                        job.Salary = salary;
-                        job.AvgYearlySalary = avgYearlySalary;
+            //         if (response.IsSuccessStatusCode && response.Content != null)
+            //         {
+            //             (string? salary, int? avgYearlySalary) = response.Content.GetSalary();
+            //             job.Salary = salary;
+            //             job.AvgYearlySalary = avgYearlySalary;
 
-                        salaryFailCount = 0;
-                    }
-                    else
-                    {
-                        _logger.LogError("Indeed Salary API request failed {@response}", response);
-                        await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", "Indeed Salary API error");
-                        salaryFailCount++;
-                    }
-                }
-            }
+            //             salaryFailCount = 0;
+            //         }
+            //         else
+            //         {
+            //             _logger.LogError("Indeed Salary API request failed {@response}", response);
+            //             await _alertService.CreateErrorAsync($"Search Error ({search.ToString()})", "Indeed Salary API error");
+            //             salaryFailCount++;
+            //         }
+            //     }
+            // }
         }
 
         // Indeed doesn't provide full job descriptions through their official API, so use an undocumented endpoint to get them
