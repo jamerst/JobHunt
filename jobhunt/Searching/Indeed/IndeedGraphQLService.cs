@@ -8,7 +8,7 @@ namespace JobHunt.Searching.Indeed;
 
 public interface IIndeedGraphQLService
 {
-    Task<JobDataResponse?> GetSalaryDataAsync(IEnumerable<string> jobKeys, string country);
+    Task<JobDataResponse?> GetJobDataAsync(IEnumerable<string> jobKeys, string country);
 }
 
 public class IndeedGraphQLService : IIndeedGraphQLService
@@ -24,7 +24,7 @@ public class IndeedGraphQLService : IIndeedGraphQLService
         _logger = logger;
     }
 
-    public async Task<JobDataResponse?> GetSalaryDataAsync(IEnumerable<string> jobKeys, string country)
+    public async Task<JobDataResponse?> GetJobDataAsync(IEnumerable<string> jobKeys, string country)
     {
         var client = new GraphQLHttpClient(
             new GraphQLHttpClientOptions
@@ -41,7 +41,7 @@ public class IndeedGraphQLService : IIndeedGraphQLService
         var request = new IndeedGraphQLHttpRequest
         {
             Query = @"
-                query MyQuery($jobKeys: [ID!]) {
+                query Salary($jobKeys: [ID!]) {
                   jobData(jobKeys: $jobKeys) {
                     results {
                       job {
@@ -96,6 +96,12 @@ public class IndeedGraphQLService : IIndeedGraphQLService
                           formattedText
                         }
                         key
+                        description {
+                          html
+                        }
+                        attributes {
+                          label
+                        }
                       }
                     }
                   }

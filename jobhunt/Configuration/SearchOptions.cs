@@ -5,6 +5,7 @@ public class SearchOptions
 
     public string IndeedPublisherId { get; set; } = null!;
     public bool IndeedFetchSalary { get; set; }
+    public bool IndeedUseGraphQL { get; set; }
     public string IndeedGraphQLApiKey { get; set; } = null!;
     public string GlassdoorPartnerId { get; set; } = null!;
     public string GlassdoorPartnerKey { get; set; } = null!;

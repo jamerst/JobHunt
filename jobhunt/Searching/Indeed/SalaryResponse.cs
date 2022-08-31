@@ -137,7 +137,6 @@ public class SalaryResponse
         public const string Weekly = "WEEKLY";
         public const string Daily = "DAILY";
         public const string Hourly = "HOURLY";
-
     }
 
     private static readonly Regex _rangeRegex = new Regex(@"[^\d]*(?<lower>[\d,]+)(?: - [^\d-]*(?<upper>[\d,-]+))*");

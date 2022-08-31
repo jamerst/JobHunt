@@ -13,7 +13,6 @@ import HideOnScroll from "components/HideOnScroll";
 import Grid from "components/Grid";
 import NumberField from "components/forms/NumberField";
 
-import Job from "types/models/Job";
 import Company from "types/models/Company";
 import CompanyName from "types/models/CompanyName";
 import { getChangedProperties, hasDefined } from "utils/forms";
@@ -82,10 +81,10 @@ const CompanyDialog = ({ mode, company, onUpdate }: CompanyDialogProps) => {
       });
 
       if (response.ok) {
-        const responseData = await response.json() as Job;
+        const responseData = await response.json() as Company;
         showSuccess();
         if (responseData) {
-          navigate(`/job/${responseData.id}`);
+          navigate(`/company/${responseData.id}`);
         }
       } else {
         showError();

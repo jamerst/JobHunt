@@ -25,6 +25,15 @@ Before running some configuration is required. All the configuration options are
 #### Indeed Publisher ID
 You must provide your own Indeed Publisher ID by setting the value of `Search__IndeedPublisherId`. Unfortunately the API used is deprecated, and you can no longer obtain a publisher ID. Thankfully there are **many** publisher IDs left in the source code of other projects here on GitHub. I'll leave it to you to find one.
 
+#### Indeed GraphQL API
+Indeed has recently moved towards using a GraphQL API in their front-end app, so JobHunt can use this to fetch more information, including salary and job "tags" to automate job categorisation.
+
+The GraphQL API can be used to replace the older salary fetching implementation as Indeed appear to have cracked down on securing the endpoint recently and it is not as reliable.
+
+To enable the GraphQL API set `Search__IndeedUseGraphQL` to `"true"` and provide an API key in `Search__IndeedGraphQLApiKey`. To get an API key visit any Indeed job page and look for requests to `/graphql` in dev tools, then copy the API key out of the `indeed-api-key` HTTP header of the request.
+
+I'm not sure how reliable this API will be, I would expect the API key to be revoked regularly, but I'm not sure how often that will be. If it's quite frequent I will investigate automating the retrieval of an API key.
+
 #### Scheduling
 Edit the `Search__Schedules` variables to customise the schedule on which results will be fetched and watched pages checked. These use the standard Cron syntax. By default the refresh will run at 9am, 12pm, and 6pm every day. You may encounter issues with rate limiting or IP blacklisting if you set the schedule to be too frequent.
 
@@ -52,12 +61,15 @@ There are a few options you can configure for duplicate job detection. You shoul
 - `Search__TitleSimilarityThreshold` - the threshold for a job title to be considered the same as another (see above)
 - `Search__IdenticalDescriptionSimilarityThreshold` - the threshold for a job description to be considered the same as another **even if the titles are not similar**.
 
+#### Indeed Options
+- `Search__IndeedFetchSalary` - enables or disables the older salary fetching information. This method of fetching accurate salary information from Indeed requires an extra request for every result, which may cause issues with rate limiting or IP blacklisting, especially for searches with a large number of results. You can disable this if you don't care about fetching salary. **This fetching method has become more unreliable recently, so I recommend using GraphQL instead**.
+- `Search__IndeedUseGraphQL` - enables or disables using the Indeed GraphQL API. To use you must provide an API key in `Search__IndeedGraphQLApiKey` (see above for how to obtain).
+
 #### Other Options
-- `Search__IndeedFetchSalary` - fetching accurate salary information from Indeed requires an extra request for every result, which may cause issues with rate limiting or IP blacklisting, especially for searches with a large number of results. You can disable this if you don't care about fetching salary.
-- `Search__GlassdoorPartnerId` and `Search__GlassdoorPartnerKey` - currently unused (I may add Glassdoor searching in the future, but from my experience Indeed is better)
-- `Search__NominatimCountryCodes` - country to return results from when geocoding locations. Set to your own country to get the most accurate results.
 - `Search__PageLoadWaitSeconds` - number of seconds to wait before capturing page source HTML for watched pages which require JavaScript support. This allows Single Page Applications without server-side rendering to initialise so that the actual page content can be compared.
 - `CultureName` - set the culture used for the application. This affects the currency symbol used when adding the formatted salary for a job if Indeed doesn't provide one. For a list of languages/countries and their codes can be found [here](https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-lcid/a9eac961-e77d-41a6-90a5-ce1a8b0cdb9c).
+- `Search__GlassdoorPartnerId` and `Search__GlassdoorPartnerKey` - currently unused (I may add Glassdoor searching in the future, but from my experience Indeed is better)
+- `Search__NominatimCountryCodes` - country to return results from when geocoding locations. Set to your own country to get the most accurate results.
 
 ### Running JobHunt
 Simply run `docker-compose -f docker-compose-prod.yml up -d` in the jobhunt directory.

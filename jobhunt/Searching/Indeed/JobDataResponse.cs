@@ -10,31 +10,66 @@ public class JobDataResponse
 
 public class JobDataResults
 {
-    public List<JobDataResult> Results { get; set; } = null!;
+    public List<JobDataResultWrapper> Results { get; set; } = null!;
+}
+
+public class JobDataResultWrapper
+{
+    public JobDataResult Job { get; set; } = null!;
 }
 
 public class JobDataResult
 {
     public Compensation? Compensation { get; set; }
     public string Key { get; set; } = null!;
+    public JobDataDescription? Description { get; set; }
+    public List<JobAttribute> Attributes { get; set; } = null!;
+}
+
+public class JobDataDescription
+{
+    public string Html { get; set; } = null!;
+}
+
+public class JobAttribute
+{
+    public string Label { get; set; } = null!;
 }
 
 public class Compensation
 {
-    public Salary? BaseSalary { get; set; }
+    public JobDataSalary? BaseSalary { get; set; }
     public EstimatedSalary? Estimated { get; set; }
-    public string? formattedText { get; set; }
+    public string? FormattedText { get; set; }
 }
 
 public class EstimatedSalary
 {
-    public Salary BaseSalary { get; set; } = null!;
+    public JobDataSalary BaseSalary { get; set; } = null!;
     public string FormattedText { get; set; } = null!;
 }
 
-public class Salary
+public class JobDataSalary
 {
+    public ISalaryType Range { get; set; } = null!;
     public SalaryUnit UnitOfWork { get; set; }
+
+    public int GetAvgYearlySalary()
+    {
+        int avgSalary = (int)Range.GetAvgSalary();
+
+        return UnitOfWork switch
+        {
+            SalaryUnit.Year => avgSalary,
+            SalaryUnit.Quarter => avgSalary * 4,
+            SalaryUnit.Month => avgSalary * 12,
+            SalaryUnit.BiWeek => avgSalary * 24,
+            SalaryUnit.Week => avgSalary * 48,
+            SalaryUnit.Day => avgSalary * 48 * 5,
+            SalaryUnit.Hour => avgSalary * 48 * 5 * 8,
+            _ => throw new InvalidOperationException($"Unknown salary unit {UnitOfWork}")
+        };
+    }
 }
 
 public interface ISalaryType
@@ -79,7 +114,18 @@ public class RangeSalary : ISalaryType
 
     public double GetAvgSalary()
     {
-        return (Min + Max) / 2;
+        if (Min < 1)
+        {
+            return Max;
+        }
+        else if (Max < 1)
+        {
+            return Min;
+        }
+        else
+        {
+            return (Min + Max) / 2;
+        }
     }
 }
 

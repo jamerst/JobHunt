@@ -5,6 +5,7 @@ namespace JobHunt.Searching.Indeed;
 public interface IIndeedSalaryApi
 {
     [Get("/viewjob?vjs=1&jk={jobKey}")]
+    [Headers("User-Agent: PostmanRuntime/7.29.2")]
     Task<ApiResponse<SalaryResponse>> GetSalaryAsync(string jobKey);
 }
 

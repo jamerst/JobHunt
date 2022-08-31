@@ -115,6 +115,7 @@ public class JobService : ODataBaseService<Job>, IJobService
         );
 
         Job? result;
+
         // set threshold values for similarity operations
 
         // this must be done because the similarity() function cannot use indexes, but the % operator can and using
@@ -123,7 +124,7 @@ public class JobService : ODataBaseService<Job>, IJobService
         // unfortunately we can't use the same similarity measure for both the Title and Description since you can only
         // set one threshold value, but that doesn't really matter
 
-        // this may not work in some contexts, there appears to be some EF weirdness where these command don't take
+        // this may not work in some contexts, there appears to be some EF weirdness where these commands don't take
         // effect - maybe they're being run in a separate connection? They do work when called from
         // CheckForDuplicatesAsync though, so no idea why the behaviour changes depending on where it is called from
         await _setThreshold("word_similarity_threshold", _options.TitleSimilarityThreshold);

@@ -23,6 +23,7 @@ services:
       Screenshots__WidthPixels: 1920
       Screenshots__PageLoadTimeoutSeconds: 10
       Search__IndeedFetchSalary: "true"
+      Search__IndeedUseGraphQL: "true"
       # Search__Schedules__0: "* * * * *"
       Search__NominatimCountryCodes: "gb"
       Search__PageLoadWaitSeconds: 5

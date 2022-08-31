@@ -63,6 +63,8 @@ public static class ServiceCollectionExtensions
             .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://api.indeed.com"))
             .AddPolicyHandler(retryPolicy);
 
+        services.AddScoped<IIndeedGraphQLService, IndeedGraphQLService>();
+
         services.AddScoped<IIndeedSalaryApiFactory, IndeedSalaryApiFactory>();
 
         services.AddRefitClient<IIndeedJobDescriptionApi>()
