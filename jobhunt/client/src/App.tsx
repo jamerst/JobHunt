@@ -2,8 +2,6 @@ import React, { useMemo } from 'react';
 import { Routes, BrowserRouter, Route } from "react-router-dom"
 import { CssBaseline, gridClasses, Typography } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { CacheProvider } from "@emotion/react";
-import createCache from "@emotion/cache"
 import { blue, purple } from '@mui/material/colors';
 import { useRecoilValue } from 'recoil';
 import { withErrorBoundary, useErrorBoundary } from "react-use-error-boundary";
@@ -20,11 +18,6 @@ import FeedbackBackdrop from 'components/FeedbackBackdrop';
 import { themeState } from 'state';
 import Grid from 'components/Grid';
 import { ErrorOutline } from '@mui/icons-material';
-
-export const muiCache = createCache({
-  key: "mui",
-  prepend: true
-});
 
 const App = withErrorBoundary(() => {
   const themeMode = useRecoilValue(themeState);
@@ -109,74 +102,70 @@ const App = withErrorBoundary(() => {
 
   if (error) {
     return (
-      <CacheProvider value={muiCache}>
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <Grid container alignItems="center" justifyContent="center" direction="column" sx={{ height: "100vh" }}>
-            <Grid item>
-              <ErrorOutline color="error" sx={{ fontSize: "10em" }} />
-            </Grid>
-            <Grid item container direction="column" alignItems="center">
-              <Typography variant="h1">Fatal Error</Typography>
-              <Typography variant="body1">A fatal error has occurred. Please reload and try again, or report this issue if it persists.</Typography>
-            </Grid>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Grid container alignItems="center" justifyContent="center" direction="column" sx={{ height: "100vh" }}>
+          <Grid item>
+            <ErrorOutline color="error" sx={{ fontSize: "10em" }} />
           </Grid>
-        </ThemeProvider>
-      </CacheProvider>
+          <Grid item container direction="column" alignItems="center">
+            <Typography variant="h1">Fatal Error</Typography>
+            <Typography variant="body1">A fatal error has occurred. Please reload and try again, or report this issue if it persists.</Typography>
+          </Grid>
+        </Grid>
+      </ThemeProvider>
     )
   }
 
   return (
-    <CacheProvider value={muiCache}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <FeedbackBackdrop />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={
-              <MainLayout pageTitle="Dashboard">
-                <Dashboard />
-              </MainLayout>
-            } />
-            <Route path="/jobs" element={
-              <MainLayout pageTitle="Saved Jobs">
-                <Jobs />
-              </MainLayout>
-            } />
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <FeedbackBackdrop />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={
+            <MainLayout pageTitle="Dashboard">
+              <Dashboard />
+            </MainLayout>
+          } />
+          <Route path="/jobs" element={
+            <MainLayout pageTitle="Saved Jobs">
+              <Jobs />
+            </MainLayout>
+          } />
 
-            <Route path="/job/:id" element={
-              <MainLayout>
-                <Job />
-              </MainLayout>
-            } />
+          <Route path="/job/:id" element={
+            <MainLayout>
+              <Job />
+            </MainLayout>
+          } />
 
-            <Route path="/companies" element={
-              <MainLayout pageTitle="Saved Companies">
-                <Companies />
-              </MainLayout>
-            } />
+          <Route path="/companies" element={
+            <MainLayout pageTitle="Saved Companies">
+              <Companies />
+            </MainLayout>
+          } />
 
-            <Route path="/company/:id" element={
-              <MainLayout>
-                <Company />
-              </MainLayout>
-            } />
+          <Route path="/company/:id" element={
+            <MainLayout>
+              <Company />
+            </MainLayout>
+          } />
 
-            <Route path="/searches" element={
-              <MainLayout>
-                <Searches />
-              </MainLayout>
-            } />
+          <Route path="/searches" element={
+            <MainLayout>
+              <Searches />
+            </MainLayout>
+          } />
 
-            <Route path="/page-changes/:id" element={
-              <MainLayout pageTitle="Page Changes">
-                <PageChanges />
-              </MainLayout>
-            } />
-          </Routes>
-        </BrowserRouter>
-      </ThemeProvider>
-    </CacheProvider>
+          <Route path="/page-changes/:id" element={
+            <MainLayout pageTitle="Page Changes">
+              <PageChanges />
+            </MainLayout>
+          } />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 });
 

@@ -4,7 +4,7 @@
  * @param modified Modified object
  * @returns Partial containing only properties of changed which have a different value to original
  */
-export const getChangedProperties = <T,>(original: T, modified: T) => {
+export const getChangedProperties = <T extends Record<string, unknown>,>(original: T, modified: T) => {
   const keys = new Set<string>();
   Object.keys(original).forEach(k => keys.add(k));
   Object.keys(modified).forEach(k => keys.add(k));

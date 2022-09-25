@@ -257,7 +257,7 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
                     if (resultsByKey.TryGetValue(job.ProviderId!, out var result))
                     {
                         job.Salary = result.Compensation?.FormattedText
-                            ?? result.Compensation?.Estimated?.FormattedText;
+                            ?? result.Compensation?.Estimated?.GetFormattedText();
 
                         job.AvgYearlySalary = result.Compensation?.BaseSalary?.GetAvgYearlySalary()
                             ?? result.Compensation?.Estimated?.BaseSalary.GetAvgYearlySalary();

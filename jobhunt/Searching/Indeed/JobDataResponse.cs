@@ -47,6 +47,7 @@ public class EstimatedSalary
 {
     public JobDataSalary BaseSalary { get; set; } = null!;
     public string FormattedText { get; set; } = null!;
+    public string GetFormattedText() => $"{FormattedText} (estimated)";
 }
 
 public class JobDataSalary
