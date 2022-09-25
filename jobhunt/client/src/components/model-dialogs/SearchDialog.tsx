@@ -149,7 +149,7 @@ const SearchDialog = ({ mode, search, open, onSave, onCancel }: SearchDialogProp
                       <TextField label="Location" name="location" fullWidth required />
                     </Grid>
                     <Grid item xs={12}>
-                      <NumberField component={TextField} label="Distance" name="distance" fullWidth required />
+                      <NumberField label="Distance" name="distance" fullWidth required />
                     </Grid>
                     <Grid item xs={12}>
                       <CountrySelector name="country" label="Country" allowedCountries={IndeedSupportedCountries} required hideForbiddenCountries/>
@@ -173,7 +173,7 @@ const SearchDialog = ({ mode, search, open, onSave, onCancel }: SearchDialogProp
                       </Select>
                     </Grid>
                     <Grid item xs={12}>
-                      <NumberField component={TextField} label="Maximum Age (days)" name="maxAge" fullWidth />
+                      <NumberField label="Maximum Age (days)" name="maxAge" fullWidth />
                     </Grid>
                   </Grid>
                 </Grid>

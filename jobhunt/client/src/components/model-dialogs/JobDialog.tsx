@@ -181,10 +181,10 @@ const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
                     mode === "edit" &&
                     <Grid item container xs={12} spacing={1}>
                       <Grid item xs={12} md={6}>
-                          <NumberField component={TextField} label="Latitude" name="latitude" fullWidth size="small" allowDecimal allowNegative />
+                          <NumberField label="Latitude" name="latitude" fullWidth size="small" allowDecimal allowNegative />
                       </Grid>
                       <Grid item xs={12} md={6}>
-                        <NumberField component={TextField} label="Longitude" name="longitude" fullWidth size="small" allowDecimal allowNegative />
+                        <NumberField label="Longitude" name="longitude" fullWidth size="small" allowDecimal allowNegative />
                       </Grid>
                     </Grid>
                   }
@@ -219,7 +219,7 @@ const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
                       <TextField label="Salary" name="salary" fullWidth />
                     </Grid>
                     <Grid item xs={12} md={6}>
-                      <NumberField component={TextField} label="Yearly Salary" name="avgYearlySalary" fullWidth />
+                      <NumberField label="Yearly Salary" name="avgYearlySalary" fullWidth />
                     </Grid>
                   </Grid>
                   <Grid item xs={12} mb={2}>

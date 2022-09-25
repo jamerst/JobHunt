@@ -227,10 +227,10 @@ const CompanyDialog = ({ mode, company, onUpdate }: CompanyDialogProps) => {
                     mode === "edit" &&
                     <Grid item container xs={12} spacing={1}>
                       <Grid item xs={12} md={6}>
-                        <NumberField component={TextField} label="Latitude" name="latitude" fullWidth size="small" allowDecimal allowNegative />
+                        <NumberField label="Latitude" name="latitude" fullWidth size="small" allowDecimal allowNegative />
                       </Grid>
                       <Grid item xs={12} md={6}>
-                        <NumberField component={TextField} label="Longitude" name="longitude" fullWidth size="small" allowDecimal allowNegative />
+                        <NumberField label="Longitude" name="longitude" fullWidth size="small" allowDecimal allowNegative />
                       </Grid>
                     </Grid>
                   }

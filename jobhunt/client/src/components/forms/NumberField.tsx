@@ -1,25 +1,24 @@
-import React, { useCallback } from "react";
+import { TextField, TextFieldProps } from "mui-rff";
+import React, { useCallback, useMemo } from "react";
 
-type FieldProps = {
-  onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void,
-  type?: React.InputHTMLAttributes<unknown>['type']
-}
-
-type NumberFieldProps<TProps extends FieldProps> = TProps & {
+type NumberFieldProps = TextFieldProps & {
   allowDecimal?: boolean,
-  allowNegative?: boolean,
-  component: (props: TProps) => JSX.Element
+  allowNegative?: boolean
 }
 
-const decimalSep = Intl.NumberFormat().formatToParts(1.1).find(p => p.type === "decimal")?.value;
+const decimalSep = Intl.NumberFormat().formatToParts(1.1).find(p => p.type === "decimal")?.value ?? ".";
 
-const NumberField = <TProps extends FieldProps,>(props: NumberFieldProps<TProps>) => {
-  const { allowDecimal, allowNegative, component: Component, onKeyDown: propOnKeyDown, ...rest } = props;
+const NumberField = (props: NumberFieldProps) => {
+  const { allowDecimal, allowNegative, onKeyDown: propOnKeyDown, inputProps: propInputProps, ...rest } = props;
 
   const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key.length === 1) {
       const target = e.target as HTMLInputElement;
       if (!target) {
+        return;
+      }
+
+      if (e.ctrlKey) {
         return;
       }
 
@@ -38,13 +37,41 @@ const NumberField = <TProps extends FieldProps,>(props: NumberFieldProps<TProps>
     }
   }, [allowDecimal, allowNegative, propOnKeyDown]);
 
-  // ideally this should destructure props instead of rest, but doing this breaks it for some unfathomable reason
-  // somehow react-final-form thinks the name property is undefined even though it clearly isn't, but changing it to use
-  // rest magically fixes it
+  const regexPattern = useMemo(() => `^${allowNegative ? "-?" : ""}\\d+${allowDecimal ? `\\${decimalSep}?\\d*` : ""}$`, [allowDecimal, allowNegative]);
+  const regex = useMemo(() =>
+    new RegExp(regexPattern),
+    [regexPattern]
+  );
 
-  // doing it this way means that if TProps has any properties in common with NumberFieldProps they won't be passed to
-  // the component, but oh well
-  return <Component type="tel" {...rest as unknown as TProps} onKeyDown={onKeyDown} />
+  // prevent inputting invalid values when pasting
+  // it would be better to modify the pasted value so that it is valid, but I couldn't get this to work with
+  // react-final-form, it still persisted the invalid value and I can't see a way to set the value programmatically
+  const onPaste = useCallback((e: React.ClipboardEvent) => {
+    const input = e.target as HTMLInputElement;
+    if (input) {
+      const currentValue = input.value;
+
+      const value = e.clipboardData.getData("text/plain");
+      if (!regex.test(value)) {
+        // prevent pasting if pasted value is not a valid number
+        e.preventDefault();
+      }
+
+      if (currentValue && input.selectionStart !== 0 && input.selectionEnd !== currentValue.length) {
+        if ((currentValue.includes("-") && value.includes("-")) || (currentValue.includes(decimalSep) && value.includes(decimalSep))) {
+          // prevent pasting if field already contains decimal or negative symbol and so does pasted value
+          e.preventDefault();
+        }
+      }
+    }
+  }, [regex]);
+
+  const inputProps = useMemo(() => ({
+    ...propInputProps,
+    pattern: regexPattern
+  }), [propInputProps, regexPattern]);
+
+  return <TextField type="tel" {...rest} inputProps={inputProps} onKeyDown={onKeyDown} onPaste={onPaste} />
 }
 
 export default NumberField;
