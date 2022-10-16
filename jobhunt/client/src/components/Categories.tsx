@@ -50,6 +50,8 @@ const getOptionLabel = (o: string | CategoryOption) => {
   }
 };
 
+const areOptionsEqual = (o1: CategoryOption, o2: CategoryOption) => o1.name === o2.name;
+
 const filter = createFilterOptions<CategoryOption>({ ignoreCase: true, trim: true });
 
 const Categories = ({ children, categories, fetchUrl, createUrl, getDeleteUrl, getEntity, onCategoryAdded, onCategoryDeleted }: PropsWithChildren<CategoriesProps>) => {
@@ -83,19 +85,29 @@ const Categories = ({ children, categories, fetchUrl, createUrl, getDeleteUrl, g
     }
 
     let isNewCategory = false;
+    let categoryName: string | null = null;
     const requestData: CategoryRequest = getEntity({});
     if (typeof newCategory === "string") {
       isNewCategory = true;
-      requestData.category = {
-        name: newCategory
-      };
+      categoryName = newCategory;
     } else if (!newCategory.id) {
       isNewCategory = true;
-      requestData.category = {
-        name: newCategory.name
-      };
+      categoryName = newCategory.name;
     } else {
       requestData.categoryId = newCategory.id;
+    }
+
+    // check category doesn't already exist if selected by typing instead of clicking option
+    if (categoryName) {
+      const existing = allCategories.find(c => c.name.toLowerCase() === categoryName!.toLowerCase());
+      if (existing) {
+        isNewCategory = false;
+        requestData.categoryId = existing.id;
+      } else {
+        requestData.category = {
+          name: categoryName
+        };
+      }
     }
 
     const response = await fetch(createUrl, {
@@ -234,6 +246,7 @@ const Categories = ({ children, categories, fetchUrl, createUrl, getDeleteUrl, g
             loading={loading}
             onKeyUp={handleKeyUp}
             onBlur={handleBlur}
+            isOptionEqualToValue={areOptionsEqual}
           />
         </Grid>
       }

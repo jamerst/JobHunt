@@ -163,20 +163,23 @@ public class PageWatcher : IPageWatcher
         {
             changed = true;
 
-            await _wpcService.CreateAsync(new WatchedPageChange
+            WatchedPageChange? change = await _wpcService.CreateAsync(new WatchedPageChange
             {
                 WatchedPageId = page.Id,
                 Created = DateTimeOffset.UtcNow,
                 Html = response
             });
 
-            await _alertService.CreateAsync(new Alert
+            if (change != null)
             {
-                Type = AlertType.PageUpdate,
-                Title = $"{page.Company.Name} page updated",
-                Message = $"'{page.Url}' content has changed",
-                Url = $"/company/{page.Company.Id}#watched-pages"
-            });
+                await _alertService.CreateAsync(new Alert
+                {
+                    Type = AlertType.PageUpdate,
+                    Title = $"{page.Company.Name} page updated",
+                    Message = $"'{page.Url}' content has changed",
+                    Url = $"/page-changes/{change.Id}"
+                });
+            }
         }
 
         await _wpService.UpdateStatusAsync(page.Id, changed);

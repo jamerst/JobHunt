@@ -157,8 +157,18 @@ public class PageScreenshotWorker : BackgroundService, IPageScreenshotWorker
 
                             using (var img = SKBitmap.Decode(screenshot.AsByteArray))
                             {
-                                using (var output = File.OpenWrite(savePath))
-                                    img.Encode(SKEncodedImageFormat.Webp, _options.QualityPercent).SaveTo(output);
+                                if (img != null)
+                                {
+                                    using (var output = File.OpenWrite(savePath))
+                                    {
+                                        img.Encode(SKEncodedImageFormat.Webp, _options.QualityPercent)
+                                            .SaveTo(output);
+                                    }
+                                }
+                                else
+                                {
+                                    _logger.LogWarning("Failed to decode image for {url}", page.WatchedPage.Url);
+                                }
                             }
                         }
                     }
