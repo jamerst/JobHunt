@@ -50,7 +50,7 @@ const PageChanges = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [view, setView] = useState("image");
 
-  const { id } = useParams();
+  const { id, change } = useParams();
   const { classes } = useStyles();
 
   useEffect(() => {
@@ -61,8 +61,14 @@ const PageChanges = () => {
         setWatchedPage(data);
 
         if (data.changes.length > 0) {
-          setCurrent(data.changes[0].id);
-          setCurrentIndex(0);
+          if (change) {
+            const changeId = parseInt(change, 10);
+            setCurrent(changeId);
+            setCurrentIndex(data.changes.findIndex(c => c.id === changeId));
+          } else {
+            setCurrent(data.changes[0].id);
+            setCurrentIndex(0);
+          }
         } else {
           setCurrent(0);
           setCurrentIndex(0);
@@ -71,7 +77,7 @@ const PageChanges = () => {
     }
 
     fetchPage();
-  }, [id]);
+  }, [id, change]);
 
   const changes = useMemo(() => !watchedPage?.changes ? [] : (watchedPage.changes ?? []).map((c, i) => {
     const hasPrevious = i < watchedPage.changes.length - 1;

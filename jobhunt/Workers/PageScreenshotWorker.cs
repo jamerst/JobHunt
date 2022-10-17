@@ -158,6 +158,8 @@ public class PageScreenshotWorker : BackgroundService, IPageScreenshotWorker
                             using (var img = SKBitmap.Decode(screenshot.AsByteArray))
                             {
                                 var webp = img?.Encode(SKEncodedImageFormat.Webp, _options.QualityPercent);
+                                // webp might be null in some cases
+                                // I think this can be caused by pages which play audio, or videos with an audio track.
                                 if (webp != null)
                                 {
                                     using (var output = File.OpenWrite(savePath))

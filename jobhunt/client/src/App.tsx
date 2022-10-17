@@ -128,12 +128,12 @@ const App = withErrorBoundary(() => {
               <Dashboard />
             </MainLayout>
           } />
+
           <Route path="/jobs" element={
             <MainLayout pageTitle="Saved Jobs">
               <Jobs />
             </MainLayout>
           } />
-
           <Route path="/job/:id" element={
             <MainLayout>
               <Job />
@@ -145,7 +145,6 @@ const App = withErrorBoundary(() => {
               <Companies />
             </MainLayout>
           } />
-
           <Route path="/company/:id" element={
             <MainLayout>
               <Company />
@@ -159,6 +158,11 @@ const App = withErrorBoundary(() => {
           } />
 
           <Route path="/page-changes/:id" element={
+            <MainLayout pageTitle="Page Changes">
+              <PageChanges />
+            </MainLayout>
+          } />
+          <Route path="/page-changes/:id/:change" element={
             <MainLayout pageTitle="Page Changes">
               <PageChanges />
             </MainLayout>

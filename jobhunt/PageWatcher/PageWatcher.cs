@@ -177,7 +177,7 @@ public class PageWatcher : IPageWatcher
                     Type = AlertType.PageUpdate,
                     Title = $"{page.Company.Name} page updated",
                     Message = $"'{page.Url}' content has changed",
-                    Url = $"/page-changes/{change.Id}"
+                    Url = $"/page-changes/{change.WatchedPageId}/{change.Id}"
                 });
             }
         }
