@@ -163,12 +163,21 @@ public class PageWatcher : IPageWatcher
         {
             changed = true;
 
-            WatchedPageChange? change = await _wpcService.CreateAsync(new WatchedPageChange
+            WatchedPageChange change = new WatchedPageChange
             {
                 WatchedPageId = page.Id,
                 Created = DateTimeOffset.UtcNow,
                 Html = response
-            });
+            };
+
+            try
+            {
+                await _wpcService.CreateAsync(change);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save page change {@change}", change);
+            }
 
             if (change != null)
             {

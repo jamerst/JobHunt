@@ -14,7 +14,7 @@ public class BaseService<T> : IBaseService<T> where T : class, KeyedEntity
 
     public Task<int> SaveChangesAsync() => _context.SaveChangesAsync();
 
-    public virtual async Task<T?> CreateAsync(T entity)
+    public virtual async Task<T> CreateAsync(T entity)
     {
         Set.Add(entity);
 
@@ -35,6 +35,6 @@ public interface IBaseService<T> where T : class, KeyedEntity
 {
     DbSet<T> Set { get; }
     Task<int> SaveChangesAsync();
-    Task<T?> CreateAsync(T entity);
+    Task<T> CreateAsync(T entity);
     Task<T> BeforeSaveAsync(T entity);
 }
