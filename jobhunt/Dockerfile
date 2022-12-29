@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build-env
 WORKDIR /app
 
 RUN curl -sL https://deb.nodesource.com/setup_16.x |  bash -
@@ -19,7 +19,7 @@ RUN dotnet publish -c Release -o out
 
 
 # Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:6.0
+FROM mcr.microsoft.com/dotnet/aspnet:7.0
 WORKDIR /app
 RUN apt-get update
 RUN curl -sL https://deb.nodesource.com/setup_16.x |  bash -

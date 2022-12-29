@@ -8,7 +8,9 @@ import makeStyles from "makeStyles";
 
 import { Helmet } from "react-helmet";
 
-import enGB from "dayjs/locale/en-gb"
+// have to do this and specify the locale using a string for some reason
+// importing as an object and passing directly doesn't work, no clue why
+import "dayjs/locale/en-gb"
 
 import JobDialog from "components/model-dialogs/JobDialog";
 import { getJobColumns } from "odata/JobColumns";
@@ -61,7 +63,7 @@ const Jobs = () => {
         alwaysSelect={alwaysSelect}
         defaultSortModel={defaultSort}
         getRowClassName={getClass}
-        filterBuilderProps={{ localizationProviderProps: { dateAdapter: AdapterDayjs, locale: enGB }, autocompleteGroups: ["Job", "Company"] }}
+        filterBuilderProps={{ localizationProviderProps: { dateAdapter: AdapterDayjs, adapterLocale: 'en-gb' }, autocompleteGroups: ["Job", "Company"] }}
         defaultPageSize={15}
       />
 

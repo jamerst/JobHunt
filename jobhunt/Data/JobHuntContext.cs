@@ -18,7 +18,7 @@ public class JobHuntContext : DbContext
 
         // optionsBuilder.UseLoggerFactory(loggerFactory);
 
-        optionsBuilder.EnableSensitiveDataLogging();
+        // optionsBuilder.EnableSensitiveDataLogging();
 
         // disable global query filter warning for related entries
         // without this a warning is thrown at every start for the JobCategories entity

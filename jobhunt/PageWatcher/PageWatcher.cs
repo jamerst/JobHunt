@@ -176,7 +176,8 @@ public class PageWatcher : IPageWatcher
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to save page change {@change}", change);
+                _logger.LogError(ex, null);
+                _logger.LogError("Failed to save page change {@change}", change);
             }
 
             if (change != null)

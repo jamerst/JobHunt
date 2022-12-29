@@ -1,4 +1,3 @@
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace JobHunt.Searching.Indeed;
@@ -73,6 +72,11 @@ public class JobDataSalary
     }
 }
 
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "__typename")]
+[JsonDerivedType(typeof(AtLeastSalary), AtLeastSalary.TypeName)]
+[JsonDerivedType(typeof(AtMostSalary), AtMostSalary.TypeName)]
+[JsonDerivedType(typeof(ExactlySalary), ExactlySalary.TypeName)]
+[JsonDerivedType(typeof(RangeSalary), RangeSalary.TypeName)]
 public interface ISalaryType
 {
     double GetAvgSalary();
@@ -80,6 +84,8 @@ public interface ISalaryType
 
 public class AtLeastSalary : ISalaryType
 {
+    public const string TypeName = "AtLeast";
+
     public double Min { get; set; }
 
     public double GetAvgSalary()
@@ -90,6 +96,8 @@ public class AtLeastSalary : ISalaryType
 
 public class AtMostSalary : ISalaryType
 {
+    public const string TypeName = "AtMost";
+
     public double Max { get; set; }
 
     public double GetAvgSalary()
@@ -100,6 +108,8 @@ public class AtMostSalary : ISalaryType
 
 public class ExactlySalary : ISalaryType
 {
+    public const string TypeName = "Exactly";
+
     public double Value { get; set; }
 
     public double GetAvgSalary()
@@ -110,6 +120,8 @@ public class ExactlySalary : ISalaryType
 
 public class RangeSalary : ISalaryType
 {
+    public const string TypeName = "Range";
+
     public double Min { get; set; }
     public double Max { get; set; }
 
@@ -128,71 +140,6 @@ public class RangeSalary : ISalaryType
             return (Min + Max) / 2;
         }
     }
-}
-
-// polymorphic deserializer for ISalaryType
-public class SalaryTypeConverter : JsonConverter<ISalaryType>
-{
-    public override ISalaryType? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-    {
-        Utf8JsonReader clone = reader;
-
-        string? type = null;
-        while (type == null & clone.Read())
-        {
-            if (clone.TokenType == JsonTokenType.PropertyName)
-            {
-                if (clone.GetString() == "__typename")
-                {
-                    clone.Read();
-
-                    if (clone.TokenType == JsonTokenType.String)
-                    {
-                        type = clone.GetString();
-                        break;
-                    }
-                    else
-                    {
-                        throw new JsonException($@"Expected ""__typename"" to be a string, was {clone.TokenType}");
-                    }
-                }
-            }
-        }
-
-        if (type == null)
-        {
-            throw new JsonException("__typename property not found");
-        }
-
-        if (!Enum.TryParse(type, out SalaryTypeName typeName))
-        {
-            throw new JsonException($@"Unknown __typename ""{type}""");
-        }
-
-        ISalaryType salaryType = typeName switch
-        {
-            SalaryTypeName.AtLeast => JsonSerializer.Deserialize<AtLeastSalary>(ref reader, options)!,
-            SalaryTypeName.AtMost => JsonSerializer.Deserialize<AtMostSalary>(ref reader, options)!,
-            SalaryTypeName.Exactly => JsonSerializer.Deserialize<ExactlySalary>(ref reader, options)!,
-            SalaryTypeName.Range => JsonSerializer.Deserialize<RangeSalary>(ref reader, options)!,
-            _ => throw new JsonException($@"Unknown __typename ""{typeName}""")
-        };
-
-        return salaryType;
-    }
-
-    public override void Write(Utf8JsonWriter writer, ISalaryType value, JsonSerializerOptions options)
-    {
-        throw new NotSupportedException();
-    }
-}
-
-public enum SalaryTypeName
-{
-    AtLeast,
-    AtMost,
-    Exactly,
-    Range
 }
 
 public enum SalaryUnit

@@ -58,20 +58,20 @@ public static class DiffExtensions
         if (diff.Result == DiffResult.Different && diff is DiffBase<T> db)
         {
             IElement targetControl = getElement(db.Control);
-            targetControl.SetAttribute(attrKey ?? "data-modified", "true");
+            targetControl.SetAttribute(attrKey ?? "data-jh-modified", "true");
 
             IElement targetTest = targetTest = getElement(db.Test);
-            targetTest.SetAttribute(attrKey ?? "data-modified", "true");
+            targetTest.SetAttribute(attrKey ?? "data-jh-modified", "true");
         }
         else if (diff.Result == DiffResult.Missing && diff is MissingDiffBase<T> mdb)
         {
             IElement target = getElement(mdb.Control);
-            target.SetAttribute(attrKey ?? "data-removed", "true");
+            target.SetAttribute(attrKey ?? "data-jh-removed", "true");
         }
         else if (diff.Result == DiffResult.Unexpected && diff is UnexpectedDiffBase<T> udb)
         {
             IElement target = getElement(udb.Test);
-            target.SetAttribute(attrKey ?? "data-added", "true");
+            target.SetAttribute(attrKey ?? "data-jh-added", "true");
         }
     }
 }

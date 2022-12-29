@@ -82,7 +82,7 @@ public class WatchedPageChangeService : KeyedEntityBaseService<WatchedPageChange
             }
             else if (diff.Target == DiffTarget.Attribute)
             {
-                diff.SetDiffAttributes<AttributeComparisonSource>(x => (IElement) x.ElementSource.Node, "data-modified");
+                diff.SetDiffAttributes<AttributeComparisonSource>(x => (IElement) x.ElementSource.Node, "data-jh-modified");
             }
             else if (diff.Target == DiffTarget.Text)
             {
@@ -96,7 +96,19 @@ public class WatchedPageChangeService : KeyedEntityBaseService<WatchedPageChange
         return (previous.ToHtml(), current.ToHtml());
     }
 
-    private const string _changeStyles = @"<style>[data-added=""true""]{outline: 2px solid #4CAF50;}[data-removed=""true""]{outline: 2px solid #F44336}[data-modified=""true""]{outline: 2px solid #FFD54F}</style>";
+    private const string _changeStyles = """
+        <style>
+            [data-jh-added=""true""] {
+                outline: 2px solid #4CAF50;
+            }
+            [data-jh-removed=""true""] {
+                outline: 2px solid #F44336;
+            }
+            [data-jh-modified=""true""] {
+                outline: 2px solid #FFD54F;
+            }
+        </style>
+        """;
 }
 
 public interface IWatchedPageChangeService : IKeyedEntityBaseService<WatchedPageChange>

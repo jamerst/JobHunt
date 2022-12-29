@@ -5,7 +5,7 @@ import { Helmet } from "react-helmet";
 import { ODataColumnVisibilityModel } from "o-data-grid";
 import ODataGrid from "components/odata/ODataGrid";
 
-import enGB from "dayjs/locale/en-gb"
+import "dayjs/locale/en-gb"
 
 import { getCompanyColumns } from "odata/CompanyColumns";
 import CompanyDialog from "components/model-dialogs/CompanyDialog";
@@ -36,7 +36,7 @@ const Companies = () => (
       columnVisibilityModel={columnVisibility}
       alwaysSelect={alwaysSelect}
       defaultSortModel={defaultSort}
-      filterBuilderProps={{ localizationProviderProps: { dateAdapter: AdapterDayjs, locale: enGB } }}
+      filterBuilderProps={{ localizationProviderProps: { dateAdapter: AdapterDayjs, adapterLocale: 'en-gb' } }}
       defaultPageSize={15}
     />
 

@@ -1,7 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 
-using EFCore.BulkExtensions;
-
 using JobHunt.Geocoding;
 using JobHunt.PageWatcher;
 using JobHunt.Services.BaseServices;
@@ -57,24 +55,26 @@ public class CompanyService : ODataBaseService<Company>, ICompanyService
         {
             await _context.Jobs
                 .Where(j => j.CompanyId == srcId)
-                .BatchUpdateAsync(new Job { CompanyId = destId });
+                .ExecuteUpdateAsync(s => s.SetProperty(j => j.CompanyId, destId));
             await _context.Jobs
                 .Where(j => j.ActualCompanyId == srcId)
-                .BatchUpdateAsync(new Job { ActualCompanyId = destId });
+                .ExecuteUpdateAsync(s => s.SetProperty(j => j.ActualCompanyId, destId));
 
+            // only update CompanyNames where the same name doesn't already exist on the destination
+            // any remaining CompanyNames will simply be deleted
             var destNames = dest.AlternateNames.Select(n => n.Name);
             await _context.CompanyNames
                 .Where(n => n.CompanyId == srcId && !destNames.Contains(n.Name))
-                .BatchUpdateAsync(new CompanyName { CompanyId = destId });
+                .ExecuteUpdateAsync(s => s.SetProperty(n => n.CompanyId, destId));
 
             var destCategories = dest.CompanyCategories.Select(c => c.CategoryId);
             await _context.CompanyCategories
                 .Where(c => c.CompanyId == srcId)
-                .BatchUpdateAsync(new CompanyCategory { CategoryId = destId });
+                .ExecuteUpdateAsync(s => s.SetProperty(c => c.CompanyId, destId));
 
             await _context.WatchedPages
                 .Where(p => p.CompanyId == srcId)
-                .BatchUpdateAsync(new WatchedPage { CompanyId = destId });
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.CompanyId, destId));
 
             await transaction.CommitAsync();
         }

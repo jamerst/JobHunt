@@ -2,7 +2,6 @@ using System.Globalization;
 using System.Text.Json.Serialization;
 
 using Microsoft.AspNetCore.OData;
-using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 
 using AspNetCore.SpaServices.ViteDevelopmentServer;
 using Serilog;
@@ -16,15 +15,16 @@ builder.Host.UseJobHuntSerilog();
 
 builder.WebHost.UseKestrel(options => options.ListenAnyIP(5000));
 
-var cultureInfo = new CultureInfo(builder.Configuration.GetValue<string>("CultureName"));
-CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
-CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
-
-builder.Host.ConfigureServices(services =>
+string? cultureName = builder.Configuration.GetValue<string>("CultureName");
+if (!string.IsNullOrEmpty(cultureName))
 {
-    services.AddHostedService<SearchRefreshWorker>();
-    services.AddHostedService<PageScreenshotWorker>();
-});
+    var cultureInfo = new CultureInfo(cultureName);
+    CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+    CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
+}
+
+builder.Services.AddHostedService<SearchRefreshWorker>();
+builder.Services.AddHostedService<PageScreenshotWorker>();
 
 if (builder.Environment.IsDevelopment())
 {
@@ -78,8 +78,10 @@ try
     app.UseRouting();
 
     app.UseCors();
-
+#pragma warning disable ASP0014 // Suggest using top level route registrations
+    // disable warning - using app.MapControllers() breaks OData
     app.UseEndpoints(endpoints => endpoints.MapControllers());
+#pragma warning restore ASP0014 // Suggest using top level route registrations
 
     app.UseSpa(spa =>
     {
@@ -89,7 +91,6 @@ try
         {
             spa.Options.DevServerPort = 5001;
             spa.UseViteDevelopmentServer("start");
-            // spa.UseReactDevelopmentServer("start");
         }
     });
 

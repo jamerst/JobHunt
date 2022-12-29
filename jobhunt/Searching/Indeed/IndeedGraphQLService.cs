@@ -31,16 +31,15 @@ public class IndeedGraphQLService : IIndeedGraphQLService
             {
                 EndPoint = new Uri($"https://apis.indeed.com/graphql?co={country}&locale={CultureInfo.CurrentCulture.Name}")
             },
-            new SystemTextJsonSerializer(options => {
-                options.PropertyNameCaseInsensitive = true;
-                options.Converters.Add(new SalaryTypeConverter());
-            }),
+            new SystemTextJsonSerializer(options =>
+                options.PropertyNameCaseInsensitive = true
+            ),
             _client
         );
 
         var request = new IndeedGraphQLHttpRequest
         {
-            Query = @"
+            Query = """
                 query Salary($jobKeys: [ID!]) {
                   jobData(jobKeys: $jobKeys) {
                     results {
@@ -105,7 +104,8 @@ public class IndeedGraphQLService : IIndeedGraphQLService
                       }
                     }
                   }
-                }",
+                }
+                """,
             Variables = new { jobKeys },
             ApiKey = _options.IndeedGraphQLApiKey
         };
