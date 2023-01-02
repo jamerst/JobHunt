@@ -78,6 +78,7 @@ try
     app.UseRouting();
 
     app.UseCors();
+
 #pragma warning disable ASP0014 // Suggest using top level route registrations
     // disable warning - using app.MapControllers() breaks OData
     app.UseEndpoints(endpoints => endpoints.MapControllers());

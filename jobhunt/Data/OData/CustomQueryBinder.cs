@@ -19,6 +19,11 @@ public class CustomFilterBinder : FilterBinder
         {
             return _geoBinder.BindGeoFunction(node, context, BindArguments, false);
         }
+        else if (node.Name == "date")
+        {
+            var args = BindArguments(node.Parameters, context);
+            return Expression.Property(args.First(), nameof(DateTime.Date));
+        }
         else
         {
             return base.BindSingleValueFunctionCallNode(node, context);
@@ -41,6 +46,11 @@ public class CustomOrderByBinder : OrderByBinder
         {
             return _geoBinder.BindGeoFunction(node, context, BindArguments, true);
         }
+        else if (node.Name == "date")
+        {
+            var args = BindArguments(node.Parameters, context);
+            return Expression.Property(args.First(), nameof(DateTime.Date));
+        }
         else
         {
             return base.BindSingleValueFunctionCallNode(node, context);
@@ -62,6 +72,11 @@ public class CustomSelectExpandBinder : SelectExpandBinder
         if (_geoBinder.IsFunctionBound(node.Name))
         {
             return _geoBinder.BindGeoFunction(node, context, BindArguments, false);
+        }
+        else if (node.Name == "date")
+        {
+            var args = BindArguments(node.Parameters, context);
+            return Expression.Property(args.First(), nameof(DateTime.Date));
         }
         else
         {

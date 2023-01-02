@@ -31,6 +31,7 @@
     "react-swipeable-views": "^0.14.0",
     "react-swipeable-views-utils": "^0.14.0",
     "react-use-error-boundary": "^3.0.0",
+    "recharts": "^2.2.0",
     "recoil": "0.7.6",
     "remark-gfm": "^3.0.1",
     "tss-react": "4.5.1",
