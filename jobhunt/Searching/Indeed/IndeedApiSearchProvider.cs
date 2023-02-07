@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Refit;
 
 using JobHunt.Converters;
+using JobHunt.Searching.Indeed.GraphQL;
+using JobHunt.Searching.Indeed.Publisher;
 
 namespace JobHunt.Searching.Indeed;
 public class IndeedApiSearchProvider : IIndeedApiSearchProvider
@@ -16,6 +18,8 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
     private readonly ICompanyService _companyService;
     private readonly IJobService _jobService;
     private readonly ISearchService _searchService;
+
+    private readonly IIndeedJobFetcher _fetcher;
 
     private readonly IIndeedPublisherApi _publisherApi;
     private readonly IIndeedGraphQLService _graphQLService;
@@ -32,6 +36,8 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
         IJobService jobService,
         ISearchService searchService,
 
+        IIndeedJobFetcher fetcher,
+
         IIndeedPublisherApi publisherApi,
         IIndeedGraphQLService graphQLService,
         IIndeedSalaryApiFactory salaryApiFactory,
@@ -46,6 +52,7 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
         _companyService = companyService;
         _jobService = jobService;
         _searchService = searchService;
+        _fetcher = fetcher;
         _publisherApi = publisherApi;
         _graphQLService = graphQLService;
         _salaryApiFactory = salaryApiFactory;
@@ -99,7 +106,89 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
         List<JobAlertData> jobAlerts = new List<JobAlertData>();
         int salaryFailCount = 0;
 
-        while (!existingFound && !token.IsCancellationRequested)
+        async Task<bool> processResults(IEnumerable<JobResult> results)
+        {
+            bool getNextPage = true;
+
+            foreach (var result in results)
+            {
+                if (token.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                if (result.Posted < maxAge)
+                {
+                    getNextPage = false;
+                }
+
+                if (!await _jobService.AnyWithProviderIdAsync(SearchProviderName.Indeed, result.Key))
+                {
+                    newJobs++;
+
+                    Job newJob = new Job
+                    {
+                        Title = result.Title,
+                        Description = result.HtmlDescription ?? "",
+                        Location = result.Location,
+                        Latitude = result.Latitude,
+                        Longitude = result.Longitude,
+                        Url = result.Url,
+                        Posted = result.Posted,
+                        Provider = SearchProviderName.Indeed,
+                        ProviderId = result.Key,
+                        SourceId = search.Id
+                    };
+
+                    Company? company = await _companyService.FindByNameAsync(result.EmployerName);
+                    if (company != default)
+                    {
+                        // company already exists
+                        if (company.Watched)
+                        {
+                            jobAlerts.Add(new JobAlertData
+                            {
+                                JobKey = newJob.ProviderId,
+                                CompanyName = company.Name
+                            });
+                        }
+
+                        newJob.CompanyId = company.Id;
+                        newJob.Archived = company.Blacklisted;
+
+                        jobs.Add(newJob);
+                    }
+                    else if (companies.Any(c => c.Name == result.EmployerName))
+                    {
+                        // company doesn't exist, but has already been encountered
+                        Company newCompany = companies.First(c => c.Name == result.EmployerName);
+                        newCompany.Jobs.Add(newJob);
+                    }
+                    else
+                    {
+                        // company doesn't exist
+                        companies.Add(new Company
+                        {
+                            Name = result.EmployerName,
+                            Location = result.Location,
+                            Latitude = result.Latitude,
+                            Longitude = result.Longitude,
+                            Jobs = new List<Job> { newJob }
+                        });
+                    }
+                }
+                else
+                {
+                    getNextPage = false;
+                }
+            }
+
+            return getNextPage;
+        }
+
+        await _fetcher.JobSearchAsync(search, processResults, token);
+
+        /*while (!existingFound && !token.IsCancellationRequested)
         {
             ApiResponse<JobSearchResponse> response;
             query.Start = start;
@@ -211,7 +300,7 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
             {
                 break;
             }
-        }
+        }*/
 
         if (newJobs == 0)
         {
