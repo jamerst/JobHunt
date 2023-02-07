@@ -60,7 +60,7 @@ public class IndeedGraphQLService : IIndeedGraphQLService, IIndeedJobFetcher
             {
                 var result = response.Data.Data.JobSearch;
 
-                bool getNextPage = await processResults(result.Results.Select(r => r.ToJobResult()));
+                bool getNextPage = await processResults(result.Results.Select(r => r.ToJobResult(_options)));
 
                 if (getNextPage && !string.IsNullOrEmpty(result.PageInfo.NextCursor))
                 {
