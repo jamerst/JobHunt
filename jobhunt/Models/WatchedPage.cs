@@ -5,7 +5,7 @@ public class WatchedPage : KeyedEntity
     public int Id { get; set; }
     public int CompanyId { get; set; }
     public Company Company { get; set; } = null!;
-    public string Url { get; set; } = null!;
+    public required string Url { get; set; }
     public string? CssSelector { get; set; }
     public string? CssBlacklist { get; set; }
     public DateTimeOffset? LastScraped { get; set; }

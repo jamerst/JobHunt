@@ -1,6 +1,6 @@
 using Refit;
 
-namespace JobHunt.Searching.Indeed;
+namespace JobHunt.Searching.Indeed.Publisher;
 
 public interface IIndeedJobDescriptionApi
 {

@@ -5,5 +5,5 @@ public class CompanyName : KeyedEntity
     public int Id { get; set; }
     public int CompanyId { get; set; }
     public Company Company { get; set; } = null!;
-    public string Name { get; set; } = null!;
+    public required string Name { get; set; }
 }

@@ -17,12 +17,10 @@ services:
       Screenshots__WidthPixels: 1920
       Screenshots__QualityPercent: 80
       Screenshots__PageLoadTimeoutSeconds: 10
-      Search__IndeedPublisherId: YOUR_PUBLISHER_ID
-      Search__IndeedFetchSalary: "true"
-      Search__IndeedUseGraphQL: "true"
-      Search__IndeedGraphQLApiKey: YOUR_API_KEY
-      Search__GlassdoorPartnerId: YOUR_PARTNER_ID
-      Search__GlassdoorPartnerKey: YOUR_PARTNER_KEY
+      Search__Indeed__PublisherId: YOUR_PUBLISHER_ID
+      Search__Indeed__FetchSalary: "true"
+      Search__Indeed__UseGraphQL: "true"
+      Search__Indeed__GraphQLApiKey: YOUR_API_KEY
       Search__Schedules__0: 0 9 * * *
       Search__Schedules__1: 0 12 * * *
       Search__Schedules__2: 0 18 * * *

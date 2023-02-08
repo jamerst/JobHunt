@@ -3,9 +3,9 @@ public class Search : KeyedEntity
 {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
-    public string Provider { get; set; } = null!;
-    public string Query { get; set; } = null!;
-    public string Country { get; set; } = null!;
+    public required string Provider { get; set; }
+    public required string Query { get; set; }
+    public required string Country { get; set; }
     public string? Location { get; set; }
     public int? Distance { get; set; }
     public int? MaxAge { get; set; }

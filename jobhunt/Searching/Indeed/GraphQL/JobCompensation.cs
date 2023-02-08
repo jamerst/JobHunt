@@ -1,57 +1,30 @@
 using System.Text.Json.Serialization;
 
-namespace JobHunt.Searching.Indeed;
 
-public class JobDataResponse
-{
-    public JobDataResults JobData { get; set; } = null!;
-}
+namespace JobHunt.Searching.Indeed.GraphQL;
 
-public class JobDataResults
+public class JobCompensation
 {
-    public List<JobDataResultWrapper> Results { get; set; } = null!;
-}
-
-public class JobDataResultWrapper
-{
-    public JobDataResult Job { get; set; } = null!;
-}
-
-public class JobDataResult
-{
-    public Compensation? Compensation { get; set; }
-    public string Key { get; set; } = null!;
-    public JobDataDescription? Description { get; set; }
-    public List<JobAttribute> Attributes { get; set; } = null!;
-}
-
-public class JobDataDescription
-{
-    public string Html { get; set; } = null!;
-}
-
-public class JobAttribute
-{
-    public string Label { get; set; } = null!;
-}
-
-public class Compensation
-{
-    public JobDataSalary? BaseSalary { get; set; }
-    public EstimatedSalary? Estimated { get; set; }
+    public Salary? BaseSalary { get; set; }
+    public JobEstimatedCompensation? Estimated { get; set; }
     public string? FormattedText { get; set; }
+
+    public string? GetFormattedText() => FormattedText ?? Estimated?.GetFormattedText();
+    public int? GetAvgYearlySalary() => BaseSalary?.GetAvgYearlySalary() ?? Estimated?.BaseSalary?.GetAvgYearlySalary();
 }
 
-public class EstimatedSalary
+public class JobEstimatedCompensation
 {
-    public JobDataSalary BaseSalary { get; set; } = null!;
-    public string FormattedText { get; set; } = null!;
-    public string GetFormattedText() => $"{FormattedText} (estimated)";
+    public required Salary? BaseSalary { get; set; }
+    public required string? FormattedText { get; set; }
+    public string? GetFormattedText() => !string.IsNullOrEmpty(FormattedText)
+        ? $"{FormattedText} (estimated)"
+        : null;
 }
 
-public class JobDataSalary
+public class Salary
 {
-    public ISalaryType Range { get; set; } = null!;
+    public required ISalaryType Range { get; set; }
     public SalaryUnit UnitOfWork { get; set; }
 
     public int GetAvgYearlySalary()

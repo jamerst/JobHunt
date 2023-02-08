@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
-namespace JobHunt.Searching.Indeed;
+namespace JobHunt.Searching.Indeed.Publisher;
 
 public class SalaryResponse
 {

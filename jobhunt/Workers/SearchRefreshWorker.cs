@@ -71,26 +71,11 @@ public class SearchRefreshWorker : BackgroundService, ISearchRefreshWorker
         {
             List<Task> tasks = new List<Task>();
 
-            IIndeedApiSearchProvider? indeed = indeedScope.ServiceProvider.GetService<IIndeedApiSearchProvider>();
-            if (indeed != null)
-            {
-                tasks.Add(indeed.SearchAllAsync(token));
-            }
-            else
-            {
-                _logger.LogError("SearchRefreshWorker: failed to get instance of IndeedAPI");
-            }
+            IIndeedApiSearchProvider indeed = indeedScope.ServiceProvider.GetRequiredService<IIndeedApiSearchProvider>();
+            tasks.Add(indeed.SearchAllAsync(token));
 
-            IPageWatcher? pageWatcher = pageScope.ServiceProvider.GetService<IPageWatcher>();
-            if (pageWatcher != null)
-            {
-                tasks.Add(pageWatcher.RefreshAllAsync(token));
-            }
-            else
-            {
-                _logger.LogError("SearchRefreshWorker: failed to get instance of PageWatcher");
-            }
-
+            IPageWatcher pageWatcher = pageScope.ServiceProvider.GetRequiredService<IPageWatcher>();
+            tasks.Add(pageWatcher.RefreshAllAsync(token));
 
             await Task.WhenAll(tasks);
         }
@@ -102,15 +87,8 @@ public class SearchRefreshWorker : BackgroundService, ISearchRefreshWorker
         {
             using (IServiceScope duplicateScope = _provider.CreateScope())
             {
-                IJobService? jobService = duplicateScope.ServiceProvider.GetService<IJobService>();
-                if (jobService != null)
-                {
-                    await jobService.CheckForDuplicatesAsync(false, token);
-                }
-                else
-                {
-                    _logger.LogError("SearchRefreshWorker: failed to get instance of JobService");
-                }
+                IJobService jobService = duplicateScope.ServiceProvider.GetRequiredService<IJobService>();
+                await jobService.CheckForDuplicatesAsync(false, token);
             }
         }
     }

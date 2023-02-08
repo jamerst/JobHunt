@@ -4,15 +4,15 @@ public class Company : KeyedEntity
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
     [Required]
-    public string Name { get; set; } = null!;
+    public required string Name { get; set; }
     [Required(AllowEmptyStrings = true)]
-    public string Location { get; set; } = null!;
+    public required string Location { get; set; }
     public double? Latitude { get; set; }
     public double? Longitude { get; set; }
     public string? Notes { get; set; }
     public bool Watched { get; set; } = false;
     public bool Blacklisted { get; set; } = false;
-    public List<Job> Jobs { get; set; } = null!;
+    public required List<Job> Jobs { get; set; }
     public string? Website { get; set; }
     public short? Rating { get; set; }
     public string? Glassdoor { get; set; }
