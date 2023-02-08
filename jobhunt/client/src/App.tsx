@@ -18,7 +18,6 @@ import FeedbackBackdrop from 'components/FeedbackBackdrop';
 import { themeState } from 'state';
 import Grid from 'components/Grid';
 import { ErrorOutline } from '@mui/icons-material';
-import { Statistics } from 'views/Statistics';
 
 const App = withErrorBoundary(() => {
   const themeMode = useRecoilValue(themeState);
@@ -166,12 +165,6 @@ const App = withErrorBoundary(() => {
           <Route path="/page-changes/:id/:change" element={
             <MainLayout pageTitle="Page Changes">
               <PageChanges />
-            </MainLayout>
-          } />
-
-          <Route path="/stats" element={
-            <MainLayout pageTitle="Statistics">
-              <Statistics/>
             </MainLayout>
           } />
         </Routes>
