@@ -71,12 +71,13 @@ public static class Queries
         """;
 
     public const string JobSearchQuery = """
-        query JobSearch($cursor: String, $query: String, $location: JobSearchLocationInput, $limit: Int) {
+        query JobSearch($cursor: String, $query: String, $location: JobSearchLocationInput, $filters: [JobSearchFilterInput!]!, $limit: Int) {
             jobSearch(
                 cursor: $cursor
                 sort: DATE
                 what: $query
                 location: $location
+                filters: $filters
                 origin: GENERATED
                 limit: $limit
             ) {
@@ -94,12 +95,13 @@ public static class Queries
                             latitude
                             longitude
                         }
+                        sourceEmployerName,
                         employer {
                             name
                         }
                         dateOnIndeed
                         attributes {
-                            key
+                            label
                         }
                         compensation {
                             baseSalary {

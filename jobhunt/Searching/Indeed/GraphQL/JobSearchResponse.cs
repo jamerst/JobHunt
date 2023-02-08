@@ -4,11 +4,6 @@ namespace JobHunt.Searching.Indeed.GraphQL;
 
 public class JobSearchResponse
 {
-    public required JobSearchData Data { get; set; }
-}
-
-public class JobSearchData
-{
     public required JobSearch JobSearch { get; set; }
 }
 
@@ -27,18 +22,16 @@ public class JobSearchResult
         {
             Key = Job.Key,
             Title = Job.Title,
-            Url = $"https://{options.IndeedHostName}/viewjob?jk={Job.Key}",
+            Url = $"https://{options.Indeed.HostName}/viewjob?jk={Job.Key}",
             HtmlDescription = Job.Description?.Html,
             Location = Job.Location.Formatted.Long,
             Latitude = Job.Location.Latitude,
             Longitude = Job.Location.Longitude,
-            EmployerName = Job.Employer.Name,
+            EmployerName = Job.Employer?.Name ?? Job.SourceEmployerName,
             Posted = Job.DateOnIndeed,
             Attributes = Job.Attributes.Select(a => a.Label),
-            FormattedSalary = Job.Compensation?.FormattedText
-                ?? Job.Compensation?.Estimated?.FormattedText,
-            AvgYearlySalary = Job.Compensation?.BaseSalary?.GetAvgYearlySalary()
-                ?? Job.Compensation?.Estimated?.BaseSalary?.GetAvgYearlySalary()
+            FormattedSalary = Job.Compensation?.GetFormattedText(),
+            AvgYearlySalary = Job.Compensation?.GetAvgYearlySalary()
         };
 }
 
@@ -48,9 +41,10 @@ public class IndeedJob
     public required string Title { get; set; }
     public JobDescription? Description { get; set; }
     public required JobLocation Location { get; set; }
-    public required Employer Employer { get; set; }
+    public required string SourceEmployerName { get; set; }
+    public Employer? Employer { get; set; }
     [JsonConverter(typeof(UnixEpochDateTimeOffsetConverter))]
-    public DateTime DateOnIndeed { get; set; }
+    public DateTimeOffset DateOnIndeed { get; set; }
     public required List<JobAttribute> Attributes { get; set; }
     public JobCompensation? Compensation { get; set; }
 }

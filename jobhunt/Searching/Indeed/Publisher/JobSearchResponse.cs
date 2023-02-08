@@ -8,31 +8,54 @@ namespace JobHunt.Searching.Indeed.Publisher;
 public class JobSearchResponse
 {
     public int TotalResults { get; set; }
-    public IEnumerable<JobResult> Results { get; set; } = null!;
+    public required IEnumerable<PublisherJobResult> Results { get; set; }
 }
 
-public class JobResult
+public class PublisherJobResult
 {
-    public string JobTitle { get; set; } = null!;
+    public required string JobTitle { get; set; }
 
-    public string Company { get; set; } = null!;
+    public required string Company { get; set; }
 
-    public string FormattedLocation { get; set; } = null!;
+    public required string FormattedLocation { get; set; }
 
     [JsonConverter(typeof(RFC1123DateTimeConverter))]
     public DateTime Date { get; set; }
 
-    public string Snippet { get; set; } = null!;
+    public required string Snippet { get; set; }
 
-    public string Url { get; set; } = null!;
+    public required string Url { get; set; }
 
     public double Latitude { get; set; }
 
     public double Longitude { get; set; }
 
-    public string JobKey { get; set; } = null!;
+    public required string JobKey { get; set; }
 
     public bool Sponsored { get; set; }
+
+    public JobResult ToJobResult()
+    {
+        // get the hostname of the job view URL to allow creating link without tracking to correct domain
+        // returns "https://uk.indeed.com" for a UK job
+        string jobBaseUri = new Uri(Url).GetLeftPart(UriPartial.Authority);
+
+        return new JobResult
+        {
+            Key = JobKey,
+            Title = JobTitle,
+            Url = $"{jobBaseUri}/viewjob?jk={JobKey}",
+            HtmlDescription = Snippet,
+            Location = FormattedLocation,
+            Latitude = Latitude,
+            Longitude = Longitude,
+            EmployerName = Company,
+            Posted = new DateTimeOffset(Date, TimeSpan.Zero),
+            Attributes = Enumerable.Empty<string>(),
+            FormattedSalary = null,
+            AvgYearlySalary = null
+        };
+    }
 
     private class RFC1123DateTimeConverter : JsonConverter<DateTime>
     {

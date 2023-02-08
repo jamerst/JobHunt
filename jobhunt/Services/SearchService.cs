@@ -29,6 +29,7 @@ public class SearchService : ODataBaseService<Search>, ISearchService
 
         SearchRun run = new SearchRun
         {
+            Search = null!,
             SearchId = searchId,
             Time = DateTimeOffset.UtcNow,
             Success = success,

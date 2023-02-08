@@ -50,7 +50,7 @@ builder.Services
 builder.Services.AddSpaStaticFiles(configuration => configuration.RootPath = "client/build");
 
 builder.Services.AddJobHuntCoreServices(builder.Configuration);
-builder.Services.AddIndeedApiSearchProvider();
+builder.Services.AddIndeedApiSearchProvider(builder.Configuration);
 builder.Services.AddPageWatcher();
 builder.Services.AddJobHuntWorkers();
 

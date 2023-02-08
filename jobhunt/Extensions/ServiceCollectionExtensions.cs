@@ -8,6 +8,8 @@ using Serilog;
 using JobHunt.Geocoding;
 using JobHunt.PageWatcher;
 using JobHunt.Searching.Indeed;
+using JobHunt.Searching.Indeed.GraphQL;
+using JobHunt.Searching.Indeed.Publisher;
 using JobHunt.Workers;
 
 namespace JobHunt.Extensions;
@@ -49,7 +51,35 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddIndeedApiSearchProvider(this IServiceCollection services)
+    public static IServiceCollection AddIndeedApiSearchProvider(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddScoped<IIndeedApiSearchProvider, IndeedApiSearchProvider>();
+
+        var options = configuration.GetRequiredSection(SearchOptions.Section).Get<SearchOptions>();
+
+        if (options != null)
+        {
+            if (options.Indeed.UseGraphQL && options.Indeed.CanUseGraphQL())
+            {
+                services.AddIndeedGraphQLApi();
+            }
+            else if (options.Indeed.CanUsePublisher())
+            {
+                services.AddIndeedPublisherApi(options.Indeed);
+            }
+        }
+
+        return services;
+    }
+
+    public static IServiceCollection AddIndeedGraphQLApi(this IServiceCollection services)
+    {
+        services.AddScoped<IIndeedJobFetcher, IndeedGraphQLService>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddIndeedPublisherApi(this IServiceCollection services, IndeedOptions options)
     {
         var retryPolicy = HttpPolicyExtensions
             .HandleTransientHttpError()
@@ -63,15 +93,18 @@ public static class ServiceCollectionExtensions
             .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://api.indeed.com"))
             .AddPolicyHandler(retryPolicy);
 
-        services.AddScoped<IIndeedGraphQLService, IndeedGraphQLService>();
-
         services.AddScoped<IIndeedSalaryApiFactory, IndeedSalaryApiFactory>();
 
         services.AddRefitClient<IIndeedJobDescriptionApi>()
             .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://indeed.com"))
             .AddPolicyHandler(retryPolicy);
 
-        services.AddScoped<IIndeedApiSearchProvider, IndeedApiSearchProvider>();
+        if (options.UseGraphQLSalaryAndDescriptions && options.CanUseGraphQL())
+        {
+            services.AddScoped<IIndeedGraphQLService, IndeedGraphQLService>();
+        }
+
+        services.AddScoped<IIndeedJobFetcher, IndeedPublisherService>();
 
         return services;
     }

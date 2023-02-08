@@ -1,5 +1,5 @@
 using System.Globalization;
-
+using System.Text.Json;
 using GraphQL.Client.Abstractions;
 using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.SystemTextJson;
@@ -8,6 +8,9 @@ namespace JobHunt.Searching.Indeed.GraphQL;
 
 public interface IIndeedGraphQLService
 {
+    Task<bool> JobSearchAsync(Search search, Func<IEnumerable<JobResult>, Task<bool>> processResults, CancellationToken token);
+    Task<bool> AfterSearchCompleteAsync(Search search, IEnumerable<JobResult> jobs, CancellationToken token);
+
     Task<JobDataResponse?> GetJobDataAsync(IEnumerable<string> jobKeys, string country);
 }
 
@@ -42,15 +45,27 @@ public class IndeedGraphQLService : IIndeedGraphQLService, IIndeedJobFetcher
             {
                 Where = search.Location,
                 Radius = search.Distance.Value,
-                RadiusUnit = "MILES"
+                RadiusUnit = _options.Indeed.SearchRadiusUnit,
             };
+        }
+
+        if (search.MaxAge.HasValue)
+        {
+            variables.Filters.Add(new JobSearchFilterInput
+            {
+                Date = new JobSearchDateRangeFilterInput
+                {
+                    Field = "dateOnIndeed",
+                    Start = $"{search.MaxAge}d"
+                }
+            });
         }
 
         var request = new IndeedGraphQLHttpRequest
         {
             Query = Queries.JobSearchQuery,
             Variables = variables,
-            ApiKey = _options.IndeedGraphQLApiKey
+            ApiKey = _options.Indeed.GraphQLApiKey!
         };
 
         do
@@ -58,7 +73,7 @@ public class IndeedGraphQLService : IIndeedGraphQLService, IIndeedJobFetcher
             var response = await client.SendQueryAsync<JobSearchResponse>(request);
             if (response != null && (response.Errors == null || !response.Errors.Any()))
             {
-                var result = response.Data.Data.JobSearch;
+                var result = response.Data.JobSearch;
 
                 bool getNextPage = await processResults(result.Results.Select(r => r.ToJobResult(_options)));
 
@@ -82,7 +97,7 @@ public class IndeedGraphQLService : IIndeedGraphQLService, IIndeedJobFetcher
         return true;
     }
 
-    public Task AfterSearchCompleteAsync(IEnumerable<Job> jobs) => Task.CompletedTask;
+    public Task<bool> AfterSearchCompleteAsync(Search search, IEnumerable<JobResult> jobs, CancellationToken token) => Task.FromResult(true);
 
     public async Task<JobDataResponse?> GetJobDataAsync(IEnumerable<string> jobKeys, string country)
     {
@@ -92,7 +107,7 @@ public class IndeedGraphQLService : IIndeedGraphQLService, IIndeedJobFetcher
         {
             Query = Queries.JobDataQuery,
             Variables = new { jobKeys },
-            ApiKey = _options.IndeedGraphQLApiKey
+            ApiKey = _options.Indeed.GraphQLApiKey!
         };
 
         var response = await client.SendQueryAsync<JobDataResponse>(request);
@@ -118,7 +133,10 @@ public class IndeedGraphQLService : IIndeedGraphQLService, IIndeedJobFetcher
                 EndPoint = new Uri(GetGraphQLEndpointUrl(country))
             },
             new SystemTextJsonSerializer(options =>
-                options.PropertyNameCaseInsensitive = true
+                {
+                    options.PropertyNameCaseInsensitive = true;
+                    options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                }
             ),
             _client
         );

@@ -4,5 +4,5 @@ public interface IIndeedJobFetcher
 {
     Task<bool> JobSearchAsync(Search search, Func<IEnumerable<JobResult>, Task<bool>> processResults, CancellationToken token);
 
-    Task AfterSearchCompleteAsync(IEnumerable<Job> jobs);
+    Task<bool> AfterSearchCompleteAsync(Search search, IEnumerable<JobResult> jobs, CancellationToken token);
 }

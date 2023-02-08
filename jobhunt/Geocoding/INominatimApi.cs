@@ -14,7 +14,7 @@ public interface INominatimApi
 public class GeocodeParams
 {
     [AliasAs("q")]
-    public string Query { get; set; } = null!;
+    public required string Query { get; set; }
 
     [AliasAs("countrycodes")]
     public string? CountryCodes { get; set; }

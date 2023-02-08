@@ -8,18 +8,23 @@ public class JobCompensation
     public Salary? BaseSalary { get; set; }
     public JobEstimatedCompensation? Estimated { get; set; }
     public string? FormattedText { get; set; }
+
+    public string? GetFormattedText() => FormattedText ?? Estimated?.GetFormattedText();
+    public int? GetAvgYearlySalary() => BaseSalary?.GetAvgYearlySalary() ?? Estimated?.BaseSalary?.GetAvgYearlySalary();
 }
 
 public class JobEstimatedCompensation
 {
-    public Salary BaseSalary { get; set; } = null!;
-    public string FormattedText { get; set; } = null!;
-    public string GetFormattedText() => $"{FormattedText} (estimated)";
+    public required Salary? BaseSalary { get; set; }
+    public required string? FormattedText { get; set; }
+    public string? GetFormattedText() => !string.IsNullOrEmpty(FormattedText)
+        ? $"{FormattedText} (estimated)"
+        : null;
 }
 
 public class Salary
 {
-    public ISalaryType Range { get; set; } = null!;
+    public required ISalaryType Range { get; set; }
     public SalaryUnit UnitOfWork { get; set; }
 
     public int GetAvgYearlySalary()
