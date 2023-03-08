@@ -98,13 +98,13 @@ public class WatchedPageChangeService : KeyedEntityBaseService<WatchedPageChange
 
     private const string _changeStyles = """
         <style>
-            [data-jh-added=""true""] {
+            [data-jh-added="true"] {
                 outline: 2px solid #4CAF50;
             }
-            [data-jh-removed=""true""] {
+            [data-jh-removed="true"] {
                 outline: 2px solid #F44336;
             }
-            [data-jh-modified=""true""] {
+            [data-jh-modified="true"] {
                 outline: 2px solid #FFD54F;
             }
         </style>
