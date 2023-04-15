@@ -170,6 +170,8 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
             {
                 Title = result.Title,
                 Description = markdown,
+                Salary = result.FormattedSalary,
+                AvgYearlySalary = result.AvgYearlySalary,
                 Location = result.Location,
                 Latitude = result.Latitude,
                 Longitude = result.Longitude,

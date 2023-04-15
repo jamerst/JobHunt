@@ -79,6 +79,11 @@ public class CompanyService : ODataBaseService<Company>, ICompanyService
             await transaction.CommitAsync();
         }
 
+        if (src.Name != dest.Name)
+        {
+            dest.AlternateNames.Add(new CompanyName { Name = src.Name });
+        }
+
         if (src.Recruiter && !dest.Recruiter)
         {
             dest.Recruiter = true;

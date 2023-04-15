@@ -75,6 +75,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddIndeedGraphQLApi(this IServiceCollection services)
     {
         services.AddScoped<IIndeedJobFetcher, IndeedGraphQLService>();
+        services.AddScoped<IIndeedGraphQLService, IndeedGraphQLService>();
 
         return services;
     }
