@@ -1,10 +1,16 @@
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build-env
 WORKDIR /app
 
-# install node and npm
-RUN curl -sL https://deb.nodesource.com/setup_16.x |  bash -
+# Add repo for node
 RUN apt-get update
-RUN apt-get install -y --no-install-recommends nodejs unzip libfreetype6 libfontconfig1 ca-certificates procps pandoc firefox-esr curl jq
+RUN apt-get install -y ca-certificates curl gnupg
+RUN mkdir -p /etc/apt/keyrings
+RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+RUN echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
+
+# install node and npm
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends nodejs unzip libfreetype6 libfontconfig1 ca-certificates procps pandoc firefox-esr jq
 
 # install pnpm
 RUN npm install -g pnpm
