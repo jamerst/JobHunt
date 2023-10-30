@@ -20,7 +20,7 @@ public class CompanyService : ODataBaseService<Company>, ICompanyService
     {
         return await _context.Companies
             .Include(c => c.AlternateNames)
-            .FirstOrDefaultAsync(c => c.Name == name || c.AlternateNames.Any(an => an.Name == name));
+            .FirstOrDefaultAsync(c => c.Name.ToLower() == name || c.AlternateNames.Any(an => an.Name.ToLower() == name));
     }
 
     public async Task CreateAllAsync(IEnumerable<Company> companies)

@@ -185,10 +185,11 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
             newJob.JobCategories = result.Attributes
                 .Select(a => categoryIdByName.GetValueOrDefault(a))
                 .Where(id => id != default)
+                .Distinct()
                 .Select(id => new JobCategory { CategoryId = id })
                 .ToList();
 
-            Company? company = await _companyService.FindByNameAsync(result.EmployerName);
+            Company? company = await _companyService.FindByNameAsync(result.EmployerName.ToLower());
             if (company != default)
             {
                 // company already exists
@@ -204,7 +205,7 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
             }
             else
             {
-                Company? newCompany = companies.FirstOrDefault(c => c.Name == result.EmployerName);
+                Company? newCompany = companies.FirstOrDefault(c => c.Name.ToLower() == result.EmployerName.ToLower());
                 if (newCompany != default)
                 {
                     // company doesn't exist, but has already been encountered
