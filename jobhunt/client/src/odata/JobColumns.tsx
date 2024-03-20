@@ -102,8 +102,8 @@ export const getJobColumns = (): ODataGridColumns<Job> => {
       headerName: "Remote",
       flex: .5,
       valueGetter: (params) => params.row.result.remote ? "Yes" : "No",
+      type: "boolean",
       filterOperators: ["eq"],
-      filterType: "boolean",
       autocompleteGroup: "Job",
     },
     {
