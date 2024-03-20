@@ -5,8 +5,7 @@ public class Company : KeyedEntity
     public int Id { get; set; }
     [Required]
     public required string Name { get; set; }
-    [Required(AllowEmptyStrings = true)]
-    public required string Location { get; set; }
+    public string? Location { get; set; }
     public double? Latitude { get; set; }
     public double? Longitude { get; set; }
     public string? Notes { get; set; }

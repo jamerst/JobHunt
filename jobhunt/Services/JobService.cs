@@ -192,7 +192,7 @@ public class JobService : ODataBaseService<Job>, IJobService
             }
         }
 
-        if (!entity.Latitude.HasValue || !entity.Longitude.HasValue)
+        if (!string.IsNullOrEmpty(entity.Location) && (!entity.Latitude.HasValue || !entity.Longitude.HasValue))
         {
             var result = await _geocoder.GeocodeAsync(entity.Location);
 

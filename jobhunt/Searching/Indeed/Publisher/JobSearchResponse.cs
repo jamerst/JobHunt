@@ -40,21 +40,32 @@ public class PublisherJobResult
         // returns "https://uk.indeed.com" for a UK job
         string jobBaseUri = new Uri(Url).GetLeftPart(UriPartial.Authority);
 
-        return new JobResult
+        var result = new JobResult
         {
             Key = JobKey,
             Title = JobTitle,
             Url = $"{jobBaseUri}/viewjob?jk={JobKey}",
             HtmlDescription = Snippet,
             Location = FormattedLocation,
-            Latitude = Latitude,
-            Longitude = Longitude,
             EmployerName = Company,
             Posted = new DateTimeOffset(Date, TimeSpan.Zero),
             Attributes = Enumerable.Empty<string>(),
             FormattedSalary = null,
             AvgYearlySalary = null
         };
+
+        if (result.Location.ToLower() == "remote"
+            || (Latitude == 25 && Longitude == -40)) // Indeed uses those coords for remote jobs for some reason
+        {
+            result.Remote = true;
+        }
+        else
+        {
+            result.Latitude = Latitude;
+            result.Longitude = Longitude;
+        }
+
+        return result;
     }
 
     private class RFC1123DateTimeConverter : JsonConverter<DateTime>

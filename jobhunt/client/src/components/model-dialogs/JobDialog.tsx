@@ -6,7 +6,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers"
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { Add, Edit } from "@mui/icons-material";
 
-import { Autocomplete, DateTimePicker, TextField } from "mui-rff";
+import { Autocomplete, DateTimePicker, Switches, TextField } from "mui-rff";
 import { Form } from "react-final-form";
 
 import dayjs, { Dayjs } from "dayjs";
@@ -55,6 +55,8 @@ dayjs.extend(utc);
 
 const getOptionValue = (c: Company) => c.id;
 const getOptionLabel = (c: Company | string) => (c as Company)?.name ?? "";
+
+const switchData = { label: "Remote", value: true};
 
 const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
   const [open, setOpen] = useState<boolean>(false);
@@ -174,8 +176,13 @@ const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
                   <Grid item xs={12} mb={2}>
                     <TextField label="Title" name="title" fullWidth required />
                   </Grid>
-                  <Grid item xs={12}>
-                    <TextField label="Location" name="location" fullWidth required />
+                  <Grid item container xs={12} alignItems="center" spacing={2}>
+                    <Grid item xs={12} md={10}>
+                      <TextField label="Location" name="location" fullWidth required />
+                    </Grid>
+                    <Grid item xs={2}>
+                      <Switches name="remote" data={switchData} />
+                    </Grid>
                   </Grid>
                   {
                     mode === "edit" &&

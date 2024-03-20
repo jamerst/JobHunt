@@ -9,7 +9,7 @@ public class Job : KeyedEntity
     public required string Description { get; set; }
     public string? Salary { get; set; }
     public int? AvgYearlySalary { get; set; }
-    [Required]
+    public bool Remote { get; set; }
     public required string Location { get; set; }
     public double? Latitude { get; set; }
     public double? Longitude { get; set; }

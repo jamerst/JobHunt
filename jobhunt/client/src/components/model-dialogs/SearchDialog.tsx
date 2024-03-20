@@ -65,11 +65,9 @@ const SearchDialog = ({ mode, search, open, onSave, onCancel }: SearchDialogProp
 
     const requestData: Search = { ...values, employerOnly: !values.recruiter, jobType: values.jobType !== "any" ? values.jobType : "" };
 
-    // workaround for weird issue where submitting extra JSON properties causes the request to be rejected
-    delete (requestData as any).recruiter;
-    delete (requestData as any).displayName;
-
     if (mode === "create") {
+      beforeSubmit(requestData);
+
       const response = await fetch("/api/odata/search", {
         method: "POST",
         body: JSON.stringify(requestData),
@@ -89,6 +87,8 @@ const SearchDialog = ({ mode, search, open, onSave, onCancel }: SearchDialogProp
       const changed = getChangedProperties(search, requestData);
 
       if (hasDefined(changed)) {
+        beforeSubmit(changed);
+
         const response = await fetch(`/api/odata/search(${search.id})`, {
           method: "PATCH",
           body: JSON.stringify(changed),
@@ -188,6 +188,14 @@ const SearchDialog = ({ mode, search, open, onSave, onCancel }: SearchDialogProp
       </Dialog>
     </Fragment>
   )
+}
+
+const beforeSubmit = (requestData: any) => {
+  // workaround for weird issue where submitting extra JSON properties causes the request to be rejected
+  delete requestData.recruiter;
+  delete requestData.displayName;
+
+  return requestData;
 }
 
 export default SearchDialog;

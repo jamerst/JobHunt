@@ -8,6 +8,7 @@ type Job = {
   description: string,
   salary?: string,
   avgYearlySalary?: number,
+  remote: boolean,
   location: string,
   latitude?: number,
   longitude?: number,

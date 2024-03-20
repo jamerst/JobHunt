@@ -17,22 +17,40 @@ public class JobSearchResult
 {
     public required IndeedJob Job { get; set; }
 
-    public JobResult ToJobResult(SearchOptions options) =>
-        new JobResult
+    public JobResult ToJobResult(SearchOptions options)
+    {
+        var result = new JobResult
         {
             Key = Job.Key,
             Title = Job.Title,
             Url = $"https://{options.Indeed.HostName}/viewjob?jk={Job.Key}",
             HtmlDescription = Job.Description?.Html,
             Location = Job.Location.Formatted.Long,
-            Latitude = Job.Location.Latitude,
-            Longitude = Job.Location.Longitude,
-            EmployerName = Job.Employer?.Name ?? Job.SourceEmployerName,
+            EmployerName = Job.SourceEmployerName,
             Posted = Job.DateOnIndeed,
             Attributes = Job.Attributes.Select(a => a.Label),
             FormattedSalary = Job.Compensation?.GetFormattedText(),
             AvgYearlySalary = Job.Compensation?.GetAvgYearlySalary()
         };
+
+        if (result.Location.ToLower() == "remote"
+            || (Job.Location.Latitude == 25 && Job.Location.Longitude == -40)) // Indeed uses those coords for remote jobs for some reason
+        {
+            result.Remote = true;
+        }
+        else
+        {
+            result.Latitude = Job.Location.Latitude;
+            result.Longitude = Job.Location.Longitude;
+        }
+
+        if (!string.IsNullOrEmpty(Job.Employer?.Name) && Job.Employer.Name.ToLower() != result.EmployerName.ToLower())
+        {
+            result.AlternativeEmployerName = Job.Employer.Name;
+        }
+
+        return result;
+    }
 }
 
 public class IndeedJob

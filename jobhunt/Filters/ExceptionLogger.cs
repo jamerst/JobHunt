@@ -15,7 +15,7 @@ public class ExceptionLogger : IAsyncExceptionFilter
     {
         _logger.LogError(context.Exception, "Uncaught exception thrown");
 
-        context.Result = new ContentResult { StatusCode = (int) HttpStatusCode.InternalServerError, Content = "JobHunt has encountered an error. Please try again or report an issue at https://github.com/jamerst/JobHunt/issues.", ContentType = "text/plain" };
+        context.Result = new ContentResult { StatusCode = StatusCodes.Status500InternalServerError, Content = "JobHunt has encountered an error. Please try again or report an issue at https://github.com/jamerst/JobHunt/issues.", ContentType = "text/plain" };
         return Task.CompletedTask;
     }
 }

@@ -100,10 +100,6 @@ const CompanyDialog = ({ mode, company, onUpdate }: CompanyDialogProps) => {
         delete changed.alternateNames;
       }
 
-      if (changed.location === null) {
-        changed.location = ""
-      }
-
       // only send patch request if fields have actually changed
       if (hasDefined(changed)) {
         batch.requests.push({

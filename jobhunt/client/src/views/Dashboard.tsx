@@ -40,7 +40,8 @@ const columnVisibility: ODataColumnVisibilityModel = {
   "status": false,
   "jobCategories": false,
   "source/displayName": false,
-  "posted": { xs: false, sm: true }
+  "posted": { xs: false, sm: true },
+  "remote": false
 };
 
 const alwaysSelect = ["id"];

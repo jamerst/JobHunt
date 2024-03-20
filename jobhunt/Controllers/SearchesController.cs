@@ -33,7 +33,7 @@ public class SearchesController : ControllerBase
             }
             else
             {
-                return StatusCode((int) HttpStatusCode.InternalServerError);
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
         else

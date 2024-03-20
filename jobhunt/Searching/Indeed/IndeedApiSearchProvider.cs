@@ -172,6 +172,7 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
                 Description = markdown,
                 Salary = result.FormattedSalary,
                 AvgYearlySalary = result.AvgYearlySalary,
+                Remote = result.Remote,
                 Location = result.Location,
                 Latitude = result.Latitude,
                 Longitude = result.Longitude,
@@ -179,17 +180,21 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
                 Posted = result.Posted,
                 Provider = SearchProviderName.Indeed,
                 ProviderId = result.Key,
-                SourceId = search.Id
+                SourceId = search.Id,
+                JobCategories = result.Attributes
+                    .Select(a => categoryIdByName.GetValueOrDefault(a))
+                    .Where(id => id != default)
+                    .Distinct()
+                    .Select(id => new JobCategory { CategoryId = id })
+                    .ToList()
             };
 
-            newJob.JobCategories = result.Attributes
-                .Select(a => categoryIdByName.GetValueOrDefault(a))
-                .Where(id => id != default)
-                .Distinct()
-                .Select(id => new JobCategory { CategoryId = id })
-                .ToList();
-
             Company? company = await _companyService.FindByNameAsync(result.EmployerName.ToLower());
+            if (company == default && !string.IsNullOrEmpty(result.AlternativeEmployerName))
+            {
+                company = await _companyService.FindByNameAsync(result.AlternativeEmployerName.ToLower());
+            }
+
             if (company != default)
             {
                 // company already exists
@@ -214,14 +219,28 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
                 else
                 {
                     // company doesn't exist
-                    companies.Add(new Company
+                    var createCompany = new Company
                     {
                         Name = result.EmployerName,
-                        Location = result.Location,
-                        Latitude = result.Latitude,
-                        Longitude = result.Longitude,
                         Jobs = new List<Job> { newJob }
-                    });
+                    };
+
+                    if (!result.Remote)
+                    {
+                        createCompany.Location = result.Location;
+                        createCompany.Latitude = result.Latitude;
+                        createCompany.Longitude = result.Longitude;
+                    }
+
+                    if (!string.IsNullOrEmpty(result.AlternativeEmployerName))
+                    {
+                        createCompany.AlternateNames = new()
+                        {
+                            new CompanyName { Name = result.AlternativeEmployerName }
+                        };
+                    }
+
+                    companies.Add(createCompany);
 
                 }
             }

@@ -41,6 +41,7 @@ const columnVisibility: ODataColumnVisibilityModel = {
   "jobCategories": { xs: false, xl: true },
   "source/displayName": false,
   "posted": { xs: false, sm: true },
+  "remote": false,
 }
 
 const defaultSort: GridSortModel = [{ field: "posted", sort: "desc" }];

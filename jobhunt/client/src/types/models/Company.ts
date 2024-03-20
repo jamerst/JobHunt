@@ -6,7 +6,7 @@ import WatchedPage from "./WatchedPage";
 type Company = {
   id: number,
   name: string,
-  location: string,
+  location?: string,
   latitude?: number,
   longitude?: number,
   notes?: string,
