@@ -9,18 +9,18 @@ import { LinearProgress, Typography } from "@mui/material";
 const pageSizes = [10, 15, 20, 50];
 
 const ODataGrid = (props: ODataGridProps) => {
-  const components = useMemo(() => ({
-    ...props.components,
+  const slots = useMemo(() => ({
+    ...props.slots,
     LoadingOverlay: LoadingOverlay,
     NoResultsOverlay: NoResultsOverlay,
     NoRowsOverlay: NoResultsOverlay
-  }), [props.components]);
+  }), [props.slots]);
 
   return (
     <DefaultDataGrid
       {...props}
-      components={components}
-      rowsPerPageOptions={props.rowsPerPageOptions ?? pageSizes}
+      slots={slots}
+      pageSizeOptions={props.pageSizeOptions ?? pageSizes}
     />
   )
 }

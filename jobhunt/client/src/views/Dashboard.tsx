@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState } from "react"
 import { Typography } from "@mui/material"
 import Grid from "components/Grid";
-import { GridRowParams, GridSortModel } from "@mui/x-data-grid"
-import { ODataColumnVisibilityModel } from "o-data-grid";
+import { GridRowParams } from "@mui/x-data-grid"
+import { ODataGridInitialState } from "o-data-grid";
 import ODataGrid from "components/odata/ODataGrid";
 
 import SwipeableView from "react-swipeable-views"
@@ -33,20 +33,25 @@ const AutoPlaySwipeableView = autoPlay(SwipeableView);
 
 const columns = getJobColumns();
 
-const columnVisibility: ODataColumnVisibilityModel = {
-  "company/name": { xs: false, md: true },
-  "duplicateJob/title": false,
-  "salary": { xs: false, xl: true },
-  "status": false,
-  "jobCategories": false,
-  "source/displayName": false,
-  "posted": { xs: false, sm: true },
-  "remote": false
-};
+const initialState: ODataGridInitialState = {
+  columns: {
+    columnVisibilityModel: {
+      "company/name": { xs: false, md: true },
+      "duplicateJob/title": false,
+      "salary": { xs: false, xl: true },
+      "status": false,
+      "jobCategories": false,
+      "source/displayName": false,
+      "posted": { xs: false, sm: true },
+      "remote": false
+    }
+  },
+  sorting: {
+    sortModel: [{ field: "posted", sort: "desc" }]
+  }
+}
 
 const alwaysSelect = ["id"];
-
-const defaultSort:GridSortModel = [{ field: "posted", sort: "desc" }];
 
 export const Dashboard = () => {
   const [jobCounts, setJobCounts] = useState<JobCount>({ daily: -1, weekly: -1, monthly: -1 });
@@ -109,11 +114,10 @@ export const Dashboard = () => {
             <ODataGrid
               url="/api/odata/Job"
               columns={columns}
-              columnVisibilityModel={columnVisibility}
               alwaysSelect={alwaysSelect}
-              defaultSortModel={defaultSort}
               $filter="Archived eq false"
               getRowClassName={getClass}
+              initialState={initialState}
             />
           </CardBody>
         </Card>

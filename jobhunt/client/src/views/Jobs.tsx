@@ -1,7 +1,7 @@
 import React, { useCallback } from "react"
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { GridRowParams, GridSortModel } from "@mui/x-data-grid"
-import { ODataColumnVisibilityModel } from "o-data-grid";
+import { GridRowParams } from "@mui/x-data-grid"
+import { ODataGridInitialState } from "o-data-grid";
 import ODataGrid from "components/odata/ODataGrid";
 
 import makeStyles from "makeStyles";
@@ -33,18 +33,28 @@ const columns = getJobColumns();
 
 const alwaysSelect = ["id", "archived"];
 
-const columnVisibility: ODataColumnVisibilityModel = {
-  "company/name": { xs: false, md: true },
-  "duplicateJob/title": false,
-  "salary": { xs: false, lg: true },
-  "status": false,
-  "jobCategories": { xs: false, xl: true },
-  "source/displayName": false,
-  "posted": { xs: false, sm: true },
-  "remote": false,
-}
-
-const defaultSort: GridSortModel = [{ field: "posted", sort: "desc" }];
+const initialState: ODataGridInitialState = {
+  columns: {
+    columnVisibilityModel: {
+      "company/name": { xs: false, md: true },
+      "duplicateJob/title": false,
+      "salary": { xs: false, lg: true },
+      "status": false,
+      "jobCategories": { xs: false, xl: true },
+      "source/displayName": false,
+      "posted": { xs: false, sm: true },
+      "remote": false,
+    }
+  },
+  sorting: {
+    sortModel: [{ field: "posted", sort: "desc" }]
+  },
+  pagination: {
+    paginationModel: {
+      pageSize: 15
+    }
+  }
+};
 
 const Jobs = () => {
   const { classes } = useStyles();
@@ -60,12 +70,10 @@ const Jobs = () => {
       <ODataGrid
         url="/api/odata/Job"
         columns={columns}
-        columnVisibilityModel={columnVisibility}
         alwaysSelect={alwaysSelect}
-        defaultSortModel={defaultSort}
         getRowClassName={getClass}
         filterBuilderProps={{ localizationProviderProps: { dateAdapter: AdapterDayjs, adapterLocale: 'en-gb' }, autocompleteGroups: ["Job", "Company"] }}
-        defaultPageSize={15}
+        initialState={initialState}
       />
 
       <JobDialog mode="create" />

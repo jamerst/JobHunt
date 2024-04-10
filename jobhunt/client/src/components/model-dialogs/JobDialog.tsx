@@ -10,7 +10,7 @@ import { Autocomplete, DateTimePicker, Switches, TextField } from "mui-rff";
 import { Form } from "react-final-form";
 
 import dayjs, { Dayjs } from "dayjs";
-import enGB from "dayjs/locale/en-gb"
+import "dayjs/locale/en-gb";
 import utc from "dayjs/plugin/utc"
 
 import makeStyles from "makeStyles";
@@ -236,8 +236,8 @@ const JobDialog = ({ mode, job, onUpdate }: JobDialogProps) => {
                     <TextField label="URL" name="url" fullWidth />
                   </Grid>
                   <Grid item xs={12}>
-                    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={enGB}>
-                      <DateTimePicker label="Posted" name="posted" required disableFuture inputFormat="DD/MM/YYYY HH:mm" />
+                    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="en-gb">
+                      <DateTimePicker label="Posted" name="posted" required disableFuture format="DD/MM/YYYY HH:mm" />
                     </LocalizationProvider>
                   </Grid>
                 </Grid>

@@ -1,8 +1,7 @@
 import React from "react"
-import { GridSortModel } from "@mui/x-data-grid"
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { Helmet } from "react-helmet";
-import { ODataColumnVisibilityModel } from "o-data-grid";
+import { ODataColumnVisibilityModel, ODataGridInitialState } from "o-data-grid";
 import ODataGrid from "components/odata/ODataGrid";
 
 import "dayjs/locale/en-gb"
@@ -20,7 +19,16 @@ const columnVisibility: ODataColumnVisibilityModel = {
 
 const columns = getCompanyColumns();
 
-const defaultSort: GridSortModel = [{ field: "name", sort: "asc" }];
+const initialState: ODataGridInitialState = {
+  sorting: {
+    sortModel: [{ field: "name", sort: "asc" }]
+  },
+  pagination: {
+    paginationModel: {
+      pageSize: 15
+    }
+  }
+}
 
 const alwaysSelect = ["id"];
 
@@ -35,9 +43,8 @@ const Companies = () => (
       columns={columns}
       columnVisibilityModel={columnVisibility}
       alwaysSelect={alwaysSelect}
-      defaultSortModel={defaultSort}
+      initialState={initialState}
       filterBuilderProps={{ localizationProviderProps: { dateAdapter: AdapterDayjs, adapterLocale: 'en-gb' } }}
-      defaultPageSize={15}
     />
 
     <CompanyDialog mode="create" />

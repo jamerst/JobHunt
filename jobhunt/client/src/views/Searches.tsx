@@ -7,7 +7,7 @@ import { Helmet } from "react-helmet";
 import Card from "components/Card";
 import CardBody from "components/CardBody";
 import CardHeader from "components/CardHeader";
-import { ODataColumnVisibilityModel, ODataGridColumns } from "o-data-grid";
+import { ODataColumnVisibilityModel, ODataGridColDef } from "o-data-grid";
 import Date from "components/Date";
 import SearchDialog from "components/model-dialogs/SearchDialog";
 import { GridActionsCellItem } from "@mui/x-data-grid";
@@ -74,7 +74,7 @@ const Searches = () => {
     setDeleteOpen(true);
   }, []);
 
-  const columns: ODataGridColumns<Search> = useMemo(() => [
+  const columns: ODataGridColDef<Search>[] = useMemo(() => [
     {
       field: "displayName",
       headerName: "Description",
@@ -89,7 +89,7 @@ const Searches = () => {
     {
       field: "enabled",
       headerName: "Enabled",
-      valueFormatter: (params) => params.value ? "Yes" : "No"
+      valueFormatter: (value) => value ? "Yes" : "No"
     },
     {
       field: "lastRun",
@@ -101,7 +101,7 @@ const Searches = () => {
           <Grid item>
             <Date date={params.value as string} emptyText="Never" />
           </Grid>
-          {params.row.result.lastFetchSuccess === false && <Grid item><Chip label="Failed" color="error" /></Grid>}
+          {params.row.lastFetchSuccess === false && <Grid item><Chip label="Failed" color="error" /></Grid>}
         </Grid>
       )
     },
@@ -112,14 +112,14 @@ const Searches = () => {
         <GridActionsCellItem
           label="Edit"
           icon={<Edit />}
-          onClick={onEditClick(params.row.result)}
+          onClick={onEditClick(params.row)}
           showInMenu
           key="SearchAction_1"
         />,
         <GridActionsCellItem
           label="View History"
           icon={<History />}
-          onClick={onHistoryClick(params.row.result.runs)}
+          onClick={onHistoryClick(params.row.runs)}
           showInMenu
           key="SearchAction_2"
         />,
@@ -133,7 +133,7 @@ const Searches = () => {
         <GridActionsCellItem
           label="Refresh now"
           icon={<Tooltip title="Refresh now" placement="right"><Refresh /></Tooltip>}
-          onClick={onRefreshClick(params.row.result)}
+          onClick={onRefreshClick(params.row)}
           key="SearchAction_4"
         />
       ]

@@ -4,8 +4,8 @@ import Grid from "components/Grid";
 import { AccountBalance, Add, Block,  Delete,  Edit,  History,  LinkedIn, Map, MoreHoriz, OpenInNew, RateReview, Refresh, Visibility, VisibilityOff, Web } from "@mui/icons-material";
 import makeStyles from "makeStyles";
 import  { AutocompleteRenderInputParams } from '@mui/material/Autocomplete';
-import { DataGrid, GridActionsCellItem, GridColumns, GridRowParams, GridSortModel } from "@mui/x-data-grid"
-import { ODataColumnVisibilityModel } from "o-data-grid";
+import { DataGrid, GridActionsCellItem, GridColDef, GridRowParams } from "@mui/x-data-grid"
+import { ODataColumnVisibilityModel, ODataGridInitialState } from "o-data-grid";
 import ODataGrid from "components/odata/ODataGrid";
 
 import { useParams } from "react-router"
@@ -47,7 +47,11 @@ const columnVisibility: ODataColumnVisibilityModel = {
   "posted": { xs: false, sm: true }
 };
 
-const defaultSort: GridSortModel = [{ field: "posted", sort: "desc" }]
+const initialState: ODataGridInitialState = {
+  sorting: {
+    sortModel: [{ field: "posted", sort: "desc" }]
+  }
+}
 
 const alwaysSelect = ["id"];
 
@@ -248,7 +252,7 @@ const Company = () => {
     }
   }, [showLoading, showSuccess, showError, fetchData]);
 
-  const watchedPageColumns: GridColumns<WatchedPage> = useMemo(() => [
+  const watchedPageColumns: GridColDef<WatchedPage>[] = useMemo(() => [
     {
       field: "url",
       headerName: "URL",
@@ -259,19 +263,19 @@ const Company = () => {
       field: "lastScraped",
       headerName: "Last Scraped",
       flex: 1,
-      valueFormatter: (params) => params.value ? dayjs.utc(params.value).fromNow() : "Never"
+      valueFormatter: (value) => value ? dayjs.utc(value).fromNow() : "Never"
     },
     {
       field: "lastUpdated",
       headerName: "Last Updated",
       flex: 1,
-      valueFormatter: (params) => params.value ? dayjs.utc(params.value).fromNow() : "Never"
+      valueFormatter: (value) => value ? dayjs.utc(value).fromNow() : "Never"
     },
     {
-      field: "status",
+      field: "statusMessage",
       headerName: "Status",
       flex: 1,
-      valueGetter: (params) => params.row.enabled ? params.value : "Disabled"
+      valueGetter: (_, row) => row.enabled ? row.statusMessage : "Disabled"
     },
     {
       field: "actions",
@@ -505,7 +509,7 @@ const Company = () => {
                 disableColumnFilter
                 disableColumnMenu
                 disableColumnSelector
-                disableSelectionOnClick
+                disableRowSelectionOnClick
                 autoHeight
                 localeText={localeText}
               />
@@ -533,10 +537,10 @@ const Company = () => {
                 columns={jobColumns}
                 columnVisibilityModel={columnVisibility}
                 alwaysSelect={alwaysSelect}
-                defaultSortModel={defaultSort}
                 $filter={`companyId eq ${id} or actualCompanyId eq ${id}`}
                 disableFilterBuilder
                 getRowClassName={getClass}
+                initialState={initialState}
               />
             </Tab>
           </Tabs>

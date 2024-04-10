@@ -9,14 +9,18 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime"
 import utc from "dayjs/plugin/utc"
 
-import { escapeODataString, ODataGridColumns } from "o-data-grid";
+import { ODataGridColDef, escapeODataString } from "o-data-grid";
 
 import LocationFilter from "types/odata/LocationFilter";
 import { createCategoryColumn } from "./ColumnDefinitions";
 import Date from "components/Date";
 import Job from "types/models/Job";
 
-export const getJobColumns = (): ODataGridColumns<Job> => {
+type JobResult = Job & {
+  distance?: number
+}
+
+export const getJobColumns = (): ODataGridColDef<JobResult>[] => {
   dayjs.extend(relativeTime);
   dayjs.extend(utc);
 
@@ -29,7 +33,7 @@ export const getJobColumns = (): ODataGridColumns<Job> => {
       renderCell: (params) => <Link component={RouterLink} to={`/job/${params.id}`}>
         <Grid container spacing={1} alignItems="center" wrap="nowrap">
           <Grid item>{params.value}</Grid>
-          {params.row.result.duplicateJobId && <Grid item><Chip sx={{ cursor: "pointer" }} label="Duplicate" size="small" /></Grid>}
+          {params.row.duplicateJobId && <Grid item><Chip sx={{ cursor: "pointer" }} label="Duplicate" size="small" /></Grid>}
         </Grid>
 
       </Link>,
@@ -44,8 +48,8 @@ export const getJobColumns = (): ODataGridColumns<Job> => {
       },
       headerName: "Duplicate Job",
       flex: 1.5,
-      renderCell: (params) => params.row.result.duplicateJobId
-        ? <Link component={RouterLink} to={`/job/${params.row.result.duplicateJobId}`}>{params.value}</Link>
+      renderCell: (params) => params.row.duplicateJobId
+        ? <Link component={RouterLink} to={`/job/${params.row.duplicateJobId}`}>{params.value}</Link>
         : null,
       filterOperators: ["eq"],
       filterType: "boolean",
@@ -94,15 +98,15 @@ export const getJobColumns = (): ODataGridColumns<Job> => {
           }
         };
       },
-      valueGetter: (params) => `${params.row["location"]}${params.row["distance"] ? ` (${params.row["distance"].toFixed(1)}mi away)` : ""}`,
+      valueGetter: (_, row) => `${row.location}${row.distance !== undefined ? ` (${row.distance.toFixed(1)}mi away)` : ""}`,
       autocompleteGroup: "Job"
     },
     {
       field: "remote",
       headerName: "Remote",
       flex: .5,
-      valueGetter: (params) => params.row.result.remote ? "Yes" : "No",
-      type: "boolean",
+      valueGetter: (_, row) => row.remote ? "Yes" : "No",
+      filterType: "boolean",
       filterOperators: ["eq"],
       autocompleteGroup: "Job",
     },
@@ -114,19 +118,19 @@ export const getJobColumns = (): ODataGridColumns<Job> => {
       renderCell: (params) => (
         <Link
           component={RouterLink}
-          to={`/company/${params.row["actualCompany/id"] ?? params.row["company/id"]}`}
+          to={`/company/${params.row.actualCompanyId ?? params.row.companyId}`}
         >
           <Grid container spacing={1} alignItems="center" wrap="nowrap">
             {
-              params.row["actualCompany/id"]
+              params.row.actualCompany?.id
                 ? <Grid item>
-                    {params.row["actualCompany/name"]} (posted by {params.value})
+                    {params.row.actualCompany.name} (posted by {params.value})
                   </Grid>
                 : <Grid item>{params.value}</Grid>
             }
-            {params.row.result.company.recruiter && <Grid item><Chip sx={{ cursor: "pointer" }} label="Recruiter" size="small" /></Grid>}
-            {params.row.result.company.blacklisted && <Grid item><Chip sx={{ cursor: "pointer" }} label="Blacklisted" size="small" color="error" /></Grid>}
-            {params.row.result.company.watched && <Grid item sx={{ display: "flex", alignItems: "center" }}><Visibility fontSize="small" /></Grid>}
+            {params.row.company.recruiter && <Grid item><Chip sx={{ cursor: "pointer" }} label="Recruiter" size="small" /></Grid>}
+            {params.row.company.blacklisted && <Grid item><Chip sx={{ cursor: "pointer" }} label="Blacklisted" size="small" color="error" /></Grid>}
+            {params.row.company.watched && <Grid item sx={{ display: "flex", alignItems: "center" }}><Visibility fontSize="small" /></Grid>}
           </Grid>
         </Link>
       ),
@@ -136,10 +140,11 @@ export const getJobColumns = (): ODataGridColumns<Job> => {
       ],
       filterOperators: ["eq", "ne", "contains"],
       getCustomFilterString: (op, v) => {
+        const value = escapeODataString(v as string);
         if (op === "contains") {
-          return `(contains(tolower(company/name), tolower('${escapeODataString(v)}')) or contains(tolower(actualCompany/name), tolower('${escapeODataString(v)}')))`;
+          return `(contains(tolower(company/name), tolower('${value}')) or contains(tolower(actualCompany/name), tolower('${value}')))`;
         } else {
-          return `(tolower(company/name) ${op} tolower('${escapeODataString(v)}') or tolower(actualCompany/name) ${op} tolower('${escapeODataString(v)}'))`;
+          return `(tolower(company/name) ${op} tolower('${value}') or tolower(actualCompany/name) ${op} tolower('${value}'))`;
         }
       },
       autocompleteGroup: "Company"
@@ -179,14 +184,14 @@ export const getJobColumns = (): ODataGridColumns<Job> => {
       filterable: false,
       sortable: false,
       flex: 1,
-      valueGetter: (params) => params.row[params.field] ? params.row[params.field] : "Added Manually",
+      valueGetter: (_, row) => row.source ? row.source.displayName : "Added Manually",
       autocompleteGroup: "Job"
     },
     {
       field: "posted",
       select: "posted,seen,archived",
       headerName: "Posted",
-      type: "date",
+      filterType: "date",
       flex: .9,
       renderCell: (params) => {
         const date = dayjs.utc(params.value as string);
