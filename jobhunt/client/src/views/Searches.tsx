@@ -7,7 +7,7 @@ import { Helmet } from "react-helmet";
 import Card from "components/Card";
 import CardBody from "components/CardBody";
 import CardHeader from "components/CardHeader";
-import { ODataColumnVisibilityModel, ODataGridColDef } from "o-data-grid";
+import { ODataColumnVisibilityModel, ODataGridColDef, useODataGridApiRef } from "o-data-grid";
 import Date from "components/Date";
 import SearchDialog from "components/model-dialogs/SearchDialog";
 import { GridActionsCellItem } from "@mui/x-data-grid";
@@ -33,6 +33,8 @@ const Searches = () => {
 
   const { showLoading, showError } = useFeedback();
 
+  const apiRef = useODataGridApiRef();
+
   const onHistoryClick = useCallback((runs: SearchRun[]) => () => {
     setSearchRuns(runs);
   }, []);
@@ -44,26 +46,26 @@ const Searches = () => {
 
     const response = await fetch(`/api/searches/refresh/${search.id}`);
     if (response.ok) {
-      window.location.reload();
+      apiRef.current.reload();
     } else {
       showError();
       console.error(`API request failed: GET /api/searches/refresh/${search.id}, HTTP ${response.status}`);
     }
-  }, [showLoading, showError]);
+  }, [showLoading, showError, apiRef]);
 
   const onEditClick = useCallback((search: Search) => async () => {
     setEditSearch(search);
     setDialogMode("edit");
   }, []);
 
-  const onDialogSave = useCallback(() => window.location.reload(), []);
+  const onDialogSave = useCallback(() => apiRef.current.reload(), [apiRef]);
   const onDialogCancel = useCallback(() => {
     setEditSearch(undefined);
     setDialogMode("create");
   }, []);
 
   const deleteUrl = useMemo(() => `/api/odata/search(${deleteId})`, [deleteId]);
-  const onDeleteConfirm = useCallback(() => window.location.reload(), []);
+  const onDeleteConfirm = useCallback(() => apiRef.current.reload(), [apiRef]);
   const onDeleteClose = useCallback(() => {
     setDeleteId(undefined);
     setDeleteOpen(false);
@@ -140,7 +142,6 @@ const Searches = () => {
     }
   ], [onEditClick, onHistoryClick, onDeleteClick, onRefreshClick]);
 
-
   return (
     <Container>
       <Helmet>
@@ -158,6 +159,7 @@ const Searches = () => {
             alwaysSelect={alwaysSelect}
             disableFilterBuilder
             disableColumnSelector
+            apiRef={apiRef}
           />
         </CardBody>
       </Card>

@@ -5,8 +5,6 @@ import { GridRowParams } from "@mui/x-data-grid"
 import { ODataGridInitialState } from "o-data-grid";
 import ODataGrid from "components/odata/ODataGrid";
 
-import SwipeableView from "react-swipeable-views"
-import { autoPlay } from "react-swipeable-views-utils"
 import { Helmet } from "react-helmet"
 
 import makeStyles from "makeStyles";
@@ -16,6 +14,7 @@ import { Work } from "@mui/icons-material"
 import CardHeader from "components/CardHeader"
 import CardBody from "components/CardBody"
 import { getJobColumns } from "odata/JobColumns";
+import { BlazeSlider } from "components/BlazeSlider";
 
 type JobCount = {
   daily: number,
@@ -29,7 +28,6 @@ const useStyles = makeStyles()((theme) => ({
   }
 }));
 
-const AutoPlaySwipeableView = autoPlay(SwipeableView);
 
 const columns = getJobColumns();
 
@@ -55,7 +53,6 @@ const alwaysSelect = ["id"];
 
 export const Dashboard = () => {
   const [jobCounts, setJobCounts] = useState<JobCount>({ daily: -1, weekly: -1, monthly: -1 });
-  const [index, setIndex] = useState<number>(0);
 
   const { classes } = useStyles();
 
@@ -86,7 +83,7 @@ export const Dashboard = () => {
             <CardHeader variant="icon" icon={(<Work fontSize="inherit"/>)}/>
             <CardBody>
               <Typography variant="subtitle1" align="right" color="textSecondary">New Jobs</Typography>
-              <AutoPlaySwipeableView index={index} onChangeIndex={(i) => setIndex(i)} interval={7500}>
+              <BlazeSlider slideGap="0px" slidesToShow={1} enableAutoplay={true} autoplayInterval={7500} stopAutoplayOnInteraction={1000}>
                 <div>
                   <Typography variant="h6" align="right">{jobCounts.daily >= 0 ? jobCounts.daily : null}</Typography>
                   <Typography variant="subtitle2" align="right" color="textSecondary">Last 24 Hours</Typography>
@@ -99,7 +96,7 @@ export const Dashboard = () => {
                   <Typography variant="h6" align="right">{jobCounts.monthly >= 0 ? jobCounts.monthly : null}</Typography>
                   <Typography variant="subtitle2" align="right" color="textSecondary">Last Month</Typography>
                 </div>
-              </AutoPlaySwipeableView>
+              </BlazeSlider>
             </CardBody>
           </Card>
         </Grid>

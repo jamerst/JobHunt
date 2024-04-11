@@ -44,6 +44,9 @@ dependencies:
   '@types/react-dom':
     specifier: 18.0.10
     version: 18.0.10
+  blaze-slider:
+    specifier: ^1.9.3
+    version: 1.9.3
   dayjs:
     specifier: 1.11.7
     version: 1.11.7
@@ -57,11 +60,14 @@ dependencies:
     specifier: ^4.0.0
     version: 4.0.0
   o-data-grid:
-    specifier: 7.0.0-alpha.1
-    version: 7.0.0-alpha.1(@emotion/react@11.10.5)(@mui/icons-material@5.15.15)(@mui/material@5.15.15)(@mui/x-data-grid@7.1.1)(@mui/x-date-pickers@7.1.1)(@types/react@18.0.26)(react-dom@18.2.0)(react@18.2.0)
+    specifier: 7.0.0-alpha.3
+    version: 7.0.0-alpha.3(@emotion/react@11.10.5)(@mui/icons-material@5.15.15)(@mui/material@5.15.15)(@mui/x-data-grid@7.1.1)(@mui/x-date-pickers@7.1.1)(@types/react@18.0.26)(react-dom@18.2.0)(react@18.2.0)
   react:
     specifier: 18.2.0
     version: 18.2.0
+  react-blaze-slider:
+    specifier: ^1.7.2
+    version: 1.7.2(react@18.2.0)
   react-dom:
     specifier: 18.2.0
     version: 18.2.0(react@18.2.0)
@@ -80,12 +86,6 @@ dependencies:
   react-router-dom:
     specifier: 6.6.1
     version: 6.6.1(react-dom@18.2.0)(react@18.2.0)
-  react-swipeable-views:
-    specifier: ^0.14.0
-    version: 0.14.0(react@18.2.0)
-  react-swipeable-views-utils:
-    specifier: ^0.14.0
-    version: 0.14.0(react@18.2.0)
   react-use-error-boundary:
     specifier: ^3.0.0
     version: 3.0.0(react@18.2.0)
@@ -109,12 +109,6 @@ devDependencies:
   '@types/react-router-dom':
     specifier: 5.3.3
     version: 5.3.3
-  '@types/react-swipeable-views':
-    specifier: ^0.13.0
-    version: 0.13.1
-  '@types/react-swipeable-views-utils':
-    specifier: 0.13.4
-    version: 0.13.4
   '@types/uuid':
     specifier: 9.0.0
     version: 9.0.0
@@ -350,12 +344,6 @@ packages:
       '@babel/core': 7.20.7
       '@babel/helper-plugin-utils': 7.20.2
     dev: true
-
-  /@babel/runtime@7.0.0:
-    resolution: {integrity: sha512-7hGhzlcmg01CvH1EHdSPVXYX1aJ8KCEyz6I9xYIi/asDtzBPMyMhVibhM/K6g/5qnKBwjZtp10bNZIEFTRW1MA==}
-    dependencies:
-      regenerator-runtime: 0.12.1
-    dev: false
 
   /@babel/runtime@7.18.9:
     resolution: {integrity: sha512-lkqXDcvlFT5rvEjiu6+QYO+1GXrEHRo2LOtS7E4GtX5ESIZOgepqsZBVIj6Pv+a6zqsya9VCgiK1KAK4BvJDAw==}
@@ -911,12 +899,6 @@ packages:
       '@jridgewell/resolve-uri': 3.1.0
       '@jridgewell/sourcemap-codec': 1.4.14
 
-  /@material-ui/types@4.1.1:
-    resolution: {integrity: sha512-AN+GZNXytX9yxGi0JOfxHrRTbhFybjUJ05rnsBVjcB+16e466Z0Xe5IxawuOayVZgTBNDxmPKo5j4V6OnMtaSQ==}
-    dependencies:
-      '@types/react': 18.0.26
-    dev: true
-
   /@mui/base@5.0.0-beta.40(@types/react@18.0.26)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-I/lGHztkCzvwlXpjD2+SNmvNQvB4227xBXhISPjEaJUXGImOQ9f3D2Yj/T3KasSI/h0MLWy74X0J6clhPmsRbQ==}
     engines: {node: '>=12.0.0'}
@@ -1316,20 +1298,6 @@ packages:
       '@types/react': 18.0.26
     dev: true
 
-  /@types/react-swipeable-views-utils@0.13.4:
-    resolution: {integrity: sha512-v0nDk6mMIPAu/kaEnqQpDz2Z7O8ewqy2in7xwobcAAkUKKsdw3MSWFW1BkQ+dPgTrBnj/KXUzx3ZIS6UYviwyA==}
-    dependencies:
-      '@material-ui/types': 4.1.1
-      '@types/react': 18.0.26
-      '@types/react-swipeable-views': 0.13.1
-    dev: true
-
-  /@types/react-swipeable-views@0.13.1:
-    resolution: {integrity: sha512-Nuvywkv9CkwcUgItOCBszkc/pc8YSdiKV5E1AzOJ/p32Db50LgwhJFi5b1ANPgyWxB0Q5yn69aMURHyGi3MLyg==}
-    dependencies:
-      '@types/react': 18.0.26
-    dev: true
-
   /@types/react-transition-group@4.4.10:
     resolution: {integrity: sha512-hT/+s0VQs2ojCX823m60m5f0sL5idt9SO6Tj6Dg+rdphGPIeJbJ6CxvBYkgkGKrYeDjvIpKTR38UzmtHJOGW3Q==}
     dependencies:
@@ -1628,6 +1596,10 @@ packages:
     resolution: {integrity: sha512-jDctJ/IVQbZoJykoeHbhXpOlNBqGNcwXJKJog42E5HDPUwQTSdjCHdihjj0DlnheQ7blbT6dHOafNAiS8ooQKA==}
     engines: {node: '>=8'}
     dev: true
+
+  /blaze-slider@1.9.3:
+    resolution: {integrity: sha512-u8i4AhbjICF6gpyKeMEg65kupT2JoN+E7yOJjOt3ocUtS+r4SKYU79DPNSBV2Zb61fix4ChIxfPyyRUSmLao5g==}
+    dev: false
 
   /brace-expansion@1.1.11:
     resolution: {integrity: sha512-iCuPHDFgrHX7H2vEI/5xpz07zSHB00TpugqhmYtVmMO6518mCuRMoOYFldEBl0g187ufozdaHgWKcYFb61qGiA==}
@@ -2665,10 +2637,6 @@ packages:
       object.assign: 4.1.4
     dev: true
 
-  /keycode@2.2.1:
-    resolution: {integrity: sha512-Rdgz9Hl9Iv4QKi8b0OlCRQEzp4AgVxyCtz5S/+VIHezDmrDhkp2N2TqBWOLz0/gbeREXOOiI9/4b8BY9uw2vFg==}
-    dev: false
-
   /kleur@4.1.5:
     resolution: {integrity: sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ==}
     engines: {node: '>=6'}
@@ -3236,8 +3204,8 @@ packages:
       path-key: 3.1.1
     dev: true
 
-  /o-data-grid@7.0.0-alpha.1(@emotion/react@11.10.5)(@mui/icons-material@5.15.15)(@mui/material@5.15.15)(@mui/x-data-grid@7.1.1)(@mui/x-date-pickers@7.1.1)(@types/react@18.0.26)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-bgnc0KD/jQu764IecUpea2MJB6OqMNhLcVS6zCnwLhf/QA/BGTZCAJXVSghtpH8EPcFwtdl8QTwqDYfCluGfvA==}
+  /o-data-grid@7.0.0-alpha.3(@emotion/react@11.10.5)(@mui/icons-material@5.15.15)(@mui/material@5.15.15)(@mui/x-data-grid@7.1.1)(@mui/x-date-pickers@7.1.1)(@types/react@18.0.26)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-oDLG3VphnSiT7jrz+ST0KwQy441R/jAeqozBWovs2fYhmo2zyz8rndshl4vsYrL94oGGpj10CGZcDeh0L+FtXQ==}
     peerDependencies:
       '@emotion/react': ^11.4.1
       '@mui/icons-material': ^5.0.0
@@ -3455,6 +3423,15 @@ packages:
       react: 18.2.0
     dev: true
 
+  /react-blaze-slider@1.7.2(react@18.2.0):
+    resolution: {integrity: sha512-HPLR8u91ojymptv0E9q8P9GRqEPjXLiF2aQFOcIqyKDUnnSY8KwDle76r/RQeIVbDnu5vfZw0cfzboaTxU8d5w==}
+    peerDependencies:
+      react: '>=16'
+    dependencies:
+      blaze-slider: 1.9.3
+      react: 18.2.0
+    dev: false
+
   /react-dom@18.2.0(react@18.2.0):
     resolution: {integrity: sha512-6IMTriUmvsjHUjNtEDudZfuDQUoWXVxKHhlEGSk81n4YFS+r/Kl99wXiwlVXtPBtJenozv2P+hxDsw9eA7Xo6g==}
     peerDependencies:
@@ -3468,17 +3445,6 @@ packages:
   /react-error-overlay@6.0.11:
     resolution: {integrity: sha512-/6UZ2qgEyH2aqzYZgQPxEnz33NJ2gNsnHA2o5+o4wW9bLM/JYQitNP9xPhsXwC08hMMovfGe/8retsdDsczPRg==}
     dev: true
-
-  /react-event-listener@0.6.6(react@18.2.0):
-    resolution: {integrity: sha512-+hCNqfy7o9wvO6UgjqFmBzARJS7qrNoda0VqzvOuioEpoEXKutiKuv92dSz6kP7rYLmyHPyYNLesi5t/aH1gfw==}
-    peerDependencies:
-      react: ^16.3.0
-    dependencies:
-      '@babel/runtime': 7.20.7
-      prop-types: 15.8.1
-      react: 18.2.0
-      warning: 4.0.3
-    dev: false
 
   /react-fast-compare@3.2.0:
     resolution: {integrity: sha512-rtGImPZ0YyLrscKI9xTpV8psd6I8VAtjKCzQDlzyDvqJA8XOW78TXYQwNRNd8g8JZnDu8q9Fu/1v4HPAVwVdHA==}
@@ -3577,42 +3543,6 @@ packages:
       react: 18.2.0
     dev: false
 
-  /react-swipeable-views-core@0.14.0:
-    resolution: {integrity: sha512-0W/e9uPweNEOSPjmYtuKSC/SvKKg1sfo+WtPdnxeLF3t2L82h7jjszuOHz9C23fzkvLfdgkaOmcbAxE9w2GEjA==}
-    engines: {node: '>=6.0.0'}
-    dependencies:
-      '@babel/runtime': 7.0.0
-      warning: 4.0.3
-    dev: false
-
-  /react-swipeable-views-utils@0.14.0(react@18.2.0):
-    resolution: {integrity: sha512-W+fXBOsDqgFK1/g7MzRMVcDurp3LqO3ksC8UgInh2P/tKgb5DusuuB1geKHFc6o1wKl+4oyER4Zh3Lxmr8xbXA==}
-    engines: {node: '>=6.0.0'}
-    dependencies:
-      '@babel/runtime': 7.0.0
-      keycode: 2.2.1
-      prop-types: 15.8.1
-      react-event-listener: 0.6.6(react@18.2.0)
-      react-swipeable-views-core: 0.14.0
-      shallow-equal: 1.2.1
-    transitivePeerDependencies:
-      - react
-    dev: false
-
-  /react-swipeable-views@0.14.0(react@18.2.0):
-    resolution: {integrity: sha512-wrTT6bi2nC3JbmyNAsPXffUXLn0DVT9SbbcFr36gKpbaCgEp7rX/OFxsu5hPc/NBsUhHyoSRGvwqJNNrWTwCww==}
-    engines: {node: '>=6.0.0'}
-    peerDependencies:
-      react: ^15.3.0 || ^16.0.0 || ^17.0.0
-    dependencies:
-      '@babel/runtime': 7.0.0
-      prop-types: 15.8.1
-      react: 18.2.0
-      react-swipeable-views-core: 0.14.0
-      react-swipeable-views-utils: 0.14.0(react@18.2.0)
-      warning: 4.0.3
-    dev: false
-
   /react-transition-group@4.4.5(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-pZcd1MCJoiKiBR2NRxeCRg13uCXbydPnmB4EOeRrY7480qNWO8IIgQG6zlDkm6uRMsURXPuKq0GWtiM59a5Q6g==}
     peerDependencies:
@@ -3663,10 +3593,6 @@ packages:
       hamt_plus: 1.0.2
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-    dev: false
-
-  /regenerator-runtime@0.12.1:
-    resolution: {integrity: sha512-odxIc1/vDlo4iZcfXqRYFj0vpXFNoGdKMAUieAlFYO6m/nl5e9KR/beGf41z4a1FI+aQgtjhuaSlDxQ0hmkrHg==}
     dev: false
 
   /regenerator-runtime@0.13.11:
@@ -3823,10 +3749,6 @@ packages:
     dependencies:
       lru-cache: 6.0.0
     dev: true
-
-  /shallow-equal@1.2.1:
-    resolution: {integrity: sha512-S4vJDjHHMBaiZuT9NPb616CSmLf618jawtv3sufLl6ivK8WocjAo58cXwbRV1cgqxH0Qbv+iUt6m05eqEa2IRA==}
-    dev: false
 
   /shebang-command@2.0.0:
     resolution: {integrity: sha512-kHxr2zZpYtdmrN1qDjrrX/Z1rR1kG8Dx+gkpK1G4eXmvXswmcE1hTWBWYUzlraYw1/yZp6YuDY77YtvbN0dmDA==}
@@ -4341,12 +4263,6 @@ packages:
   /vscode-uri@3.0.3:
     resolution: {integrity: sha512-EcswR2S8bpR7fD0YPeS7r2xXExrScVMxg4MedACaWHEtx9ftCF/qHG1xGkolzTPcEmjTavCQgbVzHUIdTMzFGA==}
     dev: true
-
-  /warning@4.0.3:
-    resolution: {integrity: sha512-rpJyN222KWIvHJ/F53XSZv0Zl/accqHR8et1kpaMTD/fLCRxtV8iX8czMzY7sVZupTI3zcUTg8eycS2kNF9l6w==}
-    dependencies:
-      loose-envify: 1.4.0
-    dev: false
 
   /which-boxed-primitive@1.0.2:
     resolution: {integrity: sha512-bwZdv0AKLpplFY2KZRX6TvyuN7ojjr7lwkg6ml0roIy9YeuSr7JS372qlNW18UQYzgYK9ziGcerWqZOmEn9VNg==}
