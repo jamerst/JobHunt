@@ -85,6 +85,7 @@ public class JobService : ODataBaseService<Job>, IJobService
                 if (duplicate.Deleted && duplicate.DeleteDuplicates == true)
                 {
                     job.Deleted = true;
+                    job.DeleteDuplicates = true;
                 }
             }
 
