@@ -1,7 +1,7 @@
 import React from "react";
 
 import { Chip, Slider, TextField, Typography, Link } from "@mui/material";
-import { Visibility } from "@mui/icons-material";
+import { Star, Visibility } from "@mui/icons-material";
 import Grid from "components/Grid";
 import { Link as RouterLink } from "react-router-dom";
 
@@ -27,12 +27,13 @@ export const getJobColumns = (): ODataGridColDef<JobResult>[] => {
   return [
     {
       field: "title",
-      select: "title,duplicateJobId",
+      select: "title,duplicateJobId,saved",
       headerName: "Job Title",
       flex: 2,
       renderCell: (params) => <Link component={RouterLink} to={`/job/${params.id}`}>
         <Grid container spacing={1} alignItems="center" wrap="nowrap">
           <Grid item>{params.value}</Grid>
+          {params.row.saved && <Grid item sx={{ display: "flex", alignItems: "center", marginTop: "-3px" }}><Star fontSize="small" /></Grid>}
           {params.row.duplicateJobId && <Grid item><Chip sx={{ cursor: "pointer" }} label="Duplicate" size="small" /></Grid>}
         </Grid>
 
@@ -118,7 +119,7 @@ export const getJobColumns = (): ODataGridColDef<JobResult>[] => {
       renderCell: (params) => (
         <Link
           component={RouterLink}
-          to={`/company/${params.row.actualCompanyId ?? params.row.companyId}`}
+          to={`/company/${params.row.actualCompany?.id ?? params.row.company.id}`}
         >
           <Grid container spacing={1} alignItems="center" wrap="nowrap">
             {
@@ -167,6 +168,14 @@ export const getJobColumns = (): ODataGridColDef<JobResult>[] => {
       type: "singleSelect",
       valueOptions: ["Not Applied", "Awaiting Response", "In Progress", "Rejected", "Dropped Out"],
       filterOperators: ["eq", "ne"],
+      autocompleteGroup: "Job"
+    },
+    {
+      field: "saved",
+      headerName: "Saved",
+      filterOnly: true,
+      filterOperators: ["eq"],
+      filterType: "boolean",
       autocompleteGroup: "Job"
     },
     createCategoryColumn(

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Fab, FilterOptionsState, MenuItem } from "@mui/material";
 import { Add, Edit } from "@mui/icons-material";
 
-import { Autocomplete, Select, TextField } from "mui-rff";
+import { Autocomplete, CheckboxData, Checkboxes, Select, TextField } from "mui-rff";
 import { Form } from "react-final-form";
 
 import makeStyles from "makeStyles";
@@ -210,6 +210,12 @@ const CompanyDialog = ({ mode, company, onUpdate }: CompanyDialogProps) => {
                       getOptionLabel={getOptionLabel}
                     />
                   </Grid>
+                  {
+                    company?.blacklisted &&
+                    <Grid item xs={12} mb={2}>
+                      <Checkboxes name="deleteJobsAutomatically" data={checkboxData} />
+                    </Grid>
+                  }
                   <Grid item xs={12} mb={2}>
                     <Select name="recruiter" label="Recruiter">
                       <MenuItem value={1}>Yes</MenuItem>
@@ -259,3 +265,8 @@ const CompanyDialog = ({ mode, company, onUpdate }: CompanyDialogProps) => {
 }
 
 export default CompanyDialog;
+
+const checkboxData: CheckboxData = {
+  label: "Automatically delete jobs posted by this company",
+  value: true
+};

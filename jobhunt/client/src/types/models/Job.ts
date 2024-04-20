@@ -25,6 +25,8 @@ type Job = {
   sourceId?: number,
   duplicateJobId?: number,
   actualCompanyId?: number,
+  deleteDuplicates?: boolean,
+  saved: boolean,
 
   company: Company,
   duplicateJob?: Job,

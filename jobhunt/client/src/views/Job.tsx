@@ -1,6 +1,6 @@
 import React, { Fragment, useCallback, useEffect, useState } from "react"
-import { Box, Button, Container, FormControl, IconButton, InputLabel, Menu, MenuItem, Select, Typography, Link, Chip, SelectChangeEvent } from "@mui/material"
-import { Map, MoreHoriz, OpenInNew, Subject } from "@mui/icons-material";
+import { Box, Button, Container, FormControl, IconButton, InputLabel, Menu, MenuItem, Select, Typography, Link, Chip, SelectChangeEvent, FormGroup, FormControlLabel, Checkbox, Tooltip } from "@mui/material"
+import { Map, MoreHoriz, OpenInNew, Star, StarOutline, Subject } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router"
 import { Helmet } from "react-helmet"
 import ReactMarkdown from "react-markdown";
@@ -32,6 +32,8 @@ const Job = () => {
   const [job, setJob] = useState<JobEntity>();
   const [menuAnchor, setMenuAnchor] = useState<null | Element>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteDuplicates, setDeleteDuplicates] = useState(false);
+  const [deleteUrl, setDeleteUrl] = useState(`/api/odata/job(${id})`);
 
   const { showLoading, showSuccess, showError, clear } = useFeedback();
 
@@ -68,6 +70,7 @@ const Job = () => {
     }
   }, [id, showError, clear, markAsSeen]);
 
+  //#region Status
   const updateStatus = useCallback(async (e: SelectChangeEvent<string>) => {
     showLoading()
     const status = e.target.value;
@@ -87,26 +90,9 @@ const Job = () => {
       console.error(`API request failed: PATCH /api/odata/job(${id}), HTTP ${response.status}`);
     }
   }, [id, showLoading, showSuccess, showError]);
+  //#endregion
 
-  const archiveJob = useCallback(async () => {
-    const response = await fetch(`/api/odata/job(${id})`, {
-      method: "PATCH",
-      body: JSON.stringify({ archived: !job!.archived }),
-      headers: {
-        "Content-Type": "application/json"
-      }}
-    );
-
-    if (response.ok) {
-      setJob(data => data ? ({ ...data, archived: !data.archived }) : undefined);
-    } else {
-      showError();
-      console.error(`API request failed: /api/odata/job(${id}), HTTP ${response.status}`);
-    }
-
-    setMenuAnchor(null);
-  }, [id, showError, job]);
-
+  //#region Categories
   const getCategoryDeleteUrl = useCallback(
     (catId: number) => `/api/odata/jobCategory(categoryId=${catId},jobId=${id})`,
     [id]
@@ -130,14 +116,63 @@ const Job = () => {
       : undefined),
     []
   );
+  //#endregion
 
+  //#region Menu
   const openMenu = useCallback((e: React.MouseEvent) => setMenuAnchor(e.currentTarget), []);
   const closeMenu = useCallback(() => setMenuAnchor(null), []);
+
+  const archiveJob = useCallback(async () => {
+    const response = await fetch(`/api/odata/job(${id})`, {
+      method: "PATCH",
+      body: JSON.stringify({ archived: !job!.archived }),
+      headers: {
+        "Content-Type": "application/json"
+      }}
+    );
+
+    if (response.ok) {
+      setJob(data => data ? ({ ...data, archived: !data.archived }) : undefined);
+    } else {
+      showError();
+      console.error(`API request failed: /api/odata/job(${id}), HTTP ${response.status}`);
+    }
+
+    setMenuAnchor(null);
+  }, [id, showError, job]);
 
   const deleteJob = useCallback(() => setDeleteOpen(true), []);
   const closeDelete = useCallback(() => setDeleteOpen(false), []);
   const onDeleteConfirm = useCallback(() => navigate("/"), [navigate]);
 
+  const onDeleteDuplicatesChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => setDeleteDuplicates(event.target.checked), []);
+  useEffect(() => {
+    setDeleteUrl(`/api/odata/job(${id})?deleteDuplicates=${deleteDuplicates}`);
+  }, [id, deleteDuplicates]);
+  //#endregion
+
+  //#region Saving/Unsaving
+  const saveJob = useCallback(async () => {
+    if (job) {
+      const response = await fetch(`/api/odata/job(${job.id})`, {
+        method: "PATCH",
+        body: JSON.stringify({ saved: !job.saved }),
+        headers: {
+          "Content-Type": "application/json"
+        }}
+      );
+
+      if (response.ok) {
+        setJob(data => data ? ({...data, saved: !data.saved }) : undefined);
+      } else {
+        showError();
+        console.error(`API request failed: PATCH /api/odata/job(${job.id}), HTTP ${response.status}`);
+      }
+    }
+  }, [job, showError]);
+  //#endregion
+
+  //#region Notes
   const onNotesSave = useCallback(async (value: string) => {
     showLoading();
     const response = await fetch(`/api/odata/job(${id})`, {
@@ -158,6 +193,7 @@ const Job = () => {
       console.error(`API request failed PATCH /api/odata/jobs(${id}), HTTP ${response.status}`);
     }
   }, [id, showLoading, showSuccess, showError]);
+  //#endregion
 
   useEffect(() => { fetchData() }, [fetchData]);
 
@@ -172,7 +208,14 @@ const Job = () => {
       </Helmet>
 
       <JobDialog mode="edit" job={job} onUpdate={fetchData} />
-      <DeleteDialog open={deleteOpen} entityName="job" onClose={closeDelete} onConfirm={onDeleteConfirm} deleteUrl={`/api/odata/job(${job.id})`} />
+      <DeleteDialog open={deleteOpen} entityName="job" onClose={closeDelete} onConfirm={onDeleteConfirm} deleteUrl={deleteUrl}>
+        <FormGroup>
+          <FormControlLabel
+            control={<Checkbox checked={deleteDuplicates} onChange={onDeleteDuplicatesChange} />}
+            label="Automatically delete future duplicates of this job"
+          />
+        </FormGroup>
+      </DeleteDialog>
 
       <Card>
         <CardHeader>
@@ -180,7 +223,15 @@ const Job = () => {
             <Grid item xs>
               <Typography variant="h4">{job.title}</Typography>
               {job.duplicateJob && <Typography variant="body1">
-                <em>Duplicate of <Link sx={{ textDecoration: "underline" }} component={RouterLink} to={`/job/${job.duplicateJobId}`}>{job.duplicateJob.title}</Link></em>
+
+                <Grid container spacing={1} alignItems="center">
+                  <Grid item>
+                    <em>
+                      Duplicate of <Link sx={{ textDecoration: "underline" }} component={RouterLink} to={`/job/${job.duplicateJobId}`}>{job.duplicateJob.title}</Link>
+                    </em>
+                  </Grid>
+                  {job.duplicateJob.saved && <Grid item sx={{ display: "flex", alignItems: "center", marginTop: "-2px" }}><Star fontSize="small" /></Grid>}
+                </Grid>
               </Typography>}
               <Typography variant="h6">
                 {
@@ -196,6 +247,11 @@ const Job = () => {
               {job.archived ? (<Typography variant="subtitle1"><em>Archived</em></Typography>) : null}
             </Grid>
             <Grid item>
+              <Tooltip title={job.saved ? "Unsave Job" : "Save Job"}>
+                <IconButton size="large" onClick={saveJob}>
+                  {job.saved ? <Star/> : <StarOutline/>}
+                </IconButton>
+              </Tooltip>
               <IconButton onClick={openMenu} size="large">
                 <MoreHoriz/>
               </IconButton>

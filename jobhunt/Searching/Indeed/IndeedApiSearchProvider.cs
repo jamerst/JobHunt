@@ -207,6 +207,11 @@ public class IndeedApiSearchProvider : IIndeedApiSearchProvider
                 {
                     alertJobs.Add(newJob);
                 }
+
+                if (company.Blacklisted && company.DeleteJobsAutomatically == true)
+                {
+                    newJob.Deleted = true;
+                }
             }
             else
             {

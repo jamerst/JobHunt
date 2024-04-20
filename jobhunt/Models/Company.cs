@@ -20,6 +20,7 @@ public class Company : KeyedEntity
     public string? LinkedIn { get; set; }
     public string? Endole { get; set; }
     public bool Recruiter { get; set; }
+    public bool? DeleteJobsAutomatically { get; set; }
     public List<WatchedPage> WatchedPages { get; set; } = null!;
     public List<CompanyCategory> CompanyCategories { get; set; } = null!;
     public List<CompanyName> AlternateNames { get; set; } = null!;

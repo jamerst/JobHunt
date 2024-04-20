@@ -18,6 +18,7 @@ type Company = {
   linkedIn?: string,
   endole?: string,
   recruiter: boolean,
+  deleteJobsAutomatically?: boolean,
 
   jobs: Job[],
   companyCategories: CompanyCategory[],

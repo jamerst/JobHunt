@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react"
 import { Box, Button, Container, Chip, IconButton, Menu, MenuItem, TextField, Tooltip, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Link, PopoverOrigin } from "@mui/material"
 import Grid from "components/Grid";
-import { AccountBalance, Add, Block,  Delete,  Edit,  History,  LinkedIn, Map, MoreHoriz, OpenInNew, RateReview, Refresh, Visibility, VisibilityOff, Web } from "@mui/icons-material";
+import { AccountBalance, Add, Block,  Delete,  DeleteOutline,  Edit,  History,  LinkedIn, Map, MoreHoriz, OpenInNew, RateReview, Refresh, Visibility, VisibilityOff, Web } from "@mui/icons-material";
 import makeStyles from "makeStyles";
 import  { AutocompleteRenderInputParams } from '@mui/material/Autocomplete';
 import { DataGrid, GridActionsCellItem, GridColDef, GridRowParams } from "@mui/x-data-grid"
@@ -163,9 +163,17 @@ const Company = () => {
   const onMenuClose = useCallback(() => setMenuAnchor(null), []);
 
   const blacklistCompany = useCallback(async () => {
+    const data: Partial<CompanyEntity> = {
+      blacklisted: !company?.blacklisted
+    };
+
+    if (!data.blacklisted) {
+      data.deleteJobsAutomatically = undefined;
+    }
+
     const response = await fetch(`/api/odata/company(${id})`, {
       method: "PATCH",
-      body: JSON.stringify({ blacklisted: !company?.blacklisted }),
+      body: JSON.stringify(data),
       headers: {
         "Content-Type": "application/json"
       }
@@ -370,6 +378,7 @@ const Company = () => {
                 <Grid item><Typography variant="h4">{company.name}</Typography></Grid>
                 {company.recruiter ? <Grid item><Chip label="Recruiter" /></Grid> : null}
                 {company.blacklisted ? <Grid item><Tooltip title={<Typography variant="subtitle2">This company is blacklisted.</Typography>}><Block fontSize="large" /></Tooltip></Grid> : null}
+                {company.blacklisted && company.deleteJobsAutomatically ? <Grid item><Tooltip title={<Typography align="center" variant="subtitle2">Jobs posted by this company are deleted automatically.</Typography>}><DeleteOutline fontSize="large" /></Tooltip></Grid> : null}
               </Grid>
               <Grid item>
                 {company.alternateNames?.length ? <Typography variant="subtitle1">Also known as {company.alternateNames.map(a => a.name).join(", ")}</Typography> : null}

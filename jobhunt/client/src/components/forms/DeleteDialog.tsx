@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { PropsWithChildren, useCallback } from "react";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
 
 type DeleteDialogProps = {
@@ -9,7 +9,7 @@ type DeleteDialogProps = {
   onClose: () => void
 }
 
-const DeleteDialog = ({ open, entityName, deleteUrl, onConfirm, onClose }: DeleteDialogProps) => {
+const DeleteDialog = ({ open, entityName, deleteUrl, onConfirm, onClose, children }: PropsWithChildren<DeleteDialogProps>) => {
   const onDelete = useCallback(async () => {
     if (deleteUrl) {
       const response = await fetch(deleteUrl, { method: "DELETE" });
@@ -31,6 +31,7 @@ const DeleteDialog = ({ open, entityName, deleteUrl, onConfirm, onClose }: Delet
       <DialogTitle>Confirm</DialogTitle>
       <DialogContent>
         <Typography variant="body1">Are you sure you want to delete this {entityName}? <strong>This action cannot be undone.</strong></Typography>
+        {children}
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>

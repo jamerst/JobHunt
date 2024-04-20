@@ -81,6 +81,11 @@ public class JobService : ODataBaseService<Job>, IJobService
                             .Where(c1 => ! job.JobCategories.Any(c2 => c1.CategoryId == c2.CategoryId))
                             .Select(c => new JobCategory { CategoryId = c.CategoryId })
                     );
+
+                if (duplicate.Deleted && duplicate.DeleteDuplicates == true)
+                {
+                    job.Deleted = true;
+                }
             }
 
             job.CheckedForDuplicate = true;
@@ -162,7 +167,9 @@ public class JobService : ODataBaseService<Job>, IJobService
         await _context.Database.ExecuteSqlRawAsync($"SET pg_trgm.{thresholdType} = {threshold};");
     }
 
-    public override async Task<bool> DeleteAsync(int id)
+    public override Task<bool> DeleteAsync(int id) => DeleteAsync(id, null);
+
+    public async Task<bool> DeleteAsync(int id, bool? deleteDuplicates)
     {
         Job? job = await FindByIdAsync(id);
         if (job == default)
@@ -171,6 +178,7 @@ public class JobService : ODataBaseService<Job>, IJobService
         }
 
         job.Deleted = true;
+        job.DeleteDuplicates = deleteDuplicates;
         await SaveChangesAsync();
 
         return true;
@@ -213,8 +221,8 @@ public interface IJobService : IODataBaseService<Job>
     Task CreateAllAsync(IEnumerable<Job> jobs);
     Task<JobCount> GetJobCountsAsync();
     IAsyncEnumerable<Category> GetJobCategories();
-
     Task CheckForDuplicatesAsync(bool force, CancellationToken token);
+    Task<bool> DeleteAsync(int id, bool? deleteDuplicates);
 
     /// <summary>
     /// Find the newest duplicate posted before a given job
