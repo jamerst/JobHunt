@@ -60,8 +60,8 @@ dependencies:
     specifier: ^4.0.0
     version: 4.0.0
   o-data-grid:
-    specifier: 7.0.0-alpha.6
-    version: 7.0.0-alpha.6(@emotion/react@11.10.5)(@mui/icons-material@5.15.15)(@mui/material@5.15.15)(@mui/x-data-grid@7.1.1)(@mui/x-date-pickers@7.1.1)(@types/react@18.0.26)(react-dom@18.2.0)(react@18.2.0)
+    specifier: 7.0.0-alpha.7
+    version: 7.0.0-alpha.7(@emotion/react@11.10.5)(@mui/icons-material@5.15.15)(@mui/material@5.15.15)(@mui/x-data-grid@7.1.1)(@mui/x-date-pickers@7.1.1)(@types/react@18.0.26)(react-dom@18.2.0)(react@18.2.0)
   react:
     specifier: 18.2.0
     version: 18.2.0
@@ -3204,8 +3204,8 @@ packages:
       path-key: 3.1.1
     dev: true
 
-  /o-data-grid@7.0.0-alpha.6(@emotion/react@11.10.5)(@mui/icons-material@5.15.15)(@mui/material@5.15.15)(@mui/x-data-grid@7.1.1)(@mui/x-date-pickers@7.1.1)(@types/react@18.0.26)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-KVHDQzFqxbEgNXTHVtE4AAM24EFdZF+qX0zncEwNrtT4i2mVUFwsLOidP8UGJX9WCrQj4vti/3A6PLHFswUQlA==}
+  /o-data-grid@7.0.0-alpha.7(@emotion/react@11.10.5)(@mui/icons-material@5.15.15)(@mui/material@5.15.15)(@mui/x-data-grid@7.1.1)(@mui/x-date-pickers@7.1.1)(@types/react@18.0.26)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-JEhAHBmQrN835rxFYnrXoab8J0E1xFdjtc6kl5USPOYUw2WdxyDcvixg1HffbV77QlHl5w7+2i6sfI87w1YnLw==}
     peerDependencies:
       '@emotion/react': ^11.4.1
       '@mui/icons-material': ^5.0.0

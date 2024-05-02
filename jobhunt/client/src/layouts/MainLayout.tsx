@@ -1,5 +1,5 @@
 import React, { Fragment, PropsWithChildren, useState, useMemo, useCallback } from "react"
-import { Badge, Divider, Drawer, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Tooltip, Typography } from "@mui/material"
+import { Badge, Divider, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Tooltip, Typography } from "@mui/material"
 import Grid from "components/Grid";
 import { BrightnessHigh, Brightness2, Work, Business, Search, Dashboard, Menu  } from "@mui/icons-material";
 
@@ -110,28 +110,29 @@ const MainLayout = (props: PropsWithChildren<MainLayoutProps>) => {
         className={classes.drawer}
         open={open}
         onClose={closeDrawer}
+        keepMounted
       >
         <List>
           <ListItem>
             <Typography className={classes.title} variant="h5">JobHunt</Typography>
           </ListItem>
           <Divider />
-          <ListItem button component={ Link } to="/" onClick={closeDrawer}>
+          <ListItemButton component={ Link } to="/" onClick={closeDrawer}>
             <ListItemIcon><Dashboard/></ListItemIcon>
             <ListItemText primary="Dashboard"/>
-          </ListItem>
-          <ListItem button component={ Link } to="/jobs" onClick={closeDrawer}>
+          </ListItemButton>
+          <ListItemButton component={ Link } to="/jobs" onClick={closeDrawer}>
             <ListItemIcon><Work/></ListItemIcon>
             <ListItemText primary="Jobs"/>
-          </ListItem>
-          <ListItem button component={Link} to="/companies" onClick={closeDrawer}>
+          </ListItemButton>
+          <ListItemButton component={Link} to="/companies" onClick={closeDrawer}>
             <ListItemIcon><Business/></ListItemIcon>
             <ListItemText primary="Companies"/>
-          </ListItem>
-          <ListItem button component={Link} to="/searches" onClick={closeDrawer}>
+          </ListItemButton>
+          <ListItemButton component={Link} to="/searches" onClick={closeDrawer}>
             <ListItemIcon><Search/></ListItemIcon>
             <ListItemText primary="Searches"/>
-          </ListItem>
+          </ListItemButton>
           <Divider/>
           <ListItem>
             <Grid container justifyContent="center">

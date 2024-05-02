@@ -46,6 +46,12 @@ const initialState: ODataGridInitialState = {
   },
   sorting: {
     sortModel: [{ field: "posted", sort: "desc" }]
+  },
+  pagination: {
+    paginationModel: {
+      page: 0,
+      pageSize: 10
+    }
   }
 }
 

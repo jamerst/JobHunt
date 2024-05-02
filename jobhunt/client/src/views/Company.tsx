@@ -5,7 +5,7 @@ import { AccountBalance, Add, Block,  Delete,  DeleteOutline,  Edit,  History,  
 import makeStyles from "makeStyles";
 import  { AutocompleteRenderInputParams } from '@mui/material/Autocomplete';
 import { DataGrid, GridActionsCellItem, GridColDef, GridRowParams } from "@mui/x-data-grid"
-import { ODataColumnVisibilityModel, ODataGridInitialState } from "o-data-grid";
+import { ODataGridInitialState } from "o-data-grid";
 import ODataGrid from "components/odata/ODataGrid";
 
 import { useParams } from "react-router"
@@ -38,18 +38,25 @@ dayjs.extend(relativeTime);
 
 const jobColumns = getJobColumns();
 
-const columnVisibility: ODataColumnVisibilityModel = {
-  "salary": { xs: false, xl: true },
-  "duplicateJob/title": false,
-  "status": false,
-  "jobCategories": false,
-  "source/displayName": false,
-  "posted": { xs: false, sm: true }
-};
-
 const initialState: ODataGridInitialState = {
   sorting: {
     sortModel: [{ field: "posted", sort: "desc" }]
+  },
+  columns: {
+    columnVisibilityModel: {
+      "salary": { xs: false, xl: true },
+      "duplicateJob/title": false,
+      "status": false,
+      "jobCategories": false,
+      "source/displayName": false,
+      "posted": { xs: false, sm: true }
+    }
+  },
+  pagination: {
+    paginationModel: {
+      page: 0,
+      pageSize: 10
+    }
   }
 }
 
@@ -544,7 +551,6 @@ const Company = () => {
               <ODataGrid
                 url="/api/odata/Job"
                 columns={jobColumns}
-                columnVisibilityModel={columnVisibility}
                 alwaysSelect={alwaysSelect}
                 $filter={`companyId eq ${id} or actualCompanyId eq ${id}`}
                 disableFilterBuilder

@@ -7,7 +7,7 @@ import { Helmet } from "react-helmet";
 import Card from "components/Card";
 import CardBody from "components/CardBody";
 import CardHeader from "components/CardHeader";
-import { ODataColumnVisibilityModel, ODataGridColDef, useODataGridApiRef } from "o-data-grid";
+import { ODataGridColDef, ODataGridInitialState, useODataGridApiRef } from "o-data-grid";
 import Date from "components/Date";
 import SearchDialog from "components/model-dialogs/SearchDialog";
 import { GridActionsCellItem } from "@mui/x-data-grid";
@@ -18,8 +18,18 @@ import DeleteDialog from "components/forms/DeleteDialog";
 import ODataGrid from "components/odata/ODataGrid";
 
 
-const columnVisibility: ODataColumnVisibilityModel = {
-  "lastRun": { xs: false, md: true }
+const initialState: ODataGridInitialState = {
+  pagination: {
+    paginationModel: {
+      page: 0,
+      pageSize: 10
+    }
+  },
+  columns: {
+    columnVisibilityModel: {
+      "lastRun": { xs: false, md: true }
+    }
+  }
 }
 
 const alwaysSelect = ["id", "displayName", "query", "distance", "location", "country", "provider", "employerOnly", "jobType", "maxAge"];
@@ -155,7 +165,7 @@ const Searches = () => {
           <ODataGrid
             url="/api/odata/Search"
             columns={columns}
-            columnVisibilityModel={columnVisibility}
+            initialState={initialState}
             alwaysSelect={alwaysSelect}
             disableFilterBuilder
             disableColumnSelector

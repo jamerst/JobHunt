@@ -85,7 +85,7 @@ dayjs.extend(relativeTime);
 
 const anchorOrigin:PopoverOrigin = { vertical: "bottom", horizontal: "left" };
 
-const Alerts = ({onAlertClick, setAlertCount}: AlertProps) => {
+const Alerts = ({ onAlertClick, setAlertCount }: AlertProps) => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [alertAnchor, setAlertAnchor] = useState<null | HTMLElement>(null);
 
