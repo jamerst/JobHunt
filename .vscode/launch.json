@@ -9,7 +9,7 @@
             "pipeTransport": {
                 "pipeCwd": "${workspaceFolder}/jobhunt",
                 "pipeProgram": "/usr/bin/docker",
-                "pipeArgs": ["exec", "-i", "jobhunt_web_1"],
+                "pipeArgs": ["exec", "-i", "jobhunt-web-1"],
                 "debuggerPath": "/vsdbg/vsdbg",
                 "quoteArgs": false
             },
@@ -26,7 +26,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/jobhunt/bin/Debug/net5.0/JobHunt.dll",
+            "program": "${workspaceFolder}/jobhunt/bin/Debug/net8.0/JobHunt.dll",
             "args": [],
             "cwd": "${workspaceFolder}/jobhunt",
             "stopAtEntry": false,

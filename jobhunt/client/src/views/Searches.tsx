@@ -41,7 +41,7 @@ const Searches = () => {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number>();
 
-  const { showLoading, showError } = useFeedback();
+  const { showLoading, showError, showSuccess } = useFeedback();
 
   const apiRef = useODataGridApiRef();
 
@@ -56,12 +56,13 @@ const Searches = () => {
 
     const response = await fetch(`/api/searches/refresh/${search.id}`);
     if (response.ok) {
+      showSuccess();
       apiRef.current.reload();
     } else {
       showError();
       console.error(`API request failed: GET /api/searches/refresh/${search.id}, HTTP ${response.status}`);
     }
-  }, [showLoading, showError, apiRef]);
+  }, [showLoading, showError, apiRef, showSuccess]);
 
   const onEditClick = useCallback((search: Search) => async () => {
     setEditSearch(search);

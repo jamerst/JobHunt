@@ -1,5 +1,3 @@
-version: "3.3"
-
 services:
   web-prod:
     image: "jamerst/jobhunt:latest"
@@ -12,6 +10,7 @@ services:
       - jobhunt-data:/jobhunt-data
     environment:
       ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "Host=db; Database=jobhunt_db; Username=jobhunt; Password=jobhunt"
       Screenshots__Schedule: "*/15 * * * *"
       Screenshots__Directory: "/jobhunt-data/page-screenshots"
       Screenshots__WidthPixels: 1920

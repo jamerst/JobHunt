@@ -122,7 +122,7 @@ public class JobHuntContext : DbContext
         builder.HasDbFunction(
             typeof(JobHuntContext)
             .GetMethod(nameof(GeoDistance),
-                new[] { typeof(double), typeof(double), typeof(double), typeof(double) }
+                [typeof(double), typeof(double), typeof(double), typeof(double)]
             )!
         ).HasName("geodistance");
 

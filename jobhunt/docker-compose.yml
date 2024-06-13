@@ -1,5 +1,3 @@
-version: "3.3"
-
 services:
   web:
     build:
@@ -17,6 +15,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - jobhunt-data:/jobhunt-data
     environment:
+      ConnectionStrings__DefaultConnection: "Host=db; Database=jobhunt_db; Username=jobhunt; Password=jobhunt"
       # Screenshots__Schedule: "* * * * *"
       Screenshots__Directory: "/jobhunt-data/page-screenshots"
       Screenshots__QualityPercent: 80

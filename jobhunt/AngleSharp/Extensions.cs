@@ -39,7 +39,7 @@ public static class DiffingStrategyCollectionExtensions
         builder.IgnoreComments();
         builder.AddSearchingNodeMatcher();
         builder.AddAttributeNameMatcher();
-        builder.AddElementComparer();
+        builder.AddElementComparer(false);
         builder.AddTextComparer(WhitespaceOption.Normalize, ignoreCase: false);
         builder.AddAttributeComparer();
 

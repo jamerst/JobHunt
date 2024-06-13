@@ -52,7 +52,7 @@ public class GeoFunctionBinder : IGeoFunctionBinder
         }
     }
 
-    private static readonly IEnumerable<string> _boundFunctionNames = new[] { GeocodeMethodName, GeoDistanceMethodName };
+    private static readonly IEnumerable<string> _boundFunctionNames = [GeocodeMethodName, GeoDistanceMethodName];
     public bool IsFunctionBound(string name) => _boundFunctionNames.Contains(name);
 
     private const string GeoDistanceMethodName = "geodistance";

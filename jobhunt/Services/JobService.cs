@@ -35,15 +35,15 @@ public class JobService : ODataBaseService<Job>, IJobService
     {
         JobCount counts = new JobCount();
 
-        DateTime today = DateTime.UtcNow.Date;
+        DateTimeOffset today = new DateTimeOffset(DateTime.UtcNow.Date, TimeSpan.Zero);
 
-        DateTime dailyDate = today.AddDays(-1);
+        DateTimeOffset dailyDate = today.AddDays(-1);
         counts.Daily = await _context.Jobs.CountAsync(j => j.Posted.Date >= dailyDate);
 
-        DateTime weeklyDate = today.AddDays(-7);
+        DateTimeOffset weeklyDate = today.AddDays(-7);
         counts.Weekly = await _context.Jobs.CountAsync(j => j.Posted.Date >= weeklyDate);
 
-        DateTime monthlyDate = today.AddMonths(-1);
+        DateTimeOffset monthlyDate = today.AddMonths(-1);
         counts.Monthly = await _context.Jobs.CountAsync(j => j.Posted.Date >= monthlyDate);
 
         return counts;
@@ -71,21 +71,27 @@ public class JobService : ODataBaseService<Job>, IJobService
             }
 
             var duplicate = await FindDuplicateAsync(job);
-            if (duplicate != default)
+            if (duplicate != default && (!duplicate.Deleted || duplicate.DeleteDuplicates == true))
             {
                 job.DuplicateJobId = duplicate.Id;
-                job.ActualCompanyId = duplicate.ActualCompanyId;
 
-                job.JobCategories.AddRange(
-                        duplicate.JobCategories
-                            .Where(c1 => ! job.JobCategories.Any(c2 => c1.CategoryId == c2.CategoryId))
-                            .Select(c => new JobCategory { CategoryId = c.CategoryId })
-                    );
+                if (job.CompanyId != duplicate.ActualCompanyId)
+                {
+                    job.ActualCompanyId = duplicate.ActualCompanyId;
+                }
 
                 if (duplicate.Deleted && duplicate.DeleteDuplicates == true)
                 {
                     job.Deleted = true;
                     job.DeleteDuplicates = true;
+                }
+                else
+                {
+                    job.JobCategories.AddRange(
+                            duplicate.JobCategories
+                                .Where(c1 => ! job.JobCategories.Any(c2 => c1.CategoryId == c2.CategoryId))
+                                .Select(c => new JobCategory { CategoryId = c.CategoryId })
+                        );
                 }
             }
 
@@ -98,6 +104,7 @@ public class JobService : ODataBaseService<Job>, IJobService
     public async Task<Job?> FindDuplicateAsync(Job job)
     {
         IQueryable<Job> jobs = _context.Jobs
+            .IgnoreQueryFilters()
             .Where(j => j.Id != job.Id && j.Posted <= job.Posted)
             .Include(j => j.JobCategories);
 
@@ -165,7 +172,9 @@ public class JobService : ODataBaseService<Job>, IJobService
 
     private async Task _setThreshold(string thresholdType, double threshold)
     {
+        #pragma warning disable EF1002 // No risk of SQL injection, not user input
         await _context.Database.ExecuteSqlRawAsync($"SET pg_trgm.{thresholdType} = {threshold};");
+        #pragma warning restore EF1002
     }
 
     public override Task<bool> DeleteAsync(int id) => DeleteAsync(id, null);
