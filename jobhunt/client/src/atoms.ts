@@ -1,4 +1,4 @@
-import { atom } from "recoil";
+import { atom } from "jotai";
 
 type FeedbackState = {
   loading: boolean,
@@ -6,10 +6,7 @@ type FeedbackState = {
   error: boolean,
 }
 
-export const feedbackState = atom<FeedbackState>({
-  key: "feedbackState",
-  default: { loading: false, success: false, error: false }
-});
+export const feedbackAtom = atom<FeedbackState>({ loading: false, success: false, error: false });
 
 type ThemeState = "light" | "dark"
 
@@ -21,7 +18,4 @@ const getDefaultTheme = () => {
   }
 }
 
-export const themeState = atom<ThemeState>({
-  key: "themeState",
-  default: getDefaultTheme()
-});
+export const themeAtom = atom<ThemeState>(getDefaultTheme());

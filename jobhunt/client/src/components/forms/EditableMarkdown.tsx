@@ -1,11 +1,12 @@
 import React, { useCallback, useState } from "react";
-import { Button, Link, Table, TableBody, TableCell, TableHead, TableRow, TextField } from "@mui/material";
+import { Button, Link, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from "@mui/material";
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import makeStyles from "makeStyles";
 import Grid from "components/Grid";
+import { Components } from "react-markdown/lib";
 
 
 type EditableMarkdownProps = {
@@ -35,14 +36,16 @@ const useStyles = makeStyles()(() => ({
   }
 }))
 
-const components = {
-  a: Link,
-  table: Table,
-  thead: TableHead,
-  tbody: TableBody,
-  tr: ({ isHeader, ...props }: any) => <TableRow {...props}/>,
-  th: ({ isHeader, ...props }: any) => <TableCell {...props}/>,
-  td: ({ isHeader, ...props }: any) => <TableCell {...props}/>
+type ValidAlignment = "left" | "center" | "right" | "justify";
+
+const components: Components = {
+  a: (props) => <Link href={props.href}>{props.children}</Link>,
+  table: (props) => <TableContainer><Table>{props.children}</Table></TableContainer>,
+  thead: (props) => <TableHead>{props.children}</TableHead>,
+  tbody: (props) => <TableBody>{props.children}</TableBody>,
+  tr: (props) => <TableRow>{props.children}</TableRow>,
+  th: (props) => <TableCell align={props.align as ValidAlignment} scope={props.scope}>{props.children}</TableCell>,
+  td: (props) => <TableCell align={props.align as ValidAlignment} scope={props.scope}>{props.children}</TableCell>
 }
 
 const EditableMarkdown = ({ value, emptyText, label, onSave }: EditableMarkdownProps) => {

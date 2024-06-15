@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect } from "react";
-import { useRecoilState } from "recoil";
+import { useAtom } from "jotai";
 import { Backdrop, CircularProgress, Grow, Paper, Typography } from "@mui/material";
 import { Check } from "@mui/icons-material";
 
 import Grid from "./Grid";
 import makeStyles from "makeStyles";
-import { feedbackState } from "state";
+import { feedbackAtom } from "atoms";
 
 const useStyles = makeStyles()((theme) => ({
   backdrop: {
@@ -39,7 +39,7 @@ const useStyles = makeStyles()((theme) => ({
 }));
 
 const FeedbackBackdrop = () => {
-  const [state, setState] = useRecoilState(feedbackState);
+  const [state, setState] = useAtom(feedbackAtom);
   const { classes } = useStyles();
 
   const handleClick = useCallback(() => {

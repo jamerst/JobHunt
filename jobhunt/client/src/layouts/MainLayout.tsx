@@ -9,8 +9,8 @@ import { Link } from "react-router-dom";
 import Alerts from "components/Alerts";
 import { useResponsive } from "utils/hooks";
 import { useEffect } from "react";
-import { useRecoilState } from "recoil";
-import { themeState } from "state";
+import { useAtom } from "jotai";
+import { themeAtom } from "atoms";
 
 type MainLayoutProps = {
   pageTitle?: string
@@ -60,13 +60,17 @@ const useStyles = makeStyles()((theme) => ({
   }
 }));
 
+const modalProps = {
+  keepMounted: true
+}
+
 const MainLayout = (props: PropsWithChildren<MainLayoutProps>) => {
   const { classes } = useStyles();
   const r = useResponsive();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [alertCount, setAlertCount] = useState(0);
 
-  const [theme, setTheme] = useRecoilState(themeState);
+  const [theme, setTheme] = useAtom(themeAtom);
 
   const changeTheme = useCallback(() => {
     setTheme((t) => {
@@ -110,7 +114,7 @@ const MainLayout = (props: PropsWithChildren<MainLayoutProps>) => {
         className={classes.drawer}
         open={open}
         onClose={closeDrawer}
-        keepMounted
+        ModalProps={modalProps}
       >
         <List>
           <ListItem>

@@ -1,7 +1,7 @@
 import { useTheme, Breakpoint, Theme } from "@mui/material/styles"
 import React, { useEffect, useMemo, useState } from "react"
-import { useSetRecoilState } from "recoil"
-import { feedbackState } from "state"
+import { useSetAtom } from "jotai"
+import { feedbackAtom } from "atoms"
 
 export type ResponsiveValues<P> = Partial<Record<Breakpoint, P>>
 
@@ -69,7 +69,7 @@ const getMatches = (breakpoints: Breakpoint[], theme: Theme) => breakpoints.redu
 );
 
 export const useFeedback = () => {
-  const setState = useSetRecoilState(feedbackState);
+  const setState = useSetAtom(feedbackAtom);
 
   const funcs = useMemo(() => ({
     showLoading: () => setState({ loading: true, success: false, error: false }),

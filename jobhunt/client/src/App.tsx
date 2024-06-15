@@ -3,7 +3,7 @@ import { Routes, BrowserRouter, Route } from "react-router-dom"
 import { CssBaseline, gridClasses, Typography } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { blue, purple } from '@mui/material/colors';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { withErrorBoundary, useErrorBoundary } from "react-use-error-boundary";
 
 import MainLayout from "layouts/MainLayout"
@@ -15,12 +15,12 @@ import Jobs from 'views/Jobs';
 import Searches from 'views/Searches';
 import PageChanges from 'views/PageChanges';
 import FeedbackBackdrop from 'components/FeedbackBackdrop';
-import { themeState } from 'state';
+import { themeAtom } from 'atoms';
 import Grid from 'components/Grid';
 import { ErrorOutline } from '@mui/icons-material';
 
 const App = withErrorBoundary(() => {
-  const themeMode = useRecoilValue(themeState);
+  const themeMode = useAtomValue(themeAtom);
 
   const [error] = useErrorBoundary(
     (error, errorInfo) => {

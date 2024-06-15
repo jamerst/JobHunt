@@ -33,16 +33,16 @@ const useStyles = makeStyles<CardHeaderProps>()((theme, props) => ({
   }
 }));
 
-const CardHeader = (props: PropsWithChildren<CardHeaderProps>) => {
-  const { classes, cx } = useStyles(props);
+const CardHeader = ({ children, icon, colour, variant = "text" }: PropsWithChildren<CardHeaderProps>) => {
+  const { classes, cx } = useStyles({ variant, icon, colour });
 
-  if (props.variant === "text") {
+  if (variant === "text") {
     return (
       <Box sx={{mx: { xs: 1, md: 3}}} mt={-3} px={3} py={2} className={classes.bar}>
         <Grid container alignItems="center" spacing={2}>
-          {props.icon ? (<Grid item className={classes.icon}>{props.icon}</Grid>) : null}
+          {icon ? (<Grid item className={classes.icon}>{icon}</Grid>) : null}
           <Grid item xs={12}>
-            {props.children}
+            {children}
           </Grid>
         </Grid>
       </Box>
@@ -50,14 +50,11 @@ const CardHeader = (props: PropsWithChildren<CardHeaderProps>) => {
   } else {
     return (
       <Box mx={3} mt={-3} p={3} className={cx(classes.bar, classes.icon)}>
-        {props.icon ? props.icon : null}
+        {icon ? icon : null}
       </Box>
     )
   }
 }
 
-CardHeader.defaultProps = {
-  variant: "text"
-}
 
 export default CardHeader;
