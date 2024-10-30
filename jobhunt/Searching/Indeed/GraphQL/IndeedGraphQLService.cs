@@ -149,6 +149,7 @@ public class IndeedGraphQLService : IIndeedGraphQLService, IIndeedJobFetcher
         {
             var request = base.ToHttpRequestMessage(options, serializer);
             request.Headers.Add("indeed-api-key", ApiKey);
+            request.Headers.UserAgent.ParseAdd("Mozilla/5.0 (iPhone; CPU iPhone OS 16_6_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Indeed App 193.1");
 
             return request;
         }

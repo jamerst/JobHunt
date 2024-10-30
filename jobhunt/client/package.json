@@ -23,7 +23,7 @@
     "jotai": "^2.8.3",
     "mui-rff": "7.4.1",
     "nanoid": "^5.0.7",
-    "o-data-grid": "7.0.0-alpha.7",
+    "o-data-grid": "7.0.0-alpha.9",
     "react": "18.3.1",
     "react-blaze-slider": "^1.7.2",
     "react-dom": "18.3.1",

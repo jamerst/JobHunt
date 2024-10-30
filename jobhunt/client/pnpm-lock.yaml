@@ -63,8 +63,8 @@ dependencies:
     specifier: ^5.0.7
     version: 5.0.7
   o-data-grid:
-    specifier: 7.0.0-alpha.7
-    version: 7.0.0-alpha.7(@emotion/react@11.11.4)(@mui/icons-material@5.15.20)(@mui/material@5.15.20)(@mui/x-data-grid@7.7.0)(@mui/x-date-pickers@7.7.0)(@types/react@18.3.3)(react-dom@18.3.1)(react@18.3.1)
+    specifier: 7.0.0-alpha.9
+    version: 7.0.0-alpha.9(@emotion/react@11.11.4)(@mui/icons-material@5.15.20)(@mui/material@5.15.20)(@mui/x-data-grid@7.7.0)(@mui/x-date-pickers@7.7.0)(@types/react@18.3.3)(react-dom@18.3.1)(react-router-dom@6.23.1)(react@18.3.1)
   react:
     specifier: 18.3.1
     version: 18.3.1
@@ -3898,8 +3898,8 @@ packages:
       path-key: 3.1.1
     dev: true
 
-  /o-data-grid@7.0.0-alpha.7(@emotion/react@11.11.4)(@mui/icons-material@5.15.20)(@mui/material@5.15.20)(@mui/x-data-grid@7.7.0)(@mui/x-date-pickers@7.7.0)(@types/react@18.3.3)(react-dom@18.3.1)(react@18.3.1):
-    resolution: {integrity: sha512-JEhAHBmQrN835rxFYnrXoab8J0E1xFdjtc6kl5USPOYUw2WdxyDcvixg1HffbV77QlHl5w7+2i6sfI87w1YnLw==}
+  /o-data-grid@7.0.0-alpha.9(@emotion/react@11.11.4)(@mui/icons-material@5.15.20)(@mui/material@5.15.20)(@mui/x-data-grid@7.7.0)(@mui/x-date-pickers@7.7.0)(@types/react@18.3.3)(react-dom@18.3.1)(react-router-dom@6.23.1)(react@18.3.1):
+    resolution: {integrity: sha512-vVehPrt0LbxLn08zItXrtPt9OvvC02zsfS9Xxa9gsqh4Hs6HmkhDpV1py5Lm+8akZvestGZl+2iym9z/Llfedw==}
     peerDependencies:
       '@emotion/react': ^11.4.1
       '@mui/icons-material': ^5.0.0
@@ -3908,6 +3908,7 @@ packages:
       '@mui/x-date-pickers': ^7.0.0
       react: ^17.0.0 || ^18.0.0
       react-dom: ^17.0.0 || ^18.0.0
+      react-router-dom: ^6.0.0
     dependencies:
       '@emotion/react': 11.11.4(@types/react@18.3.3)(react@18.3.1)
       '@mui/icons-material': 5.15.20(@mui/material@5.15.20)(@types/react@18.3.3)(react@18.3.1)
@@ -3916,10 +3917,11 @@ packages:
       '@mui/x-date-pickers': 7.7.0(@emotion/react@11.11.4)(@emotion/styled@11.11.5)(@mui/material@5.15.20)(@types/react@18.3.3)(dayjs@1.11.11)(react-dom@18.3.1)(react@18.3.1)
       immutable: 4.1.0
       jotai: 2.8.3(@types/react@18.3.3)(react@18.3.1)
+      nanoid: 5.0.7
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
+      react-router-dom: 6.23.1(react-dom@18.3.1)(react@18.3.1)
       tss-react: 3.6.2(@emotion/react@11.11.4)(react@18.3.1)
-      uuid: 8.3.2
     transitivePeerDependencies:
       - '@emotion/server'
       - '@types/react'
@@ -4772,9 +4774,9 @@ packages:
       '@emotion/server':
         optional: true
     dependencies:
-      '@emotion/cache': 11.10.5
+      '@emotion/cache': 11.11.0
       '@emotion/react': 11.11.4(@types/react@18.3.3)(react@18.3.1)
-      '@emotion/serialize': 1.1.1
+      '@emotion/serialize': 1.1.4
       '@emotion/utils': 1.2.1
       react: 18.3.1
     dev: false
@@ -4958,11 +4960,6 @@ packages:
     dependencies:
       punycode: 2.1.1
     dev: true
-
-  /uuid@8.3.2:
-    resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
-    hasBin: true
-    dev: false
 
   /vfile-message@4.0.2:
     resolution: {integrity: sha512-jRDZ1IMLttGj41KcZvlrYAaI3CfqpLpfpf+Mfig13viT6NKvRzWZ+lXz0Y5D60w6uJIBAOGq9mSHf0gktF0duw==}
